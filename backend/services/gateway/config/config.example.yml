@@ -1,0 +1,35 @@
+namespace: "pipedrive"
+name: "gateway"
+version: 0
+address: ":4044"
+repl_address: ":9999"
+debug: false
+registry:
+  addresses: ["127.0.0.1:8500"]
+  type: 2
+messaging:
+  type: 1
+  addresses: ["0.0.0.0:5672"]
+  durable: true
+tracer:
+  enable: false
+  address: "http://127.0.0.1:9411/api/v2/spans"
+  type: 1
+resilience:
+  rate_limiter:
+    limit: 1000
+    iplimit: 100
+  circuit_breaker:
+    timeout: 15000
+cors:
+  origins: []
+logger:
+  name: "gateway-logger"
+  level: 1
+  color: true
+worker:
+  addresses: ["0.0.0.0:6379"]
+oauth:
+  client_id: ""
+  client_secret: ""
+  redirect_uri: "https://"

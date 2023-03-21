@@ -1,0 +1,31 @@
+namespace: "pipedrive"
+name: "settings"
+version: 0
+address: ":5150"
+repl_address: ":8889"
+debug: false
+# persistence:
+#   url: ""
+registry:
+  addresses: ["127.0.0.1:8500"]
+  type: 2
+messaging:
+  type: 1
+  addresses: ["0.0.0.0:5672"]
+  durable: true
+tracer:
+  enable: false
+  address: "http://127.0.0.1:9411/api/v2/spans"
+  type: 1
+resilience:
+    rate_limiter:
+      limit: 500
+    circuit_breaker:
+      timeout: 2500
+logger:
+  name: "settings-logger"
+  level: 1
+  color: true
+oauth:
+  client_id: ""
+  client_secret: ""

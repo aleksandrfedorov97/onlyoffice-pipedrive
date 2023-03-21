@@ -1,0 +1,37 @@
+namespace: "pipedrive"
+name: "callback"
+version: 0
+address: ":5044"
+repl_address: ":3132"
+debug: false
+persistence:
+  url: ""
+registry:
+  addresses: ["127.0.0.1:8500"]
+  type: 2
+messaging:
+  type: 1
+  addresses: ["0.0.0.0:5672"]
+  durable: true
+tracer:
+  enable: false
+  address: "http://127.0.0.1:9411/api/v2/spans"
+  type: 1
+resilience:
+  rate_limiter:
+    limit: 1000
+    iplimit: 100
+  circuit_breaker:
+    timeout: 2500
+cors:
+  origins: ["", ""]
+logger:
+  name: "callback-logger"
+  level: 1
+  color: true
+worker:
+  addresses: ["0.0.0.0:6379"]
+onlyoffice:
+  callback:
+    max_size: 210000000000
+    upload_timeout: 120
