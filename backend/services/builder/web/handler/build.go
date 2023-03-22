@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -19,6 +20,8 @@ import (
 	"go-micro.dev/v4/client"
 	"golang.org/x/sync/singleflight"
 )
+
+var _ErrNoSettingsFound = errors.New("could not find document server settings")
 
 type ConfigHandler struct {
 	namespace  string
@@ -83,6 +86,12 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:settings", c.namespace), "SettingsSelectHandler.GetSettings", fmt.Sprint(req.CID)), &docs); err != nil {
 			c.logger.Debugf("could not document server settings: %s", err.Error())
 			errorsChan <- err
+			return
+		}
+
+		if docs.DocAddress == "" || docs.DocSecret == "" {
+			c.logger.Debugf("no settings found")
+			errorsChan <- _ErrNoSettingsFound
 			return
 		}
 
