@@ -54,7 +54,12 @@ export const SettingsPage: React.FC = () => {
     if (address && secret) {
       try {
         setSaving(true);
-        await postSettings(sdk, address, secret);
+        if (!address.endsWith("/")) {
+          await postSettings(sdk, `${address}/`, secret);
+          setAddress(`${address}/`);
+        } else {
+          await postSettings(sdk, address, secret);
+        }
         await sdk.execute(Command.SHOW_SNACKBAR, {
           message: "ONLYOFFICE settings have been saved",
         });
