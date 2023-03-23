@@ -22,6 +22,7 @@ import (
 )
 
 var _ErrNoSettingsFound = errors.New("could not find document server settings")
+var _ErrOperationTimeout = errors.New("operation timeout")
 
 type ConfigHandler struct {
 	namespace  string
@@ -107,6 +108,8 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 	select {
 	case err := <-errorsChan:
 		return config, err
+	case <-ctx.Done():
+		return config, _ErrOperationTimeout
 	default:
 		c.logger.Debugf("select default")
 	}
