@@ -22,7 +22,12 @@ export const Creation: React.FC = () => {
 
   useEffect(() => {
     new AppExtensionsSDK()
-      .initialize()
+      .initialize({
+        size: {
+          height: 500,
+          width: 600,
+        },
+      })
       .then((s) => setSDK(s))
       .catch(() => setSDK(null));
   }, []);
@@ -71,10 +76,7 @@ export const Creation: React.FC = () => {
           </div>
         </div>
       </div>
-      <div
-        className="h-[48px] flex items-center w-full"
-        style={{ backgroundColor: "#F7F7F7" }}
-      >
+      <div className="h-[48px] flex items-center w-full">
         <div className="flex justify-between items-center w-full">
           <div className="mx-5">
             <OnlyofficeButton

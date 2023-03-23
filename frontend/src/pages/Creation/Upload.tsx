@@ -38,10 +38,7 @@ export const Upload: React.FC = () => {
           <OnlyofficeDragDrop onDrop={onDrop} />
         </div>
       </div>
-      <div
-        className="h-[48px] flex items-center w-full"
-        style={{ backgroundColor: "#F7F7F7" }}
-      >
+      <div className="h-[48px] flex items-center w-full">
         <div className="flex justify-between items-center w-full">
           <div className="mx-5">
             <OnlyofficeButton
