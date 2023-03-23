@@ -6,6 +6,7 @@ type ButtonProps = {
   disabled?: boolean;
   primary?: boolean;
   fullWidth?: boolean;
+  Icon?: React.ReactElement;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -14,11 +15,12 @@ export const OnlyofficeButton: React.FC<ButtonProps> = ({
   disabled = false,
   primary = false,
   fullWidth = false,
+  Icon,
   onClick,
 }) => {
   const classes = cx({
     "hover:shadow-lg duration-200": !disabled,
-    "bg-green-600 text-slate-200": primary,
+    "bg-green-700 text-white": primary,
     "bg-white text-black border-2 border-slate-300 border-solid": !primary,
     "min-w-[62px] h-[32px]": true,
     "w-full": fullWidth,
@@ -29,10 +31,11 @@ export const OnlyofficeButton: React.FC<ButtonProps> = ({
     <button
       type="button"
       disabled={disabled}
-      className={`flex justify-center items-center p-3 text-xs lg:text-base font-semibold font-sans rounded-md cursor-pointer ${classes} truncate text-ellipsis`}
+      className={`flex justify-center items-center p-3 text-sm lg:text-base font-semibold font-inter rounded-md cursor-pointer ${classes} truncate text-ellipsis`}
       onClick={onClick}
     >
       {text}
+      {Icon ? <div className="pl-1">{Icon}</div> : null}
     </button>
   );
 };

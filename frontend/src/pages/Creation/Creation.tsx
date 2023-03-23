@@ -12,6 +12,8 @@ import { uploadFile } from "@services/file";
 import { getFileIcon, getMimeType } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
+import Redirect from "@assets/redirect.svg";
+
 export const Creation: React.FC = () => {
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const [file, setFile] = useState("New Document");
@@ -90,6 +92,7 @@ export const Creation: React.FC = () => {
             <OnlyofficeButton
               text="Create document"
               primary
+              Icon={<Redirect />}
               onClick={async () => {
                 const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
                 if (!token) return;

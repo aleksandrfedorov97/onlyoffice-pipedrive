@@ -21,7 +21,7 @@ export const OnlyofficeTile: React.FC<TileProps> = ({
   const card = cx({
     "px-5 py-3.5 rounded-lg transform shadow mb-5 outline-none": true,
     "transition duration-100 ease-linear": true,
-    "w-[108px] h-[94px]": true,
+    "w-[97px] h-[82px]": true,
     "max-h-36 flex flex-col justify-center": true,
     "hover:-translate-y-[0.125rem] hover:shadow-xl cursor-pointer": !selected,
     "bg-white": !selected,
