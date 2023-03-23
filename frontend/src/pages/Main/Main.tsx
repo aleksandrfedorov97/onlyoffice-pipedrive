@@ -15,20 +15,30 @@ import { useFileSearch } from "@hooks/useFileSearch";
 import { formatBytes, getFileIcon, isFileSupported } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
+import { useUserSearch } from "@hooks/useUserSearch";
 import { OnlyofficeFileActions } from "./Actions";
 
 export const Main: React.FC = () => {
   const { url, parameters } = getCurrentURL();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
-  const { isLoading, fetchNextPage, isFetchingNextPage, files, hasNextPage } =
-    useFileSearch(
-      `${url}api/v1/deals/${parameters.get("selectedIds")}/files`,
-      20
-    );
+  const {
+    isLoading: filesLoading,
+    fetchNextPage,
+    isFetchingNextPage,
+    files,
+    hasNextPage,
+  } = useFileSearch(
+    `${url}api/v1/deals/${parameters.get("selectedIds")}/files`,
+    20
+  );
+  const { isLoading: usersLoading, data: userData } = useUserSearch(
+    `${url}api/v1/users`
+  );
+
   const observer = useRef<IntersectionObserver>();
   const lastItem = useCallback(
     (node: Element | null) => {
-      if (isLoading) return;
+      if (filesLoading || usersLoading) return;
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver(async (entries) => {
         if (entries[0].isIntersecting && hasNextPage) {
@@ -37,7 +47,7 @@ export const Main: React.FC = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, fetchNextPage, hasNextPage]
+    [filesLoading, usersLoading, fetchNextPage, hasNextPage]
   );
 
   useEffect(() => {
@@ -47,6 +57,7 @@ export const Main: React.FC = () => {
       .catch(() => setSDK(null));
   }, []);
 
+  const isLoading = filesLoading && usersLoading;
   return (
     <div className="table-shadow h-full">
       <div className="px-5 overflow-scroll h-[85%] md:justify-between no-scrollbar">
@@ -73,7 +84,10 @@ export const Main: React.FC = () => {
                   >
                     <OnlyofficeFileInfo
                       info={{
-                        "Created by": file.person_name,
+                        "Created by":
+                          userData?.response.data.find(
+                            (u) => u.id === file.user_id
+                          )?.name || "Anonymous",
                         Workspace: file.remote_location,
                         Type: file.file_type,
                         "Date modified": file.update_time,
@@ -95,7 +109,10 @@ export const Main: React.FC = () => {
                 >
                   <OnlyofficeFileInfo
                     info={{
-                      "Created by": file.person_name,
+                      "Created by":
+                        userData?.response.data.find(
+                          (u) => u.id === file.user_id
+                        )?.name || "Anonymous",
                       Workspace: file.remote_location,
                       Type: file.file_type,
                       "Date modified": file.update_time,

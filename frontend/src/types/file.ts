@@ -1,5 +1,6 @@
 export type File = {
   id: string;
+  user_id: number;
   name: string;
   file_size: number;
   file_type: string;

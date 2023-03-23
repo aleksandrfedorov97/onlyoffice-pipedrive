@@ -9,11 +9,22 @@ type PipedriveAccess = {
   admin: boolean;
 };
 
+type PipedriveUser = {
+  id: number;
+  name: string;
+}
+
 export type PipedriveUserResponse = {
   success: boolean;
   data: {
     id: number;
+    name: string;
     access: PipedriveAccess[];
     active_flag: true;
   };
+};
+
+export type PipedriveSearchUsersResponse = {
+  success: boolean;
+  data: PipedriveUser[];
 };
