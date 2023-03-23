@@ -8,7 +8,9 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
@@ -20,6 +22,8 @@ import (
 	"go-micro.dev/v4/client"
 	"golang.org/x/sync/semaphore"
 )
+
+var _ErrNotAdmin = errors.New("no admin access")
 
 type apiController struct {
 	namespace        string
@@ -92,6 +96,12 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 			return
 		}
 
+		len, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 0)
+		if err != nil || (len/100000) > 10 {
+			rw.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		var settings request.DocSettings
 		buf, _ := ioutil.ReadAll(r.Body)
 		if err := json.Unmarshal(buf, &settings); err != nil {
@@ -110,53 +120,62 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
 		defer cancel()
 
-		if err := c.commandClient.License(ctx, settings.DocAddress, settings.DocSecret); err != nil {
-			c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
+		var wg sync.WaitGroup
+		errChan := make(chan error, 2)
+		cidChan := make(chan int, 1)
+
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			if err := c.commandClient.License(ctx, settings.DocAddress, settings.DocSecret); err != nil {
+				c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
+				errChan <- err
+				return
+			}
+		}()
+
+		go func() {
+			var ures response.UserResponse
+			if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
+				c.logger.Errorf("could not get user access info: %s", err.Error())
+				errChan <- err
+				return
+			}
+
+			urs, err := c.apiClient.GetMe(ctx, model.Token{
+				AccessToken:  ures.AccessToken,
+				RefreshToken: ures.RefreshToken,
+				TokenType:    ures.TokenType,
+				Scope:        ures.Scope,
+				ApiDomain:    ures.ApiDomain,
+			})
+
+			for _, access := range urs.Access {
+				if access.App == "global" && !access.Admin {
+					errChan <- _ErrNotAdmin
+					return
+				}
+			}
+
+			if err != nil {
+				c.logger.Errorf("could not get pipedrive user or no user has admin permissions")
+				errChan <- err
+				return
+			}
+
+			cidChan <- urs.CompanyID
+		}()
+
+		wg.Wait()
+		select {
+		case <-errChan:
 			rw.WriteHeader(http.StatusForbidden)
 			return
-		}
-
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				rw.WriteHeader(http.StatusRequestTimeout)
-				return
-			}
-
-			microErr := response.MicroError{}
-			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-				rw.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			rw.WriteHeader(microErr.Code)
-			return
-		}
-
-		urs, err := c.apiClient.GetMe(ctx, model.Token{
-			AccessToken:  ures.AccessToken,
-			RefreshToken: ures.RefreshToken,
-			TokenType:    ures.TokenType,
-			Scope:        ures.Scope,
-			ApiDomain:    ures.ApiDomain,
-		})
-
-		for _, access := range urs.Access {
-			if access.App == "global" && !access.Admin {
-				rw.WriteHeader(http.StatusForbidden)
-				return
-			}
-		}
-
-		if err != nil {
-			c.logger.Errorf("could not get pipedrive user or no user has admin permissions")
-			rw.WriteHeader(http.StatusForbidden)
-			return
+		default:
 		}
 
 		msg := c.client.NewMessage("insert-settings", request.DocSettings{
-			CompanyID:  urs.CompanyID,
+			CompanyID:  <-cidChan,
 			DocAddress: settings.DocAddress,
 			DocSecret:  settings.DocSecret,
 		})
@@ -254,7 +273,8 @@ func (c apiController) BuildGetConfig() http.HandlerFunc {
 		rw.Header().Set("Content-Type", "application/json")
 
 		query := r.URL.Query()
-		id, filename, key, dealID := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")), strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id"))
+		id, filename, key, dealID := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
+			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id"))
 
 		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
 		if !ok {
@@ -321,7 +341,8 @@ func (c apiController) BuildGetFile() http.HandlerFunc {
 
 		defer sem.Release(1)
 
-		fid, cid, token := strings.TrimSpace(r.URL.Query().Get("fid")), strings.TrimSpace(r.URL.Query().Get("cid")), strings.TrimSpace(r.URL.Query().Get("token"))
+		fid, cid, token := strings.TrimSpace(r.URL.Query().Get("fid")),
+			strings.TrimSpace(r.URL.Query().Get("cid")), strings.TrimSpace(r.URL.Query().Get("token"))
 
 		var pctx request.PipedriveTokenContext
 		if token == "" {

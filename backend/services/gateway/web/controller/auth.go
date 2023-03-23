@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -96,6 +97,12 @@ func (c authController) BuildDeleteAuth() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		c.logger.Debug("a new uninstall request")
 		var ureq request.UninstallRequest
+
+		len, err := strconv.ParseInt(r.Header.Get("Content-Length"), 10, 0)
+		if err != nil || (len/100000) > 10 {
+			rw.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
 		buf, err := ioutil.ReadAll(r.Body)
 		if err != nil {
