@@ -13,6 +13,7 @@ import { SettingsPage } from "@pages/Settings";
 import { OnlyofficeEditorPage } from "@pages/Editor";
 
 import { OnlyofficeSpinner } from "@components/spinner";
+import { TokenProvider } from "@context/TokenContext";
 
 const CenteredOnlyofficeSpinner = () => (
   <div className="w-full h-full flex justify-center items-center">
@@ -29,7 +30,9 @@ const LazyRoutes: React.FC = () => {
           index
           element={
             <React.Suspense fallback={<CenteredOnlyofficeSpinner />}>
-              <MainPage />
+              <TokenProvider>
+                <MainPage />
+              </TokenProvider>
             </React.Suspense>
           }
         />
@@ -37,15 +40,9 @@ const LazyRoutes: React.FC = () => {
           path="create"
           element={
             <React.Suspense fallback={<CenteredOnlyofficeSpinner />}>
-              <CreatePage />
-            </React.Suspense>
-          }
-        />
-        <Route
-          path="editor"
-          element={
-            <React.Suspense fallback={<CenteredOnlyofficeSpinner />}>
-              <OnlyofficeEditorPage />
+              <TokenProvider>
+                <CreatePage />
+              </TokenProvider>
             </React.Suspense>
           }
         />
@@ -53,11 +50,22 @@ const LazyRoutes: React.FC = () => {
           path="settings"
           element={
             <React.Suspense fallback={<CenteredOnlyofficeSpinner />}>
-              <SettingsPage />
+              <TokenProvider>
+                <SettingsPage />
+              </TokenProvider>
             </React.Suspense>
           }
         />
       </Route>
+      <Route
+        path="/editor"
+        element={
+          <React.Suspense fallback={<CenteredOnlyofficeSpinner />}>
+            <OnlyofficeEditorPage />
+          </React.Suspense>
+        }
+      />
+      <Route path="/bruh" element={<div>ASD</div>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

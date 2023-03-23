@@ -1,19 +1,19 @@
+import React, { useEffect, useState } from "react";
+import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
 import { Tabs, TabList, Tab, TabPanel } from "react-tabs";
-import React, { useState } from "react";
-import { useSnapshot } from "valtio";
-import { Command } from "@pipedrive/app-extensions-sdk";
-
-import { PipedriveSDK } from "@context/PipedriveContext";
 
 import { Creation } from "./Creation";
 import { Upload } from "./Upload";
 
 export const CreatePage: React.FC = () => {
-  const { sdk } = useSnapshot(PipedriveSDK);
   const [selected, setSelected] = useState(0);
-  sdk.execute(Command.RESIZE, {
-    height: 500,
-    width: 622,
+  useEffect(() => {
+    new AppExtensionsSDK().initialize({
+      size: {
+        height: 500,
+        width: 622,
+      },
+    });
   });
 
   return (

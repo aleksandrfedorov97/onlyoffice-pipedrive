@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import md5 from "md5";
-import { useSnapshot } from "valtio";
-import { useNavigate } from "react-router-dom";
-import { Command } from "@pipedrive/app-extensions-sdk";
+import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeInput } from "@components/input";
@@ -11,19 +9,23 @@ import { OnlyofficeTitle } from "@components/title";
 
 import { uploadFile } from "@services/file";
 
-import { PipedriveSDK } from "@context/PipedriveContext";
-
 import { getFileIcon, getMimeType } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
 export const Creation: React.FC = () => {
-  const navigate = useNavigate();
-  const { sdk } = useSnapshot(PipedriveSDK);
+  const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const [file, setFile] = useState("New Document");
   const [fileType, setFileType] = useState<"docx" | "pptx" | "xlsx">("docx");
   const handleChangeFile = (newType: "docx" | "pptx" | "xlsx") => {
     setFileType(newType);
   };
+
+  useEffect(() => {
+    new AppExtensionsSDK()
+      .initialize()
+      .then((s) => setSDK(s))
+      .catch(() => setSDK(null));
+  }, []);
 
   return (
     <div className="h-full">
@@ -78,7 +80,7 @@ export const Creation: React.FC = () => {
             <OnlyofficeButton
               text="Cancel"
               onClick={async () => {
-                await sdk.execute(Command.CLOSE_MODAL);
+                await sdk?.execute(Command.CLOSE_MODAL);
               }}
             />
           </div>
@@ -87,6 +89,8 @@ export const Creation: React.FC = () => {
               text="Create document"
               primary
               onClick={async () => {
+                const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
+                if (!token) return;
                 const { url, parameters } = getCurrentURL();
                 const filename = `${file}.${fileType}`;
                 const binary = new File([], filename, {
@@ -98,16 +102,15 @@ export const Creation: React.FC = () => {
                     parameters.get("selectedIds") || "",
                     binary
                   );
-                  navigate(
-                    `/editor?data=${JSON.stringify({
-                      id: res.data.id,
-                      deal_id: res.data.deal_id,
-                      name: res.data.name,
-                      key: md5(res.data.id + res.data.update_time),
-                    })}`
+                  window.open(
+                    `/editor?token=${token.token}&id=${res.data.id}&deal_id=${
+                      res.data.deal_id
+                    }&name=${res.data.name}&key=${md5(
+                      res.data.id + res.data.update_time
+                    )}`
                   );
                 } catch {
-                  await sdk.execute(Command.SHOW_SNACKBAR, {
+                  await sdk?.execute(Command.SHOW_SNACKBAR, {
                     message: "Could not create a new file",
                   });
                 }

@@ -1,18 +1,16 @@
-import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 import axios from "axios";
 import axiosRetry from "axios-retry";
 
 import { ConfigResponse } from "src/types/config";
 
 export const fetchConfig = async (
-  sdk: AppExtensionsSDK,
+  token: string,
   id: string,
   name: string,
   key: string,
   dealID: string,
   signal?: AbortSignal
 ) => {
-  const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create();
   axiosRetry(client, {
     retries: 2,
@@ -29,7 +27,7 @@ export const fetchConfig = async (
     },
     headers: {
       "Content-Type": "application/json",
-      "X-Pipedrive-App-Context": pctx.token,
+      "X-Pipedrive-App-Context": token,
     },
     signal,
   });

@@ -1,12 +1,9 @@
 import { FileRejection, DropEvent } from "react-dropzone";
-import React from "react";
-import { useSnapshot } from "valtio";
-import { Command } from "@pipedrive/app-extensions-sdk";
+import React, { useEffect, useState } from "react";
+import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeDragDrop } from "@components/drop";
-
-import { PipedriveSDK } from "@context/PipedriveContext";
 
 import { uploadFile } from "@services/file";
 
@@ -26,7 +23,14 @@ const onDrop = <T extends File>(
 };
 
 export const Upload: React.FC = () => {
-  const { sdk } = useSnapshot(PipedriveSDK);
+  const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
+  useEffect(() => {
+    new AppExtensionsSDK()
+      .initialize()
+      .then((s) => setSDK(s))
+      .catch(() => setSDK(null));
+  }, []);
+
   return (
     <div className="h-full">
       <div className="h-[calc(100%-3rem)] overflow-scroll">
@@ -43,7 +47,7 @@ export const Upload: React.FC = () => {
             <OnlyofficeButton
               text="Cancel"
               onClick={async () => {
-                await sdk.execute(Command.CLOSE_MODAL);
+                await sdk?.execute(Command.CLOSE_MODAL);
               }}
             />
           </div>

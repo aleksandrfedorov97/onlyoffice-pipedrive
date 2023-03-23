@@ -1,6 +1,8 @@
-import React, { useCallback, useRef } from "react";
-import { useSnapshot } from "valtio";
-import { Command, Modal } from "@pipedrive/app-extensions-sdk";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import AppExtensionsSDK, {
+  Command,
+  Modal,
+} from "@pipedrive/app-extensions-sdk";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeFile } from "@components/file";
@@ -10,16 +12,14 @@ import { OnlyofficeSpinner } from "@components/spinner";
 
 import { useFileSearch } from "@hooks/useFileSearch";
 
-import { PipedriveSDK } from "@context/PipedriveContext";
-
 import { formatBytes, getFileIcon, isFileSupported } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
 import { OnlyofficeFileActions } from "./Actions";
 
 export const Main: React.FC = () => {
-  const { sdk } = useSnapshot(PipedriveSDK);
   const { url, parameters } = getCurrentURL();
+  const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const { isLoading, fetchNextPage, isFetchingNextPage, files, hasNextPage } =
     useFileSearch(
       `${url}api/v1/deals/${parameters.get("selectedIds")}/files`,
@@ -39,6 +39,13 @@ export const Main: React.FC = () => {
     },
     [isLoading, fetchNextPage, hasNextPage]
   );
+
+  useEffect(() => {
+    new AppExtensionsSDK()
+      .initialize()
+      .then((s) => setSDK(s))
+      .catch(() => setSDK(null));
+  }, []);
 
   return (
     <div className="table-shadow h-full">
@@ -116,7 +123,7 @@ export const Main: React.FC = () => {
           fullWidth
           primary
           onClick={async () => {
-            await sdk.execute(Command.OPEN_MODAL, {
+            await sdk?.execute(Command.OPEN_MODAL, {
               type: Modal.CUSTOM_MODAL,
               action_id: process.env.PIPEDRIVE_CREATE_MODAL_ID || "",
             });

@@ -2,8 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "react-query";
 
-import { TokenProvider } from "@context/TokenContext";
-
 import App from "./App";
 // import "./i18n";
 
@@ -16,10 +14,8 @@ const root = ReactDOM.createRoot(
 const queryClient = new QueryClient();
 root.render(
   <React.StrictMode>
-    <TokenProvider>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </TokenProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </React.StrictMode>
 );

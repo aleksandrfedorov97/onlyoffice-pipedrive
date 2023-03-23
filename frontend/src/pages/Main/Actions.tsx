@@ -1,14 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import md5 from "md5";
-import { useSnapshot } from "valtio";
-import { Command, Modal } from "@pipedrive/app-extensions-sdk";
+import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 
 import { useDeleteFile } from "@hooks/useDeleteFile";
 
 import { isFileSupported } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
-
-import { PipedriveSDK } from "@context/PipedriveContext";
 
 import { File } from "src/types/file";
 
@@ -20,35 +17,43 @@ type FileActionsProps = {
 };
 
 export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
-  const { sdk } = useSnapshot(PipedriveSDK);
   const { url, parameters } = getCurrentURL();
+  const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const mutator = useDeleteFile(`${url}api/v1/files/${file.id}`);
+
+  useEffect(() => {
+    new AppExtensionsSDK()
+      .initialize()
+      .then((s) => setSDK(s))
+      .catch(() => setSDK(null));
+  }, []);
+
   const handleDelete = () => {
     mutator
       .mutateAsync()
       .then(async () => {
-        await sdk.execute(Command.SHOW_SNACKBAR, {
+        await sdk?.execute(Command.SHOW_SNACKBAR, {
           message: `File ${file.name} has been removed`,
         });
       })
       .catch(async () => {
-        await sdk.execute(Command.SHOW_SNACKBAR, {
+        await sdk?.execute(Command.SHOW_SNACKBAR, {
           message: `Could not remove file ${file.name}`,
         });
       });
   };
 
   const handleEditor = async () => {
-    await sdk.execute(Command.OPEN_MODAL, {
-      type: Modal.CUSTOM_MODAL,
-      action_id: process.env.PIPEDRIVE_EDITOR_MODAL_ID || "",
-      data: {
-        deal_id: parameters.get("selectedIds") || "",
-        id: file.id,
-        name: file.name,
-        key: md5(file.id + file.update_time),
-      },
-    });
+    const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
+    if (token) {
+      window.open(
+        `/editor?token=${token.token}&deal_id=${
+          parameters.get("selectedIds") || "1"
+        }&id=${file.id}&name=${file.name}&key=${md5(
+          file.id + file.update_time
+        )}`
+      );
+    }
   };
 
   return (

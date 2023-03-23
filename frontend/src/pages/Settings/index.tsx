@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Command } from "@pipedrive/app-extensions-sdk";
+import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 import { useSnapshot } from "valtio";
 
 import { OnlyofficeButton } from "@components/button";
@@ -11,11 +11,10 @@ import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
 import { postSettings, getSettings } from "@services/settings";
 import { getPipedriveMe } from "@services/me";
 
-import { PipedriveSDK } from "@context/PipedriveContext";
 import { AuthToken } from "@context/TokenContext";
 
 export const SettingsPage: React.FC = () => {
-  const { sdk } = useSnapshot(PipedriveSDK);
+  const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const { access_token: accessToken, error } = useSnapshot(AuthToken);
   const [admin, setAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -24,7 +23,16 @@ export const SettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (accessToken && !error) {
+    new AppExtensionsSDK()
+      .initialize()
+      .then((s) => {
+        setSDK(s);
+      })
+      .catch(() => setSDK(null));
+  }, []);
+
+  useEffect(() => {
+    if (accessToken && !error && !!sdk) {
       getPipedriveMe(
         `${window.parent[0].location.ancestorOrigins[0]}/api/v1/users/me`
       )
@@ -51,7 +59,7 @@ export const SettingsPage: React.FC = () => {
   }, [sdk, accessToken, error]);
 
   const handleSettings = async () => {
-    if (address && secret) {
+    if (address && secret && sdk) {
       try {
         setSaving(true);
         if (!address.endsWith("/")) {

@@ -1,8 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useSnapshot } from "valtio";
-import { Command } from "@pipedrive/app-extensions-sdk";
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 
 import { OnlyofficeButton } from "@components/button";
@@ -10,7 +8,6 @@ import { OnlyofficeError } from "@components/error";
 import { OnlyofficeSpinner } from "@components/spinner";
 
 import { useBuildConfig } from "@hooks/useBuildConfig";
-import { PipedriveSDK } from "@context/PipedriveContext";
 
 import Icon from "@assets/nofile.svg";
 
@@ -30,26 +27,14 @@ const onEditor = () => {
 
 export const OnlyofficeEditorPage: React.FC = () => {
   const [params] = useSearchParams();
-  const pData = JSON.parse(params.get("data") || "{}");
-  const { sdk } = useSnapshot(PipedriveSDK);
   const { t } = useTranslation();
   const { isLoading, error, data } = useBuildConfig(
-    pData.id || "",
-    pData.name || "new.docx",
-    pData.key || new Date().toString(),
-    pData.deal_id || "1"
+    params.get("token") || "",
+    params.get("id") || "",
+    params.get("name") || "new.docx",
+    params.get("key") || new Date().toTimeString(),
+    params.get("deal_id") || "1"
   );
-
-  useEffect(() => {
-    if (sdk) {
-      (async () => {
-        await sdk.execute(Command.RESIZE, {
-          height: 500,
-          width: 700,
-        });
-      })();
-    }
-  }, [sdk]);
 
   const validConfig = !error && !isLoading && data;
   return (
@@ -67,7 +52,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
               primary
               text="Cancel"
               fullWidth
-              onClick={() => sdk.execute(Command.CLOSE_MODAL)}
+              onClick={() => window.close()}
             />
           </div>
         </div>
@@ -84,8 +69,8 @@ export const OnlyofficeEditorPage: React.FC = () => {
           <div className="pt-5">
             <OnlyofficeButton
               primary
-              text={t("button.back") || "Go back"}
-              onClick={() => sdk.execute(Command.CLOSE_MODAL)}
+              text={t("button.close") || "Close"}
+              onClick={() => window.close()}
             />
           </div>
         </div>
@@ -122,7 +107,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
               type: data.type,
               events: {
                 onRequestClose: async () => {
-                  await sdk.execute(Command.CLOSE_MODAL);
+                  window.close();
                 },
                 onAppReady: onEditor,
                 onError: () => {
