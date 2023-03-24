@@ -35,7 +35,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               AuthToken.error = true;
             }
           }
-          timerID = setTimeout(update, 1000);
+          timerID = setTimeout(update, AuthToken.expires_at - Date.now() - 100);
         }, 1000);
       })
       .catch(() => null);
