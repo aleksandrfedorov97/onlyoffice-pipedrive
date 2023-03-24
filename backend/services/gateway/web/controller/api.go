@@ -361,10 +361,36 @@ func (c apiController) BuildGetFile() http.HandlerFunc {
 			return
 		}
 
-		if err := c.jwtManager.Verify(docs.DocSecret, token, &pctx); err != nil {
-			c.logger.Errorf("could not verify X-Pipedrive-App-Context: %s", err.Error())
+		var wg sync.WaitGroup
+		wg.Add(2)
+		errChan := make(chan error, 2)
+
+		go func() {
+			defer wg.Done()
+			if err := c.jwtManager.Verify(docs.DocSecret, token, &pctx); err != nil {
+				c.logger.Errorf("could not verify X-Pipedrive-App-Context: %s", err.Error())
+				errChan <- err
+				return
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			var tkn interface{}
+			if err := c.jwtManager.Verify(docs.DocSecret, strings.ReplaceAll(r.Header.Get(docs.DocHeader), "Bearer ", "a"), &tkn); err != nil {
+				c.logger.Errorf("could not verify docs header: %s", err.Error())
+				errChan <- err
+				return
+			}
+		}()
+
+		wg.Wait()
+
+		select {
+		case <-errChan:
 			rw.WriteHeader(http.StatusForbidden)
 			return
+		default:
 		}
 
 		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
