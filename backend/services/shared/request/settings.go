@@ -15,6 +15,7 @@ type DocSettings struct {
 	CompanyID  int    `json:"company_id" mapstructure:"company_id"`
 	DocAddress string `json:"doc_address" mapstructure:"doc_address"`
 	DocSecret  string `json:"doc_secret" mapstructure:"doc_secret"`
+	DocHeader  string `json:"doc_header" mapstructure:"doc_header"`
 }
 
 func (c DocSettings) ToJSON() []byte {
@@ -36,6 +37,10 @@ func (c DocSettings) Validate() error {
 
 	if c.DocSecret == "" {
 		return _ErrInvalidDocSecret
+	}
+
+	if c.DocHeader == "" {
+		return _ErrInvalidDocHeader
 	}
 
 	return nil

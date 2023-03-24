@@ -30,6 +30,7 @@ func (i InsertMessageHandler) GetHandler() func(context.Context, interface{}) er
 			CompanyID:  fmt.Sprint(settings.CompanyID),
 			DocAddress: settings.DocAddress,
 			DocSecret:  settings.DocSecret,
+			DocHeader:  settings.DocHeader,
 		})
 		return err
 	}

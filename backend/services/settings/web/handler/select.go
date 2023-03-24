@@ -46,6 +46,7 @@ func (u SettingsSelectHandler) GetSettings(ctx context.Context, cid *string, res
 		*res = response.DocSettingsResponse{
 			DocAddress: set.DocAddress,
 			DocSecret:  set.DocSecret,
+			DocHeader:  set.DocHeader,
 		}
 		return nil
 	}

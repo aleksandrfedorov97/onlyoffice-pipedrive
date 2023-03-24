@@ -121,11 +121,11 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		defer cancel()
 
 		var wg sync.WaitGroup
+		wg.Add(2)
 		errChan := make(chan error, 2)
 		cidChan := make(chan int, 1)
 
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			if err := c.commandClient.License(ctx, settings.DocAddress, settings.DocSecret); err != nil {
 				c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
@@ -135,6 +135,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		}()
 
 		go func() {
+			defer wg.Done()
 			var ures response.UserResponse
 			if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
 				c.logger.Errorf("could not get user access info: %s", err.Error())
@@ -167,6 +168,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		}()
 
 		wg.Wait()
+
 		select {
 		case <-errChan:
 			rw.WriteHeader(http.StatusForbidden)
@@ -178,6 +180,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 			CompanyID:  <-cidChan,
 			DocAddress: settings.DocAddress,
 			DocSecret:  settings.DocSecret,
+			DocHeader:  settings.DocHeader,
 		})
 
 		if err := c.client.Publish(ctx, msg); err != nil {

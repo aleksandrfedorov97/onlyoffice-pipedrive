@@ -22,6 +22,7 @@ export const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [address, setAddress] = useState<string | undefined>(undefined);
   const [secret, setSecret] = useState<string | undefined>(undefined);
+  const [header, setHeader] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export const SettingsPage: React.FC = () => {
               const res = await getSettings(sdk);
               setAddress(res.doc_address);
               setSecret(res.doc_secret);
+              setHeader(res.doc_header);
               setAdmin(true);
             }
           } catch {
@@ -61,14 +63,14 @@ export const SettingsPage: React.FC = () => {
   }, [sdk, accessToken, error]);
 
   const handleSettings = async () => {
-    if (address && secret && sdk) {
+    if (address && secret && header && sdk) {
       try {
         setSaving(true);
         if (!address.endsWith("/")) {
-          await postSettings(sdk, `${address}/`, secret);
+          await postSettings(sdk, `${address}/`, secret, header);
           setAddress(`${address}/`);
         } else {
-          await postSettings(sdk, address, secret);
+          await postSettings(sdk, address, secret, header);
         }
         await sdk.execute(Command.SHOW_SNACKBAR, {
           message: t(
@@ -148,7 +150,7 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => setAddress(e.target.value)}
               />
             </div>
-            <div className="pl-5 pr-5">
+            <div className="pl-5 pr-5 pb-5">
               <OnlyofficeInput
                 text={t("settings.inputs.secret", "Document Server Secret")}
                 valid={!!secret}
@@ -156,6 +158,15 @@ export const SettingsPage: React.FC = () => {
                 value={secret}
                 onChange={(e) => setSecret(e.target.value)}
                 type="password"
+              />
+            </div>
+            <div className="pl-5 pr-5">
+              <OnlyofficeInput
+                text={t("settings.inputs.header", "Document Server Header")}
+                valid={!!header}
+                disabled={saving}
+                value={header}
+                onChange={(e) => setHeader(e.target.value)}
               />
             </div>
             <div className="flex justify-start items-center mt-8 ml-5">

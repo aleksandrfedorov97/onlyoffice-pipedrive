@@ -11,6 +11,7 @@ type DocSettings struct {
 	CompanyID  string `json:"company_id" mapstructure:"company_id"`
 	DocAddress string `json:"doc_address" mapstructure:"doc_address"`
 	DocSecret  string `json:"doc_secret" mapstructure:"doc_secret"`
+	DocHeader  string `json:"doc_header" mapstructure:"doc_header"`
 }
 
 func (u DocSettings) ToJSON() []byte {
@@ -22,6 +23,7 @@ func (u *DocSettings) Validate() error {
 	u.CompanyID = strings.TrimSpace(u.CompanyID)
 	u.DocAddress = strings.TrimSpace(u.DocAddress)
 	u.DocSecret = strings.TrimSpace(u.DocSecret)
+	u.DocHeader = strings.TrimSpace(u.DocHeader)
 
 	if u.CompanyID == "" {
 		return &InvalidModelFieldError{
@@ -55,6 +57,14 @@ func (u *DocSettings) Validate() error {
 		return &InvalidModelFieldError{
 			Model:  "Docserver",
 			Field:  "Document Secret",
+			Reason: "Should not be empty",
+		}
+	}
+
+	if u.DocHeader == "" {
+		return &InvalidModelFieldError{
+			Model:  "Docserver",
+			Field:  "Document Header",
 			Reason: "Should not be empty",
 		}
 	}

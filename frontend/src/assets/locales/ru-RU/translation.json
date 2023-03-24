@@ -22,6 +22,7 @@
     "settings.text": "The plugin which enables the users to edit office documents from Pipedrive using ONLYOFFICE Document Server, allows multiple users to collaborate in real time and to save back those changes to Pipedrive",
     "settings.inputs.address": "Document Server Address",
     "settings.inputs.secret": "Document Server Secret",
+    "settings.inputs.header": "Document Server Header",
     "settings.saving.ok": "ONLYOFFICE settings have been saved",
     "settings.saving.error": "Could not save ONLYOFFICE settings",
     "editor.error": "Could not open the file. Something went wrong",

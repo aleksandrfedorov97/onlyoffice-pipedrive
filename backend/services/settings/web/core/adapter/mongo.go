@@ -24,6 +24,7 @@ type docSettingsCollection struct {
 	CompanyID        string `json:"company_id" bson:"company_id"`
 	DocAddress       string `json:"doc_address" bson:"doc_address"`
 	DocSecret        string `json:"doc_secret" bson:"doc_secret"`
+	DocHeader        string `json:"doc_header" bson:"doc_header"`
 }
 
 type mongoUserAdapter struct {
@@ -50,6 +51,7 @@ func (m *mongoUserAdapter) save(ctx context.Context, settings domain.DocSettings
 				CompanyID:  settings.CompanyID,
 				DocAddress: settings.DocAddress,
 				DocSecret:  settings.DocSecret,
+				DocHeader:  settings.DocHeader,
 			}); cerr != nil {
 				return cerr
 			}
@@ -91,6 +93,7 @@ func (m *mongoUserAdapter) SelectSettings(ctx context.Context, cid string) (doma
 		CompanyID:  cid,
 		DocAddress: settings.DocAddress,
 		DocSecret:  settings.DocSecret,
+		DocHeader:  settings.DocHeader,
 	}, collection.FirstWithCtx(ctx, bson.M{"company_id": cid}, settings)
 }
 

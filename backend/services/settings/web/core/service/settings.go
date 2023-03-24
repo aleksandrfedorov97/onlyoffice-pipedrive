@@ -47,6 +47,7 @@ func (s settingsService) CreateSettings(ctx context.Context, settings domain.Doc
 		CompanyID:  settings.CompanyID,
 		DocAddress: settings.DocAddress,
 		DocSecret:  esecret,
+		DocHeader:  settings.DocHeader,
 	}); err != nil {
 		return err
 	}
@@ -80,6 +81,7 @@ func (s settingsService) GetSettings(ctx context.Context, cid string) (domain.Do
 		CompanyID:  cid,
 		DocAddress: settings.DocAddress,
 		DocSecret:  dsecret,
+		DocHeader:  settings.DocHeader,
 	}, nil
 }
 
@@ -99,10 +101,12 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 		CompanyID:  settings.CompanyID,
 		DocAddress: settings.DocAddress,
 		DocSecret:  esecret,
+		DocHeader:  settings.DocHeader,
 	}); err != nil {
 		return settings, err
 	}
 
+	s.logger.Debugf("successfully persisted %s settings", settings.CompanyID)
 	return settings, nil
 }
 

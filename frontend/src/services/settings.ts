@@ -1,13 +1,13 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
-import { UserResponse } from "src/types/user";
 import { SettingsResponse } from "src/types/settings";
 
 export const postSettings = async (
   sdk: AppExtensionsSDK,
   address: string,
-  secret: string
+  secret: string,
+  header: string
 ) => {
   const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create({ baseURL: process.env.BACKEND_GATEWAY });
@@ -16,7 +16,7 @@ export const postSettings = async (
     retryCondition: (error) => error.status === 429,
   });
 
-  await client<UserResponse>({
+  await client({
     method: "POST",
     url: `/api/settings`,
     headers: {
@@ -26,6 +26,7 @@ export const postSettings = async (
     data: {
       doc_address: address,
       doc_secret: secret,
+      doc_header: header,
     },
     timeout: 4000,
   });
