@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
 import { Tabs, TabList, Tab, TabPanel } from "react-tabs";
+import { useTranslation } from "react-i18next";
 
 import { Creation } from "./Creation";
 import { Upload } from "./Upload";
 
 export const CreatePage: React.FC = () => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(0);
   useEffect(() => {
     new AppExtensionsSDK().initialize({
@@ -32,7 +34,7 @@ export const CreatePage: React.FC = () => {
               selected === 0 ? "text-sky-500" : "text-gray-400"
             }`}
           >
-            Create
+            {t("button.creation.create", "Create")}
           </Tab>
           <Tab
             id="upload-file"
@@ -40,7 +42,7 @@ export const CreatePage: React.FC = () => {
               selected === 1 ? "text-sky-500" : "text-gray-400"
             }`}
           >
-            Upload
+            {t("button.creation.upload", "Upload")}
           </Tab>
         </TabList>
         <TabPanel

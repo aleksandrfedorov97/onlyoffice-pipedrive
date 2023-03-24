@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
+import { useTranslation } from "react-i18next";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeInput } from "@components/input";
@@ -15,8 +16,11 @@ import { getCurrentURL } from "@utils/url";
 import Redirect from "@assets/redirect.svg";
 
 export const Creation: React.FC = () => {
+  const { t } = useTranslation();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
-  const [file, setFile] = useState("New Document");
+  const [file, setFile] = useState(
+    t("document.new", "New Document") || "New Document"
+  );
   const [fileType, setFileType] = useState<"docx" | "pptx" | "xlsx">("docx");
   const handleChangeFile = (newType: "docx" | "pptx" | "xlsx") => {
     setFileType(newType);
@@ -38,10 +42,13 @@ export const Creation: React.FC = () => {
     <div className="h-full">
       <div className="h-[calc(100%-3rem)] overflow-scroll">
         <div className="px-5 flex flex-col justify-center items-start h-full">
-          <OnlyofficeTitle text="Create with ONLYOFFICE" large />
+          <OnlyofficeTitle
+            text={t("creation.title", "Create with ONLYOFFICE")}
+            large
+          />
           <div className="pt-4 w-[330px]">
             <OnlyofficeInput
-              text="Title"
+              text={t("creation.inputs.title", "Title")}
               labelSize="sm"
               value={file}
               onChange={(e) => setFile(e.target.value)}
@@ -51,7 +58,7 @@ export const Creation: React.FC = () => {
             <div>
               <OnlyofficeTile
                 Icon={getFileIcon("sample.docx")}
-                text="Document"
+                text={t("creation.tiles.doc", "Document")}
                 onClick={() => handleChangeFile("docx")}
                 onKeyDown={() => handleChangeFile("docx")}
                 selected={fileType === "docx"}
@@ -60,7 +67,7 @@ export const Creation: React.FC = () => {
             <div className="px-1">
               <OnlyofficeTile
                 Icon={getFileIcon("sample.xlsx")}
-                text="Spreadsheet"
+                text={t("creation.tiles.spreadsheet", "Spreadsheet")}
                 onClick={() => handleChangeFile("xlsx")}
                 onKeyDown={() => handleChangeFile("xlsx")}
                 selected={fileType === "xlsx"}
@@ -69,7 +76,7 @@ export const Creation: React.FC = () => {
             <div>
               <OnlyofficeTile
                 Icon={getFileIcon("sample.pptx")}
-                text="Presentation"
+                text={t("creation.tiles.presentation", "Presentation")}
                 onClick={() => handleChangeFile("pptx")}
                 onKeyDown={() => handleChangeFile("pptx")}
                 selected={fileType === "pptx"}
@@ -82,7 +89,7 @@ export const Creation: React.FC = () => {
         <div className="flex justify-between items-center w-full">
           <div className="mx-5">
             <OnlyofficeButton
-              text="Cancel"
+              text={t("button.cancel", "Cancel")}
               onClick={async () => {
                 await sdk?.execute(Command.CLOSE_MODAL);
               }}
@@ -90,7 +97,7 @@ export const Creation: React.FC = () => {
           </div>
           <div className="mx-5">
             <OnlyofficeButton
-              text="Create document"
+              text={t("button.create", "Create document")}
               primary
               Icon={<Redirect />}
               onClick={async () => {
@@ -116,7 +123,7 @@ export const Creation: React.FC = () => {
                   );
                 } catch {
                   await sdk?.execute(Command.SHOW_SNACKBAR, {
-                    message: "Could not create a new file",
+                    message: t("creation.error", "Could not create a new file"),
                   });
                 }
               }}

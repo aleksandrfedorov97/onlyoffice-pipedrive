@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "react-query";
 
 import App from "./App";
-// import "./i18n";
+import "./i18n";
 
 import "@assets/index.css";
 

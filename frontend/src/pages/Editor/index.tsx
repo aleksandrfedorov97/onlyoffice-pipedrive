@@ -26,8 +26,8 @@ const onEditor = () => {
 };
 
 export const OnlyofficeEditorPage: React.FC = () => {
-  const [params] = useSearchParams();
   const { t } = useTranslation();
+  const [params] = useSearchParams();
   const { isLoading, error, data } = useBuildConfig(
     params.get("token") || "",
     params.get("id") || "",
@@ -50,7 +50,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
           <div className="small:mb-5 small:px-5 small:w-full">
             <OnlyofficeButton
               primary
-              text="Cancel"
+              text={t("button.cancel", "Cancel")}
               fullWidth
               onClick={() => window.close()}
             />
@@ -61,15 +61,15 @@ export const OnlyofficeEditorPage: React.FC = () => {
         <div className="w-full h-full flex justify-center flex-col items-center mb-1">
           <Icon />
           <OnlyofficeError
-            text={
-              t("editor.error") ||
+            text={t(
+              "editor.error",
               "Could not open the file. Something went wrong"
-            }
+            )}
           />
           <div className="pt-5">
             <OnlyofficeButton
               primary
-              text={t("button.close") || "Close"}
+              text={t("button.close", "Close")}
               onClick={() => window.close()}
             />
           </div>

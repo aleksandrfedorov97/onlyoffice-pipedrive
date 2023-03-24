@@ -3,6 +3,7 @@ import AppExtensionsSDK, {
   Command,
   Modal,
 } from "@pipedrive/app-extensions-sdk";
+import { useTranslation } from "react-i18next";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeFile } from "@components/file";
@@ -18,6 +19,7 @@ import { getCurrentURL } from "@utils/url";
 import { OnlyofficeFileActions } from "./Actions";
 
 export const Main: React.FC = () => {
+  const { t } = useTranslation();
   const { url, parameters } = getCurrentURL();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const { isLoading, fetchNextPage, isFetchingNextPage, files, hasNextPage } =
@@ -57,7 +59,9 @@ export const Main: React.FC = () => {
           </div>
         )}
         {!isLoading && (!files || files.length === 0) && (
-          <OnlyofficeNoFile title="Could not find pipedrive files" />
+          <OnlyofficeNoFile
+            title={t("files.error.nofiles", "Could not find Pipedrive files")}
+          />
         )}
         {!isLoading &&
           files &&
@@ -75,11 +79,16 @@ export const Main: React.FC = () => {
                     <OnlyofficeFileInfo
                       info={{
                         // "Created by": file.person_name,
-                        Workspace: file.remote_location,
-                        Type: file.file_type,
-                        "Date modified": file.update_time,
-                        "Creation date": file.add_time,
-                        Size: formatBytes(file.file_size),
+                        [t("files.info.workspace", "Workspace")]:
+                          file.remote_location,
+                        [t("files.info.type", "Type")]: file.file_type,
+                        [t("files.info.modified", "Date modified")]:
+                          file.update_time,
+                        [t("files.info.creation", "Creation date")]:
+                          file.add_time,
+                        [t("files.info.size", "Size")]: formatBytes(
+                          file.file_size
+                        ),
                       }}
                     />
                   </OnlyofficeFile>
@@ -97,11 +106,16 @@ export const Main: React.FC = () => {
                   <OnlyofficeFileInfo
                     info={{
                       // "Created by": file.person_name,
-                      Workspace: file.remote_location,
-                      Type: file.file_type,
-                      "Date modified": file.update_time,
-                      "Creation date": file.add_time,
-                      Size: formatBytes(file.file_size),
+                      [t("files.info.workspace", "Workspace")]:
+                        file.remote_location,
+                      [t("files.info.type", "Type")]: file.file_type,
+                      [t("files.info.modified", "Date modified")]:
+                        file.update_time,
+                      [t("files.info.creation", "Creation date")]:
+                        file.add_time,
+                      [t("files.info.size", "Size")]: formatBytes(
+                        file.file_size
+                      ),
                     }}
                   />
                 </OnlyofficeFile>
@@ -120,7 +134,7 @@ export const Main: React.FC = () => {
       </div>
       <div className="h-[15%] w-3/4 text-ellipsis flex justify-center items-center px-5">
         <OnlyofficeButton
-          text="Create or upload document"
+          text={t("button.upload", "Create or upload document")}
           fullWidth
           primary
           onClick={async () => {

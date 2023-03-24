@@ -1,14 +1,17 @@
 import React from "react";
 import { useSnapshot } from "valtio";
+import { useTranslation } from "react-i18next";
 
 import { OnlyofficeSpinner } from "@components/spinner";
 
+import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
+
 import { AuthToken } from "@context/TokenContext";
 
-import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
 import { Main } from "./Main";
 
 export const MainPage: React.FC = () => {
+  const { t } = useTranslation();
   const { access_token: accessToken, error } = useSnapshot(AuthToken);
   const loading = !accessToken && !error;
   const loadingError = !accessToken && error;
@@ -22,8 +25,11 @@ export const MainPage: React.FC = () => {
       )}
       {loadingError && (
         <OnlyofficeBackgroundError
-          title="Error"
-          subtitle="Something went wrong. Please reload or reinstall the app."
+          title={t("background.error.title", "Error")}
+          subtitle={t(
+            "background.reinstall.subtitle",
+            "Something went wrong. Please reload or reinstall the app."
+          )}
         />
       )}
       {loaded && <Main />}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
+import { useTranslation } from "react-i18next";
 
 import { useDeleteFile } from "@hooks/useDeleteFile";
 
@@ -17,6 +18,7 @@ type FileActionsProps = {
 };
 
 export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
+  const { t } = useTranslation();
   const { url, parameters } = getCurrentURL();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const mutator = useDeleteFile(`${url}api/v1/files/${file.id}`);
@@ -33,12 +35,20 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
       .mutateAsync()
       .then(async () => {
         await sdk?.execute(Command.SHOW_SNACKBAR, {
-          message: `File ${file.name} has been removed`,
+          message: t(
+            "snackbar.fileremoved.ok",
+            `File ${file.name} has been removed`,
+            { file: file.name }
+          ),
         });
       })
       .catch(async () => {
         await sdk?.execute(Command.SHOW_SNACKBAR, {
-          message: `Could not remove file ${file.name}`,
+          message: t(
+            "snackbar.fileremoved.error",
+            `Could not remove file ${file.name}`,
+            { file: file.name }
+          ),
         });
       });
   };
