@@ -38,7 +38,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
 
   const validConfig = !error && !isLoading && data;
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full overflow-hidden">
       {!error && (
         <div
           id="eloader"

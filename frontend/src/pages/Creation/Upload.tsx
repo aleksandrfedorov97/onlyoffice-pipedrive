@@ -35,7 +35,7 @@ export const Upload: React.FC = () => {
 
   return (
     <div className="h-full">
-      <div className="h-[calc(100%-3rem)] overflow-scroll">
+      <div className="h-[calc(100%-3rem)] overflow-hidden">
         <div className="px-5 py-20 flex flex-col justify-center items-start h-full">
           <OnlyofficeDragDrop
             errorText={

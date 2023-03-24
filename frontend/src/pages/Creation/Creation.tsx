@@ -40,7 +40,7 @@ export const Creation: React.FC = () => {
 
   return (
     <div className="h-full">
-      <div className="h-[calc(100%-3rem)] overflow-scroll">
+      <div className="h-[calc(100%-3rem)] overflow-hidden">
         <div className="px-5 flex flex-col justify-center items-start h-full">
           <OnlyofficeTitle
             text={t("creation.title", "Create with ONLYOFFICE")}
