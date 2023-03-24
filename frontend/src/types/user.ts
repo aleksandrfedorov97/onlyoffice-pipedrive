@@ -11,8 +11,9 @@ type PipedriveAccess = {
 
 type PipedriveUser = {
   id: number;
+  user_id: number;
   name: string;
-}
+};
 
 export type PipedriveUserResponse = {
   success: boolean;
