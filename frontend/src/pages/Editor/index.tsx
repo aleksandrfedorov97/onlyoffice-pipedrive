@@ -96,6 +96,10 @@ export const OnlyofficeEditorPage: React.FC = () => {
                 callbackUrl: data.editorConfig.callbackUrl,
                 user: data.editorConfig.user,
                 lang: data.editorConfig.lang,
+                customization: {
+                  hideRightMenu: data.editorConfig.customization.hideRightMenu,
+                  plugins: data.editorConfig.customization.plugins,
+                },
               },
               token: data.token,
               type: data.type,

@@ -149,10 +149,10 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			),
 			Customization: response.Customization{
 				Goback: response.Goback{
-					RequestClose: true,
+					RequestClose: false,
 				},
 				Plugins:       false,
-				HideRightMenu: true,
+				HideRightMenu: false,
 			},
 			Lang: usr.Language.Lang,
 		},

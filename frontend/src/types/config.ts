@@ -31,6 +31,8 @@ type Goback = {
 
 type Customization = {
   goback: Goback;
+  hideRightMenu: boolean;
+  plugins: boolean;
 };
 
 type EditorConfig = {
