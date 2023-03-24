@@ -377,7 +377,7 @@ func (c apiController) BuildGetFile() http.HandlerFunc {
 		go func() {
 			defer wg.Done()
 			var tkn interface{}
-			if err := c.jwtManager.Verify(docs.DocSecret, strings.ReplaceAll(r.Header.Get(docs.DocHeader), "Bearer ", "a"), &tkn); err != nil {
+			if err := c.jwtManager.Verify(docs.DocSecret, strings.ReplaceAll(r.Header.Get(docs.DocHeader), "Bearer ", ""), &tkn); err != nil {
 				c.logger.Errorf("could not verify docs header: %s", err.Error())
 				errChan <- err
 				return
