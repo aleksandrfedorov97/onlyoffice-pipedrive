@@ -47,6 +47,4 @@ export type ConfigResponse = {
   type: string;
   token: string;
   server_url: string;
-  is_session?: boolean;
-  is_owner?: boolean;
 };

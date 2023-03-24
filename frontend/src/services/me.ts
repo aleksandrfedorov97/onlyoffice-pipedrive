@@ -10,6 +10,7 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
   axiosRetry(client, {
     retries: 2,
     retryCondition: (error) => error.status !== 200,
+    retryDelay: (count) => count * 50,
   });
   const res = await client<UserResponse>({
     method: "GET",

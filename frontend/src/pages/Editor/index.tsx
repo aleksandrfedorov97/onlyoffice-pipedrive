@@ -96,12 +96,6 @@ export const OnlyofficeEditorPage: React.FC = () => {
                 callbackUrl: data.editorConfig.callbackUrl,
                 user: data.editorConfig.user,
                 lang: data.editorConfig.lang,
-                customization: {
-                  goback: {
-                    requestClose: true,
-                    text: "Close",
-                  },
-                },
               },
               token: data.token,
               type: data.type,

@@ -65,7 +65,6 @@ const LazyRoutes: React.FC = () => {
           </React.Suspense>
         }
       />
-      <Route path="/bruh" element={<div>ASD</div>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
