@@ -10,7 +10,7 @@ export function useBuildConfig(
   dealID: string
 ) {
   const { isLoading, error, data } = useQuery({
-    queryKey: ["config", id],
+    queryKey: ["config", id, key],
     queryFn: ({ signal }) => fetchConfig(token, id, name, key, dealID, signal),
     staleTime: 0,
     cacheTime: 0,
