@@ -50,6 +50,13 @@ export const Creation: React.FC = () => {
             <OnlyofficeInput
               text={t("creation.inputs.title", "Title")}
               labelSize="sm"
+              valid={file.length <= 190}
+              errorText={
+                t(
+                  "creation.inputs.error",
+                  "File name length should be less than 190 characters"
+                ) || "File name length should be less than 190 characters"
+              }
               value={file}
               onChange={(e) => setFile(e.target.value)}
             />
@@ -97,6 +104,7 @@ export const Creation: React.FC = () => {
           </div>
           <div className="mx-5">
             <OnlyofficeButton
+              disabled={file.length > 190}
               text={t("button.create", "Create document")}
               primary
               Icon={<Redirect />}

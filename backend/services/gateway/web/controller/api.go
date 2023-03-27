@@ -292,6 +292,12 @@ func (c apiController) BuildGetConfig() http.HandlerFunc {
 			return
 		}
 
+		if len(filename) > 200 {
+			rw.WriteHeader(http.StatusBadRequest)
+			c.logger.Error("file length is greater than 200")
+			return
+		}
+
 		if key == "" {
 			rw.WriteHeader(http.StatusBadRequest)
 			c.logger.Error("could not extract doc key from URL Query")
