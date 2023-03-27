@@ -33,6 +33,7 @@
     "background.error.subtitle": "Could not fetch plugin settings. Something went wrong. Please reload the pipedrive window",
     "background.access.title": "Access denied",
     "background.access.subtitle": "Something went wrong or access denied",
+    "background.reinstall.title": "The document security token has expired",
     "background.reinstall.subtitle": "Something went wrong. Please reload or reinstall the app.",
     "document.new": "New Document",
     "button.upload": "Create or upload document",

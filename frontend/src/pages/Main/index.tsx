@@ -8,7 +8,7 @@ import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
 
 import { AuthToken } from "@context/TokenContext";
 
-import BackgroundError from "@assets/background-error.svg";
+import TokenError from "@assets/token-error.svg";
 
 import { Main } from "./Main";
 
@@ -27,8 +27,11 @@ export const MainPage: React.FC = () => {
       )}
       {loadingError && (
         <OnlyofficeBackgroundError
-          Icon={<BackgroundError />}
-          title={t("background.error.title", "Error")}
+          Icon={<TokenError className="mb-5" />}
+          title={t(
+            "background.reinstall.title",
+            "The document security token has expired"
+          )}
           subtitle={t(
             "background.reinstall.subtitle",
             "Something went wrong. Please reload or reinstall the app."
