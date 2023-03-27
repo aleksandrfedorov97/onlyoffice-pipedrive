@@ -8,6 +8,8 @@ import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
 
 import { AuthToken } from "@context/TokenContext";
 
+import BackgroundError from "@assets/background-error.svg";
+
 import { Main } from "./Main";
 
 export const MainPage: React.FC = () => {
@@ -25,6 +27,7 @@ export const MainPage: React.FC = () => {
       )}
       {loadingError && (
         <OnlyofficeBackgroundError
+          Icon={<BackgroundError />}
           title={t("background.error.title", "Error")}
           subtitle={t(
             "background.reinstall.subtitle",

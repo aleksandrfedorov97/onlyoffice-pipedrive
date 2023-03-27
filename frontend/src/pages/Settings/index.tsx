@@ -14,6 +14,8 @@ import { getPipedriveMe } from "@services/me";
 
 import { AuthToken } from "@context/TokenContext";
 
+import SettingsError from "@assets/settings-error.svg";
+
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
@@ -100,6 +102,7 @@ export const SettingsPage: React.FC = () => {
       )}
       {!loading && error && (
         <OnlyofficeBackgroundError
+          Icon={<SettingsError />}
           title={t("background.error.title", "Error")}
           subtitle={t(
             "background.error.subtitle",
@@ -111,6 +114,7 @@ export const SettingsPage: React.FC = () => {
       )}
       {!loading && !error && !admin && (
         <OnlyofficeBackgroundError
+          Icon={<SettingsError />}
           title={t("background.access.title", "Access Denied")}
           subtitle={t(
             "background.access.subtitle",
