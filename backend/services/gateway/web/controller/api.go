@@ -72,10 +72,12 @@ func (c *apiController) BuildGetMe() http.HandlerFunc {
 			microErr := response.MicroError{}
 			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
 				rw.WriteHeader(http.StatusUnauthorized)
+				c.logger.Errorf("could not get me info: %s", err.Error())
 				return
 			}
 
 			rw.WriteHeader(microErr.Code)
+			c.logger.Errorf("could not get me info: %s", microErr.Detail)
 			return
 		}
 
