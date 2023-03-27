@@ -1,4 +1,6 @@
 {
+    "banner.title": "ONLYOFFICE Docs Cloud",
+    "banner.subtitle": "Easily launch the editors in the cloud without downloading and installation",
     "files.error.nofiles": "Could not find Pipedrive documents",
     "files.info.workspace": "Workspace",
     "files.info.type": "Type",
@@ -40,5 +42,6 @@
     "button.close": "Close",
     "button.create": "Create document",
     "button.creation.create": "Create",
-    "button.creation.upload": "Upload"
+    "button.creation.upload": "Upload",
+    "button.getnow": "Get Now"
 }

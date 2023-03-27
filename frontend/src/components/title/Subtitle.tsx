@@ -4,14 +4,17 @@ import cx from "classnames";
 type SubtitleProps = {
   text: string;
   large?: boolean;
+  center?: boolean;
 };
 
 export const OnlyofficeSubtitle: React.FC<SubtitleProps> = ({
   text,
   large = false,
+  center = true,
 }) => {
   const style = cx({
-    "text-slate-700 font-normal text-center": !!text,
+    "text-slate-700 font-normal": !!text,
+    "text-center": center,
     "text-sm": !large,
     "text-base": large,
   });

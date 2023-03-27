@@ -8,6 +8,7 @@ import { OnlyofficeInput } from "@components/input";
 import { OnlyofficeTitle } from "@components/title";
 import { OnlyofficeSpinner } from "@components/spinner";
 import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
+import { Banner } from "@layouts/Banner";
 
 import { postSettings, getSettings } from "@services/settings";
 import { getPipedriveMe } from "@services/me";
@@ -94,7 +95,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen">
+    <div className="w-screen h-screen overflow-hidden">
       {loading && !error && (
         <div className="h-full w-full flex justify-center items-center">
           <OnlyofficeSpinner />
@@ -126,7 +127,7 @@ export const SettingsPage: React.FC = () => {
       )}
       {!loading && !error && admin && (
         <>
-          <div className="flex flex-col items-start pl-5 pr-5 pt-12 pb-7">
+          <div className="flex flex-col items-start pl-5 pr-5 pt-8 pb-5">
             <div className="pb-2">
               <OnlyofficeTitle
                 text={t("settings.title", "Configure ONLYOFFICE app settings")}
@@ -145,7 +146,7 @@ export const SettingsPage: React.FC = () => {
             </p>
           </div>
           <div className="max-w-[320px]">
-            <div className="pl-5 pr-5 pb-5">
+            <div className="pl-5 pr-5 pb-3">
               <OnlyofficeInput
                 text={t("settings.inputs.address", "Document Server Address")}
                 valid={!!address}
@@ -154,7 +155,7 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => setAddress(e.target.value)}
               />
             </div>
-            <div className="pl-5 pr-5 pb-5">
+            <div className="pl-5 pr-5 pb-3">
               <OnlyofficeInput
                 text={t("settings.inputs.secret", "Document Server Secret")}
                 valid={!!secret}
@@ -164,7 +165,7 @@ export const SettingsPage: React.FC = () => {
                 type="password"
               />
             </div>
-            <div className="pl-5 pr-5">
+            <div className="pl-5 pr-3">
               <OnlyofficeInput
                 text={t("settings.inputs.header", "Document Server Header")}
                 valid={!!header}
@@ -180,6 +181,9 @@ export const SettingsPage: React.FC = () => {
                 disabled={saving}
                 onClick={handleSettings}
               />
+            </div>
+            <div className="ml-5 w-[568px]">
+              <Banner />
             </div>
           </div>
         </>
