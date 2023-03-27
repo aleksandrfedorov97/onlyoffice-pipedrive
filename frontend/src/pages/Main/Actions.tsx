@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { useDeleteFile } from "@hooks/useDeleteFile";
 
-import { isFileSupported } from "@utils/file";
+import { getFileParts, isFileSupported } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
 import { File } from "src/types/file";
@@ -56,12 +56,13 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   const handleEditor = async () => {
     const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
     if (token) {
+      const [name, ext] = getFileParts(file.name);
       window.open(
         `/editor?token=${token.token}&deal_id=${
           parameters.get("selectedIds") || "1"
-        }&id=${file.id}&name=${file.name}&key=${md5(
-          file.id + file.update_time
-        )}`
+        }&id=${file.id}&name=${`${encodeURIComponent(
+          name.substring(0, 190)
+        )}.${ext}`}&key=${md5(file.id + file.update_time)}`
       );
     }
   };

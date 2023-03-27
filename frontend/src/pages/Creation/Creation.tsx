@@ -10,7 +10,7 @@ import { OnlyofficeTitle } from "@components/title";
 
 import { uploadFile } from "@services/file";
 
-import { getFileIcon, getMimeType } from "@utils/file";
+import { getFileParts, getFileIcon, getMimeType } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
 import Redirect from "@assets/redirect.svg";
@@ -114,12 +114,13 @@ export const Creation: React.FC = () => {
                     parameters.get("selectedIds") || "",
                     binary
                   );
+                  const [name, ext] = getFileParts(res.data.name);
                   window.open(
                     `/editor?token=${token.token}&id=${res.data.id}&deal_id=${
                       res.data.deal_id
-                    }&name=${res.data.name}&key=${md5(
-                      res.data.id + res.data.update_time
-                    )}`
+                    }&name=${`${encodeURIComponent(
+                      name.substring(0, 190)
+                    )}.${ext}`}&key=${md5(res.data.id + res.data.update_time)}`
                   );
                 } catch {
                   await sdk?.execute(Command.SHOW_SNACKBAR, {

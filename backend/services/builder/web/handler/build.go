@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -145,7 +146,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			},
 			CallbackURL: fmt.Sprintf(
 				"%s/callback?cid=%d&did=%s&fid=%s&filename=%s",
-				c.gatewayURL, usr.CompanyID, req.Deal, req.FileID, req.Filename,
+				c.gatewayURL, usr.CompanyID, req.Deal, req.FileID, url.QueryEscape(req.Filename),
 			),
 			Customization: response.Customization{
 				Goback: response.Goback{

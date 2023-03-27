@@ -60,12 +60,12 @@ func (c callbackWorker) UploadFile(ctx context.Context, payload []byte) error {
 	c.logger.Debugf("got a new file %s upload job (%s)", msg.Filename, msg.UID)
 
 	var wg sync.WaitGroup
+	wg.Add(2)
 	userChan := make(chan response.UserResponse, 1)
 	sizeChan := make(chan int64, 1)
 	errChan := make(chan error, 2)
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		c.logger.Debugf("trying to get an access token")
@@ -84,7 +84,6 @@ func (c callbackWorker) UploadFile(ctx context.Context, payload []byte) error {
 	}()
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		headResp, err := otelhttp.Head(tctx, msg.Url)
