@@ -31,7 +31,7 @@ export const OnlyofficeButton: React.FC<ButtonProps> = ({
     <button
       type="button"
       disabled={disabled}
-      className={`flex justify-center items-center p-3 text-sm lg:text-base font-semibold font-inter rounded-md cursor-pointer ${classes} truncate text-ellipsis`}
+      className={`flex justify-center items-center p-3 text-sm lg:text-base font-bold rounded-md cursor-pointer ${classes} truncate text-ellipsis`}
       onClick={onClick}
     >
       {text}

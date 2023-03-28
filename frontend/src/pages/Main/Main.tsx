@@ -132,10 +132,9 @@ export const Main: React.FC = () => {
           </div>
         )}
       </div>
-      <div className="h-[15%] w-3/4 text-ellipsis flex justify-center items-center px-5">
+      <div className="h-[15%] w-3/4 text-ellipsis flex justify-start items-center px-5">
         <OnlyofficeButton
           text={t("button.upload", "Create or upload document")}
-          fullWidth
           primary
           onClick={async () => {
             await sdk?.execute(Command.OPEN_MODAL, {
