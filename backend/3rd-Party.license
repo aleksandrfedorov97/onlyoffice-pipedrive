@@ -1,4 +1,4 @@
-ONLYOFFICE Applications example uses code from the following 3rd party projects:
+ONLYOFFICE Pipedrive uses code from the following 3rd party projects:
 
 gin           - Gin is a web framework written in Go. It features a martini-like API with performance that is up to 40 times faster thanks to httprouter. (https://github.com/gin-gonic/gin/blob/master/LICENSE)
 License:        MIT
