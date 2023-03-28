@@ -127,7 +127,7 @@ export const SettingsPage: React.FC = () => {
       )}
       {!loading && !error && admin && (
         <>
-          <div className="flex flex-col items-start pl-5 pr-5 pt-8 pb-5">
+          <div className="flex flex-col items-start pl-5 pr-5 pt-5 pb-3">
             <div className="pb-2">
               <OnlyofficeTitle
                 text={t("settings.title", "Configure ONLYOFFICE app settings")}
@@ -146,7 +146,7 @@ export const SettingsPage: React.FC = () => {
             </p>
           </div>
           <div className="max-w-[320px]">
-            <div className="pl-5 pr-5 pb-3">
+            <div className="pl-5 pr-5 pb-2">
               <OnlyofficeInput
                 text={t("settings.inputs.address", "Document Server Address")}
                 valid={!!address}
@@ -155,7 +155,7 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => setAddress(e.target.value)}
               />
             </div>
-            <div className="pl-5 pr-5 pb-3">
+            <div className="pl-5 pr-5 pb-2">
               <OnlyofficeInput
                 text={t("settings.inputs.secret", "Document Server Secret")}
                 valid={!!secret}
@@ -165,7 +165,7 @@ export const SettingsPage: React.FC = () => {
                 type="password"
               />
             </div>
-            <div className="pl-5 pr-3">
+            <div className="pl-5 pr-2">
               <OnlyofficeInput
                 text={t("settings.inputs.header", "Document Server Header")}
                 valid={!!header}
@@ -174,7 +174,7 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => setHeader(e.target.value)}
               />
             </div>
-            <div className="flex justify-start items-center mt-8 ml-5">
+            <div className="flex justify-start items-center mt-4 ml-5">
               <OnlyofficeButton
                 text={t("button.save", "Save")}
                 primary
@@ -182,7 +182,7 @@ export const SettingsPage: React.FC = () => {
                 onClick={handleSettings}
               />
             </div>
-            <div className="ml-5 w-[568px]">
+            <div className="absolute bottom-0 ml-5 w-[568px]">
               <Banner />
             </div>
           </div>
