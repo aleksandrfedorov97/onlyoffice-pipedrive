@@ -17,7 +17,6 @@ import (
 )
 
 var _ErrInvalidCompanyID error = errors.New("invalid cid format")
-var _ErrUserAlreadyExists error = errors.New("user already exists")
 
 type docSettingsCollection struct {
 	mgm.DefaultModel `bson:",inline"`

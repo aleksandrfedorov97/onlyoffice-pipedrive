@@ -55,12 +55,12 @@ func NewConfigHandler(
 func (c ConfigHandler) processConfig(user response.UserResponse, req request.BuildConfigRequest, ctx context.Context) (response.BuildConfigResponse, error) {
 	var config response.BuildConfigResponse
 	var wg sync.WaitGroup
+	wg.Add(2)
 	usrChan := make(chan model.User, 1)
 	settingsChan := make(chan response.DocSettingsResponse, 1)
 	errorsChan := make(chan error, 2)
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		u, err := c.apiClient.GetMe(ctx, model.Token{
 			AccessToken:  user.AccessToken,
@@ -82,7 +82,6 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 	}()
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		var docs response.DocSettingsResponse
 		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:settings", c.namespace), "SettingsSelectHandler.GetSettings", fmt.Sprint(req.CID)), &docs); err != nil {
@@ -91,7 +90,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			return
 		}
 
-		if docs.DocAddress == "" || docs.DocSecret == "" {
+		if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
 			c.logger.Debugf("no settings found")
 			errorsChan <- _ErrNoSettingsFound
 			return
