@@ -33,7 +33,7 @@ export const OnlyofficeInput: React.FC<InputProps> = ({
     "font-normal text-sm text-gray-700 appearance-none block select-auto": true,
     "text-xs": textSize === "xs",
     "w-full border rounded-sm h-10 px-4": true,
-    "border-gray-light bg-slate-100": valid,
+    "border-gray-light": valid,
     "border-red-600": !valid,
     "bg-slate-200": disabled,
   });
