@@ -39,14 +39,14 @@ export const Creation: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-full">
-      <div className="h-[calc(100%-3rem)] overflow-hidden">
+    <div className="h-full w-full">
+      <div className="h-[calc(100%-3rem)] w-full overflow-hidden">
         <div className="px-5 flex flex-col justify-center items-start h-full">
           <OnlyofficeTitle
             text={t("creation.title", "Create with ONLYOFFICE")}
             large
           />
-          <div className="pt-4 w-[330px]">
+          <div className="w-full pt-4">
             <OnlyofficeInput
               text={t("creation.inputs.title", "Title")}
               labelSize="sm"
@@ -61,8 +61,8 @@ export const Creation: React.FC = () => {
               onChange={(e) => setFile(e.target.value)}
             />
           </div>
-          <div className="flex justify-center items-center pt-10">
-            <div>
+          <div className="w-full flex pt-5">
+            <div className="grow">
               <OnlyofficeTile
                 Icon={getFileIcon("sample.docx")}
                 text={t("creation.tiles.doc", "Document")}
@@ -71,7 +71,7 @@ export const Creation: React.FC = () => {
                 selected={fileType === "docx"}
               />
             </div>
-            <div className="px-1">
+            <div className="grow px-5">
               <OnlyofficeTile
                 Icon={getFileIcon("sample.xlsx")}
                 text={t("creation.tiles.spreadsheet", "Spreadsheet")}
@@ -80,7 +80,7 @@ export const Creation: React.FC = () => {
                 selected={fileType === "xlsx"}
               />
             </div>
-            <div>
+            <div className="grow">
               <OnlyofficeTile
                 Icon={getFileIcon("sample.pptx")}
                 text={t("creation.tiles.presentation", "Presentation")}

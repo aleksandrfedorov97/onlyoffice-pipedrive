@@ -19,7 +19,7 @@ export const CreatePage: React.FC = () => {
   });
 
   return (
-    <div className="relative w-[622px] h-[500px] flex flex-col overflow-hidden">
+    <div className="relative w-full h-full flex flex-col overflow-hidden">
       <Tabs
         className="flex justify-center items-start flex-col h-screen"
         onSelect={(index) => setSelected(index)}
