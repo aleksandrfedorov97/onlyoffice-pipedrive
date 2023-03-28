@@ -39,12 +39,12 @@ func (s userService) CreateUser(ctx context.Context, user domain.UserAccess) err
 	}
 
 	var wg sync.WaitGroup
+	wg.Add(2)
 	errChan := make(chan error, 2)
 	atokenChan := make(chan string, 1)
 	rtokenChan := make(chan string, 1)
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		aToken, err := s.encryptor.Encrypt(user.AccessToken)
 		if err != nil {
@@ -55,7 +55,6 @@ func (s userService) CreateUser(ctx context.Context, user domain.UserAccess) err
 	}()
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		rToken, err := s.encryptor.Encrypt(user.RefreshToken)
 		if err != nil {
@@ -103,6 +102,7 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 	}
 
 	var wg sync.WaitGroup
+	wg.Add(2)
 	errChan := make(chan error, 2)
 	atokenChan := make(chan string, 1)
 	rtokenChan := make(chan string, 1)
@@ -115,7 +115,6 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 	s.logger.Debugf("found a user: %v", user)
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		aToken, err := s.encryptor.Decrypt(user.AccessToken)
 		if err != nil {
@@ -126,7 +125,6 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 	}()
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		rToken, err := s.encryptor.Decrypt(user.RefreshToken)
 		if err != nil {
@@ -163,12 +161,12 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 	}
 
 	var wg sync.WaitGroup
+	wg.Add(2)
 	errChan := make(chan error, 2)
 	atokenChan := make(chan string, 1)
 	rtokenChan := make(chan string, 1)
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		aToken, err := s.encryptor.Encrypt(user.AccessToken)
 		if err != nil {
@@ -179,7 +177,6 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 	}()
 
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		rToken, err := s.encryptor.Encrypt(user.RefreshToken)
 		if err != nil {
