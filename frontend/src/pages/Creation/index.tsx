@@ -30,17 +30,23 @@ export const CreatePage: React.FC = () => {
         >
           <Tab
             id="create-file"
-            className={`mx-5 outline-none hover:cursor-pointer ${
-              selected === 0 ? "text-sky-500" : "text-gray-400"
+            className={`flex justify-center items-center text-sm font-inter outline-none hover:cursor-pointer min-h-[40px] ${
+              selected === 0
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-500"
             }`}
+            style={{ margin: "0 0 0 1em", padding: "1em" }}
           >
             {t("button.creation.create", "Create")}
           </Tab>
           <Tab
             id="upload-file"
-            className={`mx-5 outline-none hover:cursor-pointer ${
-              selected === 1 ? "text-sky-500" : "text-gray-400"
+            className={`flex justify-center items-center text-sm font-inter outline-none hover:cursor-pointer min-h-[40px] ${
+              selected === 1
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-slate-500"
             }`}
+            style={{ margin: "0 0 0 1em", padding: "1em" }}
           >
             {t("button.creation.upload", "Upload")}
           </Tab>
