@@ -4,8 +4,6 @@ import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeSubtitle } from "@components/title";
 import { OnlyofficeError } from "@components/error/Error";
 
-import BackgroundError from "@assets/background-error.svg";
-
 type ErrorProps = {
   Icon: any;
   title: string;
