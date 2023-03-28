@@ -43,6 +43,7 @@ export const deleteFile = async (
       Authorization: `Bearer ${AuthToken.access_token}`,
     },
     signal,
+    timeout: 4500,
   });
 
   return res.status === 200;

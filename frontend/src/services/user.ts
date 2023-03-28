@@ -14,6 +14,7 @@ export const fetchUsers = async (
       Authorization: `Bearer ${AuthToken.access_token}`,
     },
     signal,
+    timeout: 4000,
   });
 
   return {

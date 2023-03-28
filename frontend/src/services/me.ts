@@ -19,6 +19,7 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
       "Content-Type": "application/json",
       "X-Pipedrive-App-Context": pctx.token,
     },
+    timeout: 5000,
   });
 
   return { response: res.data };
@@ -32,6 +33,7 @@ export const getPipedriveMe = async (url: string) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${AuthToken.access_token}`,
     },
+    timeout: 5000,
   });
   return res.data;
 };
