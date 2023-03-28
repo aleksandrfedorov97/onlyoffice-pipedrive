@@ -28,12 +28,7 @@ export const Creation: React.FC = () => {
 
   useEffect(() => {
     new AppExtensionsSDK()
-      .initialize({
-        size: {
-          height: 500,
-          width: 600,
-        },
-      })
+      .initialize()
       .then((s) => setSDK(s))
       .catch(() => setSDK(null));
   }, []);
