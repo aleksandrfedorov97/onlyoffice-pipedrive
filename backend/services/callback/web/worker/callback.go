@@ -141,7 +141,7 @@ func (c callbackWorker) UploadFile(ctx context.Context, payload []byte) error {
 		Scope:        ures.Scope,
 		ApiDomain:    ures.ApiDomain,
 	}); err != nil {
-		c.logger.Debugf("could not upload an onlyoffice file to zoom: %s", err.Error())
+		c.logger.Debugf("could not upload an onlyoffice file to pipedrive: %s", err.Error())
 		return err
 	}
 

@@ -31,5 +31,5 @@ type UnexpectedStatusCodeError struct {
 }
 
 func (e *UnexpectedStatusCodeError) Error() string {
-	return fmt.Sprintf("could not perform zoom %s action. Status code: %d", e.Action, e.Code)
+	return fmt.Sprintf("could not perform pipedrive %s action. Status code: %d", e.Action, e.Code)
 }

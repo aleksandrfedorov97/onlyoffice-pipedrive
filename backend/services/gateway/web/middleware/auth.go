@@ -31,7 +31,7 @@ func BuildHandleAuthMiddleware(
 	clientID, clientSecret string,
 	logger log.Logger,
 ) func(next http.Handler) http.HandlerFunc {
-	logger.Debugf("zoom event middleware has been built with client_id %s and client_secret %s", clientID, clientSecret)
+	logger.Debugf("pipedrive event middleware has been built with client_id %s and client_secret %s", clientID, clientSecret)
 	return func(next http.Handler) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			signature := strings.ReplaceAll(r.Header.Get("Authorization"), "Basic ", "")
