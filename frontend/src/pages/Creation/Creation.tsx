@@ -35,13 +35,14 @@ import Redirect from "@assets/redirect.svg";
 
 export const Creation: React.FC = () => {
   const { t } = useTranslation();
+  const [creating, setCreating] = useState(false);
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const [file, setFile] = useState(
     t("document.new", "New Document") || "New Document"
   );
   const [fileType, setFileType] = useState<"docx" | "pptx" | "xlsx">("docx");
   const handleChangeFile = (newType: "docx" | "pptx" | "xlsx") => {
-    setFileType(newType);
+    if (!creating) setFileType(newType);
   };
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export const Creation: React.FC = () => {
               }
               value={file}
               onChange={(e) => setFile(e.target.value)}
+              disabled={creating}
             />
           </div>
           <div className="w-full flex pt-5">
@@ -113,15 +115,17 @@ export const Creation: React.FC = () => {
               onClick={async () => {
                 await sdk?.execute(Command.CLOSE_MODAL);
               }}
+              disabled={creating}
             />
           </div>
           <div className="mx-5">
             <OnlyofficeButton
-              disabled={file.length > 190}
+              disabled={file.length > 190 || creating}
               text={t("button.create", "Create document")}
               primary
               Icon={<Redirect />}
               onClick={async () => {
+                setCreating(true);
                 const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
                 if (!token) return;
                 const { parameters } = getCurrentURL();
@@ -157,6 +161,8 @@ export const Creation: React.FC = () => {
                   await sdk?.execute(Command.SHOW_SNACKBAR, {
                     message: t("creation.error", "Could not create a new file"),
                   });
+                } finally {
+                  setCreating(false);
                 }
               }}
             />
