@@ -1,0 +1,4 @@
+[submodule "backend/services/gateway/embed/assets"]
+	path = backend/services/gateway/embed/assets
+	url = https://github.com/ONLYOFFICE/document-templates.git
+	branch = main/new

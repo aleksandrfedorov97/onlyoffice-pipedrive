@@ -98,7 +98,8 @@ func (s *PipedriveHTTPService) InitializeRoutes() {
 	tokenMiddleware := middleware.BuildHandleContextMiddleware(s.clientSecret, jwtManager, s.logger)
 
 	authController := controller.NewAuthController(s.namespace, s.redirectURI, s.client, pclient.NewPipedriveAuthClient(s.clientID, s.clientSecret), s.logger)
-	apiController := controller.NewApiController(s.namespace, s.client, jwtManager, s.allowedDownloads, s.logger)
+	apiController := controller.NewApiController(s.namespace, s.client, jwtManager, s.logger)
+	fileController := controller.NewFileController(s.namespace, s.allowedDownloads, s.client, jwtManager, s.logger)
 
 	s.mux.Group(func(r chi.Router) {
 		r.Use(chimiddleware.Recoverer)
@@ -122,6 +123,9 @@ func (s *PipedriveHTTPService) InitializeRoutes() {
 			cr.Get("/settings", apiController.BuildGetSettings())
 		})
 
-		r.Get("/download", apiController.BuildGetFile())
+		r.Route("/files", func(fr chi.Router) {
+			fr.Get("/download", fileController.BuildDownloadFile())
+			fr.Get("/create", fileController.BuildGetFile())
+		})
 	})
 }

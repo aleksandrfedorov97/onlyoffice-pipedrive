@@ -154,7 +154,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		Document: response.Document{
 			Key:   req.DocKey,
 			Title: req.Filename,
-			URL:   fmt.Sprintf("%s/download?cid=%d&fid=%s&token=%s", c.gatewayURL, usr.CompanyID, req.FileID, tkn),
+			URL:   fmt.Sprintf("%s/files/download?cid=%d&fid=%s&token=%s", c.gatewayURL, usr.CompanyID, req.FileID, tkn),
 		},
 		EditorConfig: response.EditorConfig{
 			User: response.User{

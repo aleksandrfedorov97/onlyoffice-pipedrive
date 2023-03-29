@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -38,32 +37,29 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
-	"golang.org/x/sync/semaphore"
 )
 
 var _ErrNotAdmin = errors.New("no admin access")
 
 type apiController struct {
-	namespace        string
-	client           client.Client
-	apiClient        pclient.PipedriveApiClient
-	commandClient    pclient.CommandClient
-	jwtManager       crypto.JwtManager
-	logger           log.Logger
-	allowedDownloads int
+	namespace     string
+	client        client.Client
+	apiClient     pclient.PipedriveApiClient
+	commandClient pclient.CommandClient
+	jwtManager    crypto.JwtManager
+	logger        log.Logger
 }
 
 func NewApiController(
 	namespace string, client client.Client,
-	jwtManager crypto.JwtManager, allowedDownloads int, logger log.Logger) apiController {
+	jwtManager crypto.JwtManager, logger log.Logger) apiController {
 	return apiController{
-		namespace:        namespace,
-		client:           client,
-		apiClient:        pclient.NewPipedriveApiClient(),
-		commandClient:    pclient.NewCommandClient(jwtManager),
-		jwtManager:       jwtManager,
-		logger:           logger,
-		allowedDownloads: allowedDownloads,
+		namespace:     namespace,
+		client:        client,
+		apiClient:     pclient.NewPipedriveApiClient(),
+		commandClient: pclient.NewCommandClient(jwtManager),
+		jwtManager:    jwtManager,
+		logger:        logger,
 	}
 }
 
@@ -356,100 +352,5 @@ func (c apiController) BuildGetConfig() http.HandlerFunc {
 
 		rw.WriteHeader(http.StatusOK)
 		rw.Write(resp.ToJSON())
-	}
-}
-
-func (c apiController) BuildGetFile() http.HandlerFunc {
-	sem := semaphore.NewWeighted(int64(c.allowedDownloads))
-	return func(rw http.ResponseWriter, r *http.Request) {
-		if ok := sem.TryAcquire(1); !ok {
-			c.logger.Warn("too many download requests")
-			rw.WriteHeader(http.StatusTooManyRequests)
-			return
-		}
-
-		defer sem.Release(1)
-
-		fid, cid, token := strings.TrimSpace(r.URL.Query().Get("fid")),
-			strings.TrimSpace(r.URL.Query().Get("cid")), strings.TrimSpace(r.URL.Query().Get("token"))
-
-		var pctx request.PipedriveTokenContext
-		if token == "" {
-			c.logger.Errorf("unauthorized access to an api endpoint")
-			rw.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		var docs response.DocSettingsResponse
-		if err := c.client.Call(r.Context(), c.client.NewRequest(fmt.Sprintf("%s:settings", c.namespace), "SettingsSelectHandler.GetSettings", cid), &docs); err != nil {
-			c.logger.Debugf("could not document server settings: %s", err.Error())
-			rw.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		var wg sync.WaitGroup
-		wg.Add(2)
-		errChan := make(chan error, 2)
-
-		go func() {
-			defer wg.Done()
-			if err := c.jwtManager.Verify(docs.DocSecret, token, &pctx); err != nil {
-				c.logger.Errorf("could not verify X-Pipedrive-App-Context: %s", err.Error())
-				errChan <- err
-				return
-			}
-		}()
-
-		go func() {
-			defer wg.Done()
-			var tkn interface{}
-			if err := c.jwtManager.Verify(docs.DocSecret, strings.ReplaceAll(r.Header.Get(docs.DocHeader), "Bearer ", ""), &tkn); err != nil {
-				c.logger.Errorf("could not verify docs header: %s", err.Error())
-				errChan <- err
-				return
-			}
-		}()
-
-		wg.Wait()
-
-		select {
-		case <-errChan:
-			rw.WriteHeader(http.StatusForbidden)
-			return
-		default:
-		}
-
-		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
-		defer cancel()
-
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				rw.WriteHeader(http.StatusRequestTimeout)
-				return
-			}
-
-			microErr := response.MicroError{}
-			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-				rw.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			rw.WriteHeader(microErr.Code)
-			return
-		}
-
-		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/files/%s/download", ures.ApiDomain, fid), nil)
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", ures.AccessToken))
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		defer resp.Body.Close()
-		io.Copy(rw, resp.Body)
 	}
 }
