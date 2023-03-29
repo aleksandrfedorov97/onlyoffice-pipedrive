@@ -29,6 +29,7 @@ import (
 
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/go-resty/resty/v2"
 	"github.com/mitchellh/mapstructure"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -174,4 +175,24 @@ func (p *PipedriveApiClient) UploadFile(ctx context.Context, url, deal, fileID, 
 	}
 
 	return nil
+}
+
+func (p *PipedriveApiClient) CreateFile(ctx context.Context, deal, filename string, file io.ReadCloser, token model.Token) (response.AddFileResponse, error) {
+	var body response.AddFileResponse
+
+	_, err := p.client.R().
+		SetResult(&body).
+		SetContext(ctx).
+		SetAuthToken(token.AccessToken).
+		SetFileReader("file", filename, file).
+		SetFormData(map[string]string{
+			"deal_id": deal,
+		}).
+		Post(fmt.Sprintf("%s/api/v1/files", token.ApiDomain))
+
+	if err != nil {
+		return body, err
+	}
+
+	return body, nil
 }

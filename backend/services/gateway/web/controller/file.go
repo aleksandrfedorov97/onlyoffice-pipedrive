@@ -13,6 +13,8 @@ import (
 
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/gateway/assets"
+	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
@@ -24,6 +26,7 @@ type fileController struct {
 	namespace        string
 	allowedDownloads int
 	client           client.Client
+	apiClient        pclient.PipedriveApiClient
 	jwtManager       crypto.JwtManager
 	logger           log.Logger
 }
@@ -34,6 +37,7 @@ func NewFileController(
 	return fileController{
 		namespace:        namespace,
 		client:           client,
+		apiClient:        pclient.NewPipedriveApiClient(),
 		jwtManager:       jwtManager,
 		logger:           logger,
 		allowedDownloads: allowedDownloads,
@@ -42,17 +46,41 @@ func NewFileController(
 
 func (c fileController) BuildGetFile() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		lang, fileType := strings.TrimSpace(r.URL.Query().Get("lang")),
-			strings.TrimSpace(r.URL.Query().Get("type"))
-		if lang == "" {
+		query := r.URL.Query()
+		lang, fileType, dealID, filename := strings.TrimSpace(query.Get("lang")),
+			strings.TrimSpace(query.Get("type")), strings.TrimSpace(query.Get("deal")),
+			strings.TrimSpace(query.Get("filename"))
+		if lang == "" || fileType == "" || dealID == "" || filename == "" {
 			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		_, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
+		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+		defer cancel()
+		var ures response.UserResponse
+		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
+			c.logger.Errorf("could not get user access info: %s", err.Error())
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				rw.WriteHeader(http.StatusRequestTimeout)
+				return
+			}
+
+			microErr := response.MicroError{}
+			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
+				rw.WriteHeader(http.StatusUnauthorized)
+				c.logger.Errorf("could not get me info: %s", err.Error())
+				return
+			}
+
+			rw.WriteHeader(microErr.Code)
+			c.logger.Errorf("could not get me info: %s", microErr.Detail)
 			return
 		}
 
@@ -65,11 +93,39 @@ func (c fileController) BuildGetFile() http.HandlerFunc {
 				c.logger.Errorf("could not get a new file: %s", err.Error())
 				return
 			}
-			io.Copy(rw, file)
+			res, ferr := c.apiClient.CreateFile(ctx, dealID, filename, file, model.Token{
+				AccessToken:  ures.AccessToken,
+				RefreshToken: ures.AccessToken,
+				TokenType:    ures.TokenType,
+				Scope:        ures.Scope,
+				ApiDomain:    ures.ApiDomain,
+			})
+
+			if ferr != nil {
+				rw.WriteHeader(http.StatusBadRequest)
+				c.logger.Errorf("could not upload a pipedrive file: %s", ferr.Error())
+				return
+			}
+
+			rw.Write(res.ToJSON())
 			return
 		}
 
-		io.Copy(rw, file)
+		res, ferr := c.apiClient.CreateFile(ctx, dealID, filename, file, model.Token{
+			AccessToken:  ures.AccessToken,
+			RefreshToken: ures.AccessToken,
+			TokenType:    ures.TokenType,
+			Scope:        ures.Scope,
+			ApiDomain:    ures.ApiDomain,
+		})
+
+		if ferr != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			c.logger.Errorf("could not upload a pipedrive file: %s", ferr.Error())
+			return
+		}
+
+		rw.Write(res.ToJSON())
 	}
 }
 

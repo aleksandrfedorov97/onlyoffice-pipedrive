@@ -17,18 +17,18 @@
  */
 
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeInput } from "@components/input";
 import { OnlyofficeTile } from "@components/tile";
 import { OnlyofficeTitle } from "@components/title";
 
-import { uploadFile } from "@services/file";
-
-import { getFileParts, getFileIcon, getMimeType } from "@utils/file";
+import { getFileIcon } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
 import Redirect from "@assets/redirect.svg";
@@ -124,24 +124,31 @@ export const Creation: React.FC = () => {
               onClick={async () => {
                 const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
                 if (!token) return;
-                const { url, parameters } = getCurrentURL();
-                const filename = `${file}.${fileType}`;
-                const binary = new File([], filename, {
-                  type: getMimeType(filename),
-                });
+                const { parameters } = getCurrentURL();
                 try {
-                  const res = await uploadFile(
-                    `${url}api/v1/files`,
-                    parameters.get("selectedIds") || "",
-                    binary
-                  );
-                  const [name, ext] = getFileParts(res.data.name);
+                  const fres = await axios({
+                    method: "GET",
+                    url: `${process.env.BACKEND_GATEWAY}/files/create`,
+                    headers: {
+                      "X-Pipedrive-App-Context": token.token,
+                    },
+                    params: {
+                      lang: i18next.language,
+                      type: fileType,
+                      deal: parameters.get("selectedIds") || "",
+                      filename: `${file.substring(0, 190)}.${fileType}`,
+                    },
+                  });
                   window.open(
-                    `/editor?token=${token.token}&id=${res.data.id}&deal_id=${
-                      res.data.deal_id
+                    `/editor?token=${token.token}&id=${
+                      fres.data.data.id
+                    }&deal_id=${
+                      fres.data.data.deal_id
                     }&name=${`${encodeURIComponent(
-                      name.substring(0, 190)
-                    )}.${ext}`}&key=${md5(res.data.id + res.data.update_time)}`
+                      file.substring(0, 190)
+                    )}.${fileType}`}&key=${md5(
+                      fres.data.data.id + fres.data.data.update_time
+                    )}`
                   );
                 } catch {
                   await sdk?.execute(Command.SHOW_SNACKBAR, {
