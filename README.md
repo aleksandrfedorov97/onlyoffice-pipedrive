@@ -7,8 +7,6 @@ This app allows users to edit and collaborate on office documents right within P
 You can add the ONLYOFFICE app from the Pipedrive App Marketplace. 
 To do it, you need to sign into your account and allow the requested app permissions.
 
-*ONLYOFFICE app is using the connection to the special ONLYOFFICE Document Server instance to ensure document processing.*
-
 ## App usage 
 
 The app allows working with office documents directly within the Pipedrive frontend.
