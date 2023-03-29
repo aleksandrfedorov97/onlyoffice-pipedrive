@@ -39,6 +39,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   const { t } = useTranslation();
   const { url, parameters } = getCurrentURL();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
+  const [disable, setDisable] = useState(false);
   const mutator = useDeleteFile(`${url}api/v1/files/${file.id}`);
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   }, []);
 
   const handleDelete = () => {
+    setDisable(true);
     mutator
       .mutateAsync()
       .then(async () => {
@@ -61,6 +63,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         });
       })
       .catch(async () => {
+        setDisable(false);
         await sdk?.execute(Command.SHOW_SNACKBAR, {
           message: t(
             "snackbar.fileremoved.error",
@@ -72,16 +75,18 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleEditor = async () => {
-    const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
-    if (token) {
-      const [name, ext] = getFileParts(file.name);
-      window.open(
-        `/editor?token=${token.token}&deal_id=${
-          parameters.get("selectedIds") || "1"
-        }&id=${file.id}&name=${`${encodeURIComponent(
-          name.substring(0, 190)
-        )}.${ext}`}&key=${md5(file.id + file.update_time)}`
-      );
+    if (!disable && isFileSupported(file.name)) {
+      const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
+      if (token) {
+        const [name, ext] = getFileParts(file.name);
+        window.open(
+          `/editor?token=${token.token}&deal_id=${
+            parameters.get("selectedIds") || "1"
+          }&id=${file.id}&name=${`${encodeURIComponent(
+            name.substring(0, 190)
+          )}.${ext}`}&key=${md5(file.id + file.update_time)}`
+        );
+      }
     }
   };
 
@@ -91,7 +96,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         role="button"
         tabIndex={0}
         className={`${
-          !isFileSupported(file.name)
+          !isFileSupported(file.name) || disable
             ? "hover:cursor-default opacity-50"
             : "hover:cursor-pointer"
         } mx-1`}
