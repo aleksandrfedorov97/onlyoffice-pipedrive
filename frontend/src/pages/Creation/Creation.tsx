@@ -136,7 +136,10 @@ export const Creation: React.FC = () => {
                       lang: i18next.language,
                       type: fileType,
                       deal: parameters.get("selectedIds") || "",
-                      filename: `${file.substring(0, 190)}.${fileType}`,
+                      filename: `${file
+                        .replaceAll("/", ":")
+                        .replaceAll("\\", ":")
+                        .substring(0, 190)}.${fileType}`,
                     },
                   });
                   window.open(
