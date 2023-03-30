@@ -140,7 +140,7 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 		}
 	}
 
-	if user.AccessToken == "" {
+	if user.Validate() == nil {
 		user, err = s.adapter.SelectUserByID(ctx, id)
 		if err != nil {
 			return user, err
