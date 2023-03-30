@@ -22,11 +22,14 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
+	"github.com/mitchellh/mapstructure"
+	"go-micro.dev/v4/cache"
 )
 
 var _ErrOperationTimeout = errors.New("operation timeout")
@@ -34,17 +37,20 @@ var _ErrOperationTimeout = errors.New("operation timeout")
 type settingsService struct {
 	adapter   port.DocSettingsServiceAdapter
 	encryptor crypto.Encryptor
+	cache     cache.Cache
 	logger    plog.Logger
 }
 
 func NewSettingsService(
 	adapter port.DocSettingsServiceAdapter,
 	encryptor crypto.Encryptor,
+	cache cache.Cache,
 	logger plog.Logger,
 ) port.DocSettingsService {
 	return settingsService{
 		adapter:   adapter,
 		encryptor: encryptor,
+		cache:     cache,
 		logger:    logger,
 	}
 }
@@ -84,9 +90,21 @@ func (s settingsService) GetSettings(ctx context.Context, cid string) (domain.Do
 		}
 	}
 
-	settings, err := s.adapter.SelectSettings(ctx, id)
-	if err != nil {
-		return settings, err
+	var settings domain.DocSettings
+	var err error
+	if res, _, err := s.cache.Get(ctx, id); err == nil && res != nil {
+		s.logger.Debugf("found settings %s in the cache", id)
+		if err := mapstructure.Decode(res, &settings); err != nil {
+			s.logger.Errorf("could not decode from cache: %s", err.Error())
+		}
+	}
+
+	if settings.CompanyID == "" {
+		settings, err = s.adapter.SelectSettings(ctx, id)
+		if err != nil {
+			return settings, err
+		}
+		s.cache.Put(ctx, id, settings, 1*time.Minute)
 	}
 
 	s.logger.Debugf("found settings: %v", settings)
@@ -124,6 +142,10 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 		return settings, err
 	}
 
+	if err := s.cache.Delete(ctx, settings.CompanyID); err != nil {
+		return settings, err
+	}
+
 	s.logger.Debugf("successfully persisted %s settings", settings.CompanyID)
 	return settings, nil
 }
@@ -137,6 +159,10 @@ func (s settingsService) DeleteSettings(ctx context.Context, cid string) error {
 			Name:   "CID",
 			Reason: "Should not be blank",
 		}
+	}
+
+	if err := s.cache.Delete(ctx, cid); err != nil {
+		return err
 	}
 
 	s.logger.Debugf("uid %s is valid to perform a delete action", id)

@@ -22,6 +22,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/adapter"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
@@ -42,7 +44,7 @@ func (e mockEncryptor) Decrypt(ciphertext string) (string, error) {
 
 func TestSelectCaching(t *testing.T) {
 	adapter := adapter.NewMemoryDocserverAdapter()
-	service := service.NewSettingsService(adapter, mockEncryptor{}, log.NewEmptyLogger())
+	service := service.NewSettingsService(adapter, mockEncryptor{}, cache.NewCache(&config.CacheConfig{}), log.NewEmptyLogger())
 
 	sel := NewSettingsSelectHandler(service, nil, log.NewEmptyLogger())
 
@@ -50,6 +52,7 @@ func TestSelectCaching(t *testing.T) {
 		CompanyID:  "mock",
 		DocAddress: "mock",
 		DocSecret:  "mock",
+		DocHeader:  "mocj",
 	})
 
 	t.Run("get settings", func(t *testing.T) {

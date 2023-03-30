@@ -40,14 +40,16 @@ type DocserverRPCServer struct {
 func NewDocserverRPCServer(
 	persistenceConfig *config.PersistenceConfig,
 	credentialsConfig *config.OAuthCredentialsConfig,
-	logger log.Logger,
+	cache cache.Cache, logger log.Logger,
 ) rpc.RPCEngine {
 	adptr := adapter.NewMemoryDocserverAdapter()
 	if persistenceConfig.Persistence.URL != "" {
 		adptr = adapter.NewMongoDocserverAdapter(persistenceConfig.Persistence.URL)
 	}
 
-	service := service.NewSettingsService(adptr, crypto.NewAesEncryptor([]byte(credentialsConfig.Credentials.ClientSecret)), logger)
+	service := service.NewSettingsService(
+		adptr, crypto.NewAesEncryptor([]byte(credentialsConfig.Credentials.ClientSecret)), cache, logger,
+	)
 	return DocserverRPCServer{
 		service: service,
 		logger:  logger,
