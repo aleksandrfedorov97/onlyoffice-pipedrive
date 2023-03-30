@@ -23,11 +23,14 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"time"
 
 	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/port"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
+	"github.com/mitchellh/mapstructure"
+	"go-micro.dev/v4/cache"
 )
 
 var _ErrOperationTimeout = errors.New("operation timeout")
@@ -35,17 +38,20 @@ var _ErrOperationTimeout = errors.New("operation timeout")
 type userService struct {
 	adapter   port.UserAccessServiceAdapter
 	encryptor crypto.Encryptor
+	cache     cache.Cache
 	logger    plog.Logger
 }
 
 func NewUserService(
 	adapter port.UserAccessServiceAdapter,
 	encryptor crypto.Encryptor,
+	cache cache.Cache,
 	logger plog.Logger,
 ) port.UserAccessService {
 	return userService{
 		adapter:   adapter,
 		encryptor: encryptor,
+		cache:     cache,
 		logger:    logger,
 	}
 }
@@ -125,9 +131,22 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 	atokenChan := make(chan string, 1)
 	rtokenChan := make(chan string, 1)
 
-	user, err := s.adapter.SelectUserByID(ctx, id)
-	if err != nil {
-		return user, err
+	var user domain.UserAccess
+	var err error
+	if res, _, err := s.cache.Get(ctx, id); err == nil && res != nil {
+		s.logger.Debugf("found user %s in the cache", id)
+		if err := mapstructure.Decode(res, &user); err != nil {
+			s.logger.Errorf("could not decode from cache: %s", err.Error())
+		}
+	}
+
+	if user.AccessToken == "" {
+		user, err = s.adapter.SelectUserByID(ctx, id)
+		if err != nil {
+			return user, err
+		}
+
+		s.cache.Put(ctx, id, user, time.Duration((user.ExpiresAt-time.Now().UnixMilli())*1e6/6))
 	}
 
 	s.logger.Debugf("found a user: %v", user)
@@ -212,8 +231,7 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 	default:
 	}
 
-	s.logger.Debugf("user %s is valid to perform an update action", user.ID)
-	if _, err := s.adapter.UpsertUser(ctx, domain.UserAccess{
+	euser := domain.UserAccess{
 		ID:           user.ID,
 		AccessToken:  <-atokenChan,
 		RefreshToken: <-rtokenChan,
@@ -221,7 +239,15 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 		Scope:        user.Scope,
 		ExpiresAt:    user.ExpiresAt,
 		ApiDomain:    user.ApiDomain,
-	}); err != nil {
+	}
+
+	if err := s.cache.Put(ctx, euser.ID, euser, time.Duration((euser.ExpiresAt-time.Now().UnixMilli())*1e6/6)); err != nil {
+		s.logger.Warnf("could not populate cache with a user %s instance: %s", euser.ID, err.Error())
+		s.cache.Delete(ctx, euser.ID)
+	}
+
+	s.logger.Debugf("user %s is valid to perform an update action", user.ID)
+	if _, err := s.adapter.UpsertUser(ctx, euser); err != nil {
 		return user, err
 	}
 
@@ -237,6 +263,10 @@ func (s userService) DeleteUser(ctx context.Context, uid string) error {
 			Name:   "UID",
 			Reason: "Should not be blank",
 		}
+	}
+
+	if err := s.cache.Delete(ctx, uid); err != nil {
+		return err
 	}
 
 	s.logger.Debugf("uid %s is valid to perform a delete action", id)

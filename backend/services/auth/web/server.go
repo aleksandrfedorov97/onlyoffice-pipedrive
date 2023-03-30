@@ -39,13 +39,15 @@ type AuthRPCServer struct {
 	logger        log.Logger
 }
 
-func NewAuthRPCServer(persistenceConfig *config.PersistenceConfig, oauthConfig *config.OAuthCredentialsConfig, logger log.Logger) rpc.RPCEngine {
+func NewAuthRPCServer(
+	persistenceConfig *config.PersistenceConfig, oauthConfig *config.OAuthCredentialsConfig,
+	cache cache.Cache, logger log.Logger) rpc.RPCEngine {
 	adptr := adapter.NewMemoryUserAdapter()
 	if persistenceConfig.Persistence.URL != "" {
 		adptr = adapter.NewMongoUserAdapter(persistenceConfig.Persistence.URL)
 	}
 
-	service := service.NewUserService(adptr, crypto.NewAesEncryptor([]byte(oauthConfig.Credentials.ClientSecret)), logger)
+	service := service.NewUserService(adptr, crypto.NewAesEncryptor([]byte(oauthConfig.Credentials.ClientSecret)), cache, logger)
 	return AuthRPCServer{
 		service: service,
 		pipedriveAuth: pclient.NewPipedriveAuthClient(

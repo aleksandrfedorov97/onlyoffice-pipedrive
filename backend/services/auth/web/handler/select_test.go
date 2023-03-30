@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/adapter"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
@@ -43,7 +45,8 @@ func (e mockEncryptor) Decrypt(ciphertext string) (string, error) {
 
 func TestSelectCaching(t *testing.T) {
 	adapter := adapter.NewMemoryUserAdapter()
-	service := service.NewUserService(adapter, mockEncryptor{}, log.NewEmptyLogger())
+	cache := cache.NewCache(&config.CacheConfig{})
+	service := service.NewUserService(adapter, mockEncryptor{}, cache, log.NewEmptyLogger())
 	pclient := pclient.NewPipedriveAuthClient("clientID", "clientSecret")
 
 	sel := NewUserSelectHandler(service, nil, pclient, log.NewEmptyLogger())

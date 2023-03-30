@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/stretchr/testify/assert"
@@ -71,7 +73,7 @@ func (m mockAdapter) DeleteUserByID(ctx context.Context, uid string) error {
 }
 
 func TestUserService(t *testing.T) {
-	service := NewUserService(mockAdapter{}, mockEncryptor{}, log.NewEmptyLogger())
+	service := NewUserService(mockAdapter{}, mockEncryptor{}, cache.NewCache(&config.CacheConfig{}), log.NewEmptyLogger())
 
 	t.Run("save user", func(t *testing.T) {
 		assert.NoError(t, service.CreateUser(context.Background(), user))
