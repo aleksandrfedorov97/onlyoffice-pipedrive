@@ -44,6 +44,25 @@ func NewFileController(
 	}
 }
 
+func (c *fileController) getUser(ctx context.Context, id string) (response.UserResponse, int) {
+	var ures response.UserResponse
+	if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", id), &ures); err != nil {
+		c.logger.Errorf("could not get user access info: %s", err.Error())
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return ures, http.StatusRequestTimeout
+		}
+
+		microErr := response.MicroError{}
+		if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
+			return ures, http.StatusUnauthorized
+		}
+
+		return ures, microErr.Code
+	}
+
+	return ures, http.StatusOK
+}
+
 func (c fileController) BuildGetFile() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
@@ -64,23 +83,10 @@ func (c fileController) BuildGetFile() http.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
 		defer cancel()
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				rw.WriteHeader(http.StatusRequestTimeout)
-				return
-			}
 
-			microErr := response.MicroError{}
-			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-				rw.WriteHeader(http.StatusUnauthorized)
-				c.logger.Errorf("could not get me info: %s", err.Error())
-				return
-			}
-
-			rw.WriteHeader(microErr.Code)
-			c.logger.Errorf("could not get me info: %s", microErr.Detail)
+		ures, status := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
+		if status != http.StatusOK {
+			rw.WriteHeader(status)
 			return
 		}
 
@@ -192,21 +198,9 @@ func (c fileController) BuildDownloadFile() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 		defer cancel()
 
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				rw.WriteHeader(http.StatusRequestTimeout)
-				return
-			}
-
-			microErr := response.MicroError{}
-			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-				rw.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			rw.WriteHeader(microErr.Code)
+		ures, status := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
+		if status != http.StatusOK {
+			rw.WriteHeader(status)
 			return
 		}
 

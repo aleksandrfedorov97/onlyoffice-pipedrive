@@ -63,6 +63,25 @@ func NewApiController(
 	}
 }
 
+func (c *apiController) getUser(ctx context.Context, id string) (response.UserResponse, int, error) {
+	var ures response.UserResponse
+	if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", id), &ures); err != nil {
+		c.logger.Errorf("could not get user access info: %s", err.Error())
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return ures, http.StatusRequestTimeout, err
+		}
+
+		microErr := response.MicroError{}
+		if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
+			return ures, http.StatusUnauthorized, err
+		}
+
+		return ures, microErr.Code, err
+	}
+
+	return ures, http.StatusOK, nil
+}
+
 func (c *apiController) BuildGetMe() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
@@ -75,23 +94,9 @@ func (c *apiController) BuildGetMe() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 		defer cancel()
 
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				rw.WriteHeader(http.StatusRequestTimeout)
-				return
-			}
-
-			microErr := response.MicroError{}
-			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-				rw.WriteHeader(http.StatusUnauthorized)
-				c.logger.Errorf("could not get me info: %s", err.Error())
-				return
-			}
-
-			rw.WriteHeader(microErr.Code)
-			c.logger.Errorf("could not get me info: %s", microErr.Detail)
+		ures, status, _ := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
+		if status != http.StatusOK {
+			rw.WriteHeader(status)
 			return
 		}
 
@@ -152,9 +157,8 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 
 		go func() {
 			defer wg.Done()
-			var ures response.UserResponse
-			if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-				c.logger.Errorf("could not get user access info: %s", err.Error())
+			ures, _, err := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
+			if err != nil {
 				errChan <- err
 				return
 			}
@@ -188,6 +192,9 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		select {
 		case <-errChan:
 			rw.WriteHeader(http.StatusForbidden)
+			return
+		case <-ctx.Done():
+			rw.WriteHeader(http.StatusRequestTimeout)
 			return
 		default:
 		}
@@ -232,21 +239,9 @@ func (c apiController) BuildGetSettings() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 		defer cancel()
 
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", fmt.Sprint(pctx.UID+pctx.CID)), &ures); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				rw.WriteHeader(http.StatusRequestTimeout)
-				return
-			}
-
-			microErr := response.MicroError{}
-			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-				rw.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			rw.WriteHeader(microErr.Code)
+		ures, status, _ := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
+		if status != http.StatusOK {
+			rw.WriteHeader(status)
 			return
 		}
 
