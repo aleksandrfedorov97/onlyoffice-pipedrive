@@ -60,7 +60,7 @@ func NewCache(config *config.CacheConfig) cache.Cache {
 		}
 	case 2:
 		return &CustomCache{
-			store: newRedis(config.Cache.Address, config.Cache.Password, config.Cache.Database),
+			store: newRedis(config.Cache.Address, config.Cache.Username, config.Cache.Password, config.Cache.Database),
 			name:  "Redis",
 		}
 	default:

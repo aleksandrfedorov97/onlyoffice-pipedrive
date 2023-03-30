@@ -25,8 +25,9 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func newRedis(address, password string, db int) *marshaler.Marshaler {
+func newRedis(address, username, password string, db int) *marshaler.Marshaler {
 	redisClient := redis.NewClient(&redis.Options{
+		Username: username,
 		Addr:     address,
 		Password: password,
 		DB:       db,
