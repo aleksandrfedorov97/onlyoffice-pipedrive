@@ -29,6 +29,7 @@ import (
 	"time"
 
 	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/constants"
@@ -150,12 +151,11 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 	downloadToken.ExpiresAt = time.Now().Add(4 * time.Minute).UnixMilli()
 	tkn, _ := c.jwtManager.Sign(settings.DocSecret, downloadToken)
 
-	fileName := strings.ReplaceAll(req.Filename, "\\", ":")
-	fileName = strings.ReplaceAll(fileName, "/", ":")
+	filename := shared.EscapeFilename(req.Filename)
 	config = response.BuildConfigResponse{
 		Document: response.Document{
 			Key:   req.DocKey,
-			Title: fileName,
+			Title: filename,
 			URL:   fmt.Sprintf("%s/files/download?cid=%d&fid=%s&token=%s", c.gatewayURL, usr.CompanyID, req.FileID, tkn),
 		},
 		EditorConfig: response.EditorConfig{
@@ -165,7 +165,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			},
 			CallbackURL: fmt.Sprintf(
 				"%s/callback?cid=%d&did=%s&fid=%s&filename=%s",
-				c.gatewayURL, usr.CompanyID, req.Deal, req.FileID, url.QueryEscape(fileName),
+				c.gatewayURL, usr.CompanyID, req.Deal, req.FileID, url.QueryEscape(filename),
 			),
 			Customization: response.Customization{
 				Goback: response.Goback{
@@ -180,8 +180,8 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		ServerURL: settings.DocAddress,
 	}
 
-	if strings.TrimSpace(fileName) != "" {
-		ext := strings.ReplaceAll(filepath.Ext(fileName), ".", "")
+	if strings.TrimSpace(filename) != "" {
+		ext := strings.ReplaceAll(filepath.Ext(filename), ".", "")
 		fileType, err := constants.GetFileType(ext)
 		if err != nil {
 			return config, err
