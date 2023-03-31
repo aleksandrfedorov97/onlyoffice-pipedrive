@@ -34,7 +34,7 @@ export function useFileSearch(url: string, limit: number) {
     queryFn: ({ signal, pageParam }) =>
       fetchFiles(url, pageParam, limit, signal),
     getNextPageParam: (lastPage) =>
-      lastPage.pagination.more_items_in_collection
+      lastPage?.pagination?.more_items_in_collection
         ? lastPage.pagination.next_start
         : undefined,
     staleTime: 2000,
@@ -43,10 +43,11 @@ export function useFileSearch(url: string, limit: number) {
   });
 
   return {
-    files: data?.pages
-      .map((page) => page.response)
-      .filter(Boolean)
-      .flat(),
+    files:
+      data?.pages
+        .map((page) => page.response)
+        .filter(Boolean)
+        .flat() || [],
     isLoading,
     error,
     refetch,

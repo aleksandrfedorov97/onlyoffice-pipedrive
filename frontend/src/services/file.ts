@@ -29,25 +29,39 @@ export const fetchFiles = async (
   signal: AbortSignal | undefined = undefined,
   sort = "add_time ASC"
 ) => {
-  const res = await axios<FileResponse>({
-    method: "GET",
-    url,
-    params: {
-      start,
-      limit,
-      sort,
-    },
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${AuthToken.access_token}`,
-    },
-    signal,
-  });
+  try {
+    const res = await axios<FileResponse>({
+      method: "GET",
+      url,
+      params: {
+        start,
+        limit,
+        sort,
+      },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${AuthToken.access_token}`,
+      },
+      signal,
+      timeout: 4000,
+    });
 
-  return {
-    response: res.data.data,
-    pagination: res.data.additional_data.pagination,
-  };
+    return {
+      response: res.data.data,
+      pagination: res.data.additional_data.pagination,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      response: [],
+      pagination: {
+        start,
+        next_start: 0,
+        limit,
+        more_items_in_collection: false,
+      },
+    };
+  }
 };
 
 export const deleteFile = async (
