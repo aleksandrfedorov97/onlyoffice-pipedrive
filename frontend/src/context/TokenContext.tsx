@@ -17,6 +17,7 @@
  */
 
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
+import axios from "axios";
 import React, { useEffect } from "react";
 import { proxy } from "valtio";
 
@@ -49,8 +50,11 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               const token = await getMe(sdk);
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
-            } catch {
-              AuthToken.error = true;
+            } catch (err) {
+              if (!axios.isAxiosError(err)) {
+                AuthToken.error = true;
+                AuthToken.access_token = "";
+              }
             }
           }
           timerID = setTimeout(update, AuthToken.expires_at - Date.now() - 100);
