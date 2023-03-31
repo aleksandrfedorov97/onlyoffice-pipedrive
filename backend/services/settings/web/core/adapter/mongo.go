@@ -49,7 +49,7 @@ type mongoUserAdapter struct {
 
 func NewMongoDocserverAdapter(url string) port.DocSettingsServiceAdapter {
 	if err := mgm.SetDefaultConfig(
-		&mgm.Config{CtxTimeout: 3 * time.Second}, "pipedrive-settings",
+		&mgm.Config{CtxTimeout: 3 * time.Second}, "pipedrive",
 		options.Client().ApplyURI(url),
 	); err != nil {
 		log.Fatalf("mongo initialization error: %s", err.Error())
