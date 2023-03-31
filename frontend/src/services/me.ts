@@ -28,7 +28,7 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
   const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create({ baseURL: process.env.BACKEND_GATEWAY });
   axiosRetry(client, {
-    retries: 4,
+    retries: 0,
     retryCondition: (error) => error.status !== 200,
     retryDelay: (count) => count * 50,
   });

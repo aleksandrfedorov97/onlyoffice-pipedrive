@@ -51,7 +51,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
             } catch (err) {
-              if (!axios.isAxiosError(err)) {
+              if (!axios.isCancel(err)) {
                 AuthToken.error = true;
                 AuthToken.access_token = "";
               }
