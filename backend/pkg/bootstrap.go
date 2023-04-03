@@ -19,6 +19,10 @@
 package pkg
 
 import (
+	"context"
+	"net/http"
+	"os"
+
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
@@ -27,12 +31,28 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/repl"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/trace"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/worker"
+	"go-micro.dev/v4"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
+	"golang.org/x/sync/errgroup"
 )
 
-func Bootstrap(path string) fx.Option {
-	return fx.Module(
-		"pkg",
+func Bootstrap(path string, extras ...interface{}) *fx.App {
+	builder := config.BuildNewServerConfig(path)
+	sconf, err := builder()
+	if err != nil {
+		log.DefaultLogger{}.Fatal(err.Error())
+		return nil
+	}
+
+	var logger fx.Option = fx.NopLogger
+	if sconf.Debug {
+		logger = fx.WithLogger(func() fxevent.Logger {
+			return &fxevent.ConsoleLogger{W: os.Stdout}
+		})
+	}
+
+	return fx.New(
 		fx.Provide(config.BuildNewCacheConfig(path)),
 		fx.Provide(config.BuildNewCorsConfig(path)),
 		fx.Provide(config.BuildNewCredentialsConfig(path)),
@@ -41,7 +61,7 @@ func Bootstrap(path string) fx.Option {
 		fx.Provide(config.BuildNewPersistenceConfig(path)),
 		fx.Provide(config.BuildNewRegistryConfig(path)),
 		fx.Provide(config.BuildNewResilienceConfig(path)),
-		fx.Provide(config.BuildNewServerConfig(path)),
+		fx.Provide(builder),
 		fx.Provide(config.BuildNewTracerConfig(path)),
 		fx.Provide(config.BuildNewWorkerConfig(path)),
 		fx.Provide(cache.NewCache),
@@ -52,5 +72,23 @@ func Bootstrap(path string) fx.Option {
 		fx.Provide(worker.NewBackgroundWorker),
 		fx.Provide(worker.NewBackgroundEnqueuer),
 		fx.Provide(repl.NewService),
+		fx.Provide(extras...),
+		fx.Invoke(func(lifecycle fx.Lifecycle, service micro.Service, repl *http.Server, logger log.Logger) {
+			lifecycle.Append(fx.Hook{
+				OnStart: func(ctx context.Context) error {
+					go repl.ListenAndServe()
+					go service.Run()
+					return nil
+				},
+				OnStop: func(ctx context.Context) error {
+					g, gCtx := errgroup.WithContext(ctx)
+					g.Go(func() error {
+						return repl.Shutdown(gCtx)
+					})
+					return g.Wait()
+				},
+			})
+		}),
+		logger,
 	)
 }
