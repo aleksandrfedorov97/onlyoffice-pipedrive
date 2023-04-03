@@ -38,7 +38,7 @@ type PersistenceConfig struct {
 func (p *PersistenceConfig) Validate() error {
 	p.Persistence.URL = strings.TrimSpace(p.Persistence.URL)
 	switch p.Persistence.Type {
-	case 2:
+	case 1:
 		if p.Persistence.URL == "" {
 			return &InvalidConfigurationParameterError{
 				Parameter: "URL",
