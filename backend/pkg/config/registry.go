@@ -29,21 +29,25 @@ import (
 
 type RegistryConfig struct {
 	Registry struct {
-		Addresses    []string      `yaml:"addresses" env:"REGISTRY_ADDRESSES,overwrite"`
-		CacheTTL     time.Duration `yaml:"cache_duration" env:"REGISTRY_CACHE_DURATION,overwrite"`
-		RegistryType int           `yaml:"type" env:"REGISTRY_TYPE,overwrite"`
+		Addresses []string      `yaml:"addresses" env:"REGISTRY_ADDRESSES,overwrite"`
+		CacheTTL  time.Duration `yaml:"cache_duration" env:"REGISTRY_CACHE_DURATION,overwrite"`
+		Type      int           `yaml:"type" env:"REGISTRY_TYPE,overwrite"`
 	} `yaml:"registry"`
 }
 
 func (r *RegistryConfig) Validate() error {
-	if len(r.Registry.Addresses) <= 0 {
-		return &InvalidConfigurationParameterError{
-			Parameter: "Addresses",
-			Reason:    "Length should be greater than zero",
+	switch r.Registry.Type {
+	case 2:
+		return nil
+	default:
+		if len(r.Registry.Addresses) <= 0 {
+			return &InvalidConfigurationParameterError{
+				Parameter: "Addresses",
+				Reason:    "Length should be greater than zero",
+			}
 		}
+		return nil
 	}
-
-	return nil
 }
 
 func BuildNewRegistryConfig(path string) func() (*RegistryConfig, error) {

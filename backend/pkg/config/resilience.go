@@ -37,6 +37,9 @@ type ResilienceConfig struct {
 func BuildNewResilienceConfig(path string) func() (*ResilienceConfig, error) {
 	return func() (*ResilienceConfig, error) {
 		var config ResilienceConfig
+		config.Resilience.RateLimiter.Limit = 3000
+		config.Resilience.RateLimiter.IPLimit = 20
+		config.Resilience.CircuitBreaker.Timeout = 5000
 		if path != "" {
 			file, err := os.Open(path)
 			if err != nil {

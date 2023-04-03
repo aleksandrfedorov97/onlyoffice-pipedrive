@@ -31,7 +31,7 @@ import (
 // NewRegistry looks up envs and configures respective registries based on those variables. Defaults to memory
 func NewRegistry(config *config.RegistryConfig) registry.Registry {
 	var r registry.Registry
-	switch config.Registry.RegistryType {
+	switch config.Registry.Type {
 	case 1:
 		r = kubernetes.NewRegistry(
 			registry.Addrs(config.Registry.Addresses...),

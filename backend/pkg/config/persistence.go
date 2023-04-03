@@ -30,13 +30,25 @@ import (
 
 type PersistenceConfig struct {
 	Persistence struct {
-		URL string `yaml:"url" env:"PERSISTENCE_URL,overwrite"`
+		URL  string `yaml:"url" env:"PERSISTENCE_URL,overwrite"`
+		Type int    `yaml:"type" env:"PERSISTENCE_TYPE,overwrite"`
 	} `yaml:"persistence"`
 }
 
 func (p *PersistenceConfig) Validate() error {
 	p.Persistence.URL = strings.TrimSpace(p.Persistence.URL)
-	return nil
+	switch p.Persistence.Type {
+	case 2:
+		if p.Persistence.URL == "" {
+			return &InvalidConfigurationParameterError{
+				Parameter: "URL",
+				Reason:    "MongoDB driver expects a valid url",
+			}
+		}
+		return nil
+	default:
+		return nil
+	}
 }
 
 func BuildNewPersistenceConfig(path string) func() (*PersistenceConfig, error) {
