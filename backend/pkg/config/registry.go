@@ -37,7 +37,7 @@ type RegistryConfig struct {
 
 func (r *RegistryConfig) Validate() error {
 	switch r.Registry.Type {
-	case 2:
+	case 1:
 		return nil
 	default:
 		if len(r.Registry.Addresses) <= 0 {
