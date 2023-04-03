@@ -75,6 +75,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleEditor = async () => {
+    setDisable(true);
     if (!disable && isFileSupported(file.name)) {
       const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
       if (token) {
@@ -88,6 +89,8 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         );
       }
     }
+    // temporary solution
+    setTimeout(() => setDisable(false), 10000);
   };
 
   return (
@@ -108,7 +111,11 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
       <div
         role="button"
         tabIndex={0}
-        className="hover:cursor-pointer mx-1"
+        className={`mx-1 ${
+          !isFileSupported(file.name) || disable
+            ? "hover:cursor-default opacity-50"
+            : "hover:cursor-pointer"
+        }`}
         onClick={() => handleDelete()}
         onKeyDown={() => handleDelete()}
       >
