@@ -112,9 +112,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         role="button"
         tabIndex={0}
         className={`mx-1 ${
-          !isFileSupported(file.name) || disable
-            ? "hover:cursor-default opacity-50"
-            : "hover:cursor-pointer"
+          disable ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
         }`}
         onClick={() => handleDelete()}
         onKeyDown={() => handleDelete()}
