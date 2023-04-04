@@ -20,6 +20,7 @@ import Docx from "@assets/docx.svg";
 import Pptx from "@assets/pptx.svg";
 import Xlsx from "@assets/xlsx.svg";
 import Unsupported from "@assets/unsupported.svg";
+import Supported from "@assets/supported.svg";
 
 const DOCUMENT_EXTS = [
   "doc",
@@ -127,9 +128,15 @@ export const getMimeType = (filename: string) => {
 export const getFileIcon = (filename: string) => {
   const e = getFileExt(filename).toLowerCase();
 
-  if (DOCUMENT_EXTS.includes(e)) return Docx;
-  if (SPREADSHEET_EXTS.includes(e)) return Xlsx;
-  if (PRESENTATION_EXTS.includes(e)) return Pptx;
+  if (e === "docx") return Docx;
+  if (e === "xlsx") return Xlsx;
+  if (e === "pptx") return Pptx;
+  if (
+    DOCUMENT_EXTS.includes(e) ||
+    SPREADSHEET_EXTS.includes(e) ||
+    PRESENTATION_EXTS.includes(e)
+  )
+    return Supported;
 
   return Unsupported;
 };
