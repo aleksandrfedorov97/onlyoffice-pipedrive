@@ -45,13 +45,14 @@ var _ErrNoSettingsFound = errors.New("could not find document server settings")
 var _ErrOperationTimeout = errors.New("operation timeout")
 
 type ConfigHandler struct {
-	namespace  string
-	logger     plog.Logger
-	client     client.Client
-	apiClient  pclient.PipedriveApiClient
-	jwtManager crypto.JwtManager
-	gatewayURL string
-	group      singleflight.Group
+	namespace   string
+	logger      plog.Logger
+	client      client.Client
+	apiClient   pclient.PipedriveApiClient
+	jwtManager  crypto.JwtManager
+	gatewayURL  string
+	callbackURL string
+	group       singleflight.Group
 }
 
 func NewConfigHandler(
@@ -60,14 +61,16 @@ func NewConfigHandler(
 	client client.Client,
 	jwtManager crypto.JwtManager,
 	gatewayURL string,
+	callbackURL string,
 ) ConfigHandler {
 	return ConfigHandler{
-		namespace:  namespace,
-		logger:     logger,
-		client:     client,
-		apiClient:  pclient.NewPipedriveApiClient(),
-		jwtManager: jwtManager,
-		gatewayURL: gatewayURL,
+		namespace:   namespace,
+		logger:      logger,
+		client:      client,
+		apiClient:   pclient.NewPipedriveApiClient(),
+		jwtManager:  jwtManager,
+		gatewayURL:  gatewayURL,
+		callbackURL: callbackURL,
 	}
 }
 
@@ -165,7 +168,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			},
 			CallbackURL: fmt.Sprintf(
 				"%s/callback?cid=%d&did=%s&fid=%s&filename=%s",
-				c.gatewayURL, usr.CompanyID, req.Deal, req.FileID, url.QueryEscape(filename),
+				c.callbackURL, usr.CompanyID, req.Deal, req.FileID, url.QueryEscape(filename),
 			),
 			Customization: response.Customization{
 				Goback: response.Goback{

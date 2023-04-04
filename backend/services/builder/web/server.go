@@ -31,10 +31,11 @@ import (
 )
 
 type ConfigRPCServer struct {
-	namespace  string
-	jwtManager crypto.JwtManager
-	logger     plog.Logger
-	gatewayURL string
+	namespace   string
+	jwtManager  crypto.JwtManager
+	logger      plog.Logger
+	gatewayURL  string
+	callbackURL string
 }
 
 func NewConfigRPCServer(
@@ -45,10 +46,11 @@ func NewConfigRPCServer(
 ) rpc.RPCEngine {
 	jwtManager := crypto.NewOnlyofficeJwtManager()
 	return ConfigRPCServer{
-		namespace:  serverConfig.Namespace,
-		jwtManager: jwtManager,
-		logger:     logger,
-		gatewayURL: onlyofficeConfig.Onlyoffice.Builder.GatewayURL,
+		namespace:   serverConfig.Namespace,
+		jwtManager:  jwtManager,
+		logger:      logger,
+		gatewayURL:  onlyofficeConfig.Onlyoffice.Builder.GatewayURL,
+		callbackURL: onlyofficeConfig.Onlyoffice.Builder.CallbackURL,
 	}
 }
 
@@ -58,6 +60,6 @@ func (a ConfigRPCServer) BuildMessageHandlers() []rpc.RPCMessageHandler {
 
 func (a ConfigRPCServer) BuildHandlers(c mclient.Client, cache cache.Cache) []interface{} {
 	return []interface{}{
-		handler.NewConfigHandler(a.namespace, a.logger, c, a.jwtManager, a.gatewayURL),
+		handler.NewConfigHandler(a.namespace, a.logger, c, a.jwtManager, a.gatewayURL, a.callbackURL),
 	}
 }
