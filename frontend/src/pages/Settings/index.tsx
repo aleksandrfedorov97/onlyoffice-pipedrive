@@ -34,6 +34,7 @@ import { getPipedriveMe } from "@services/me";
 import { AuthToken } from "@context/TokenContext";
 
 import SettingsError from "@assets/settings-error.svg";
+import { getCurrentURL } from "@utils/url";
 
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -57,9 +58,8 @@ export const SettingsPage: React.FC = () => {
 
   useEffect(() => {
     if (accessToken && !error && !!sdk) {
-      getPipedriveMe(
-        `${window.parent[0].location.ancestorOrigins[0]}/api/v1/users/me`
-      )
+      const { url } = getCurrentURL();
+      getPipedriveMe(`${url}api/v1/users/me`)
         .then(async (ures) => {
           try {
             if (ures.data.access.find((a) => a.app === "global" && a.admin)) {
@@ -75,7 +75,7 @@ export const SettingsPage: React.FC = () => {
             setLoading(false);
           }
         })
-        .catch(() => {
+        .catch((e) => {
           setLoading(false);
         });
     }
