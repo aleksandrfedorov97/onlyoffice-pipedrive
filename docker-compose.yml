@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  gateway:
+    build:
+      context: .
+      target: gateway
+    image: onlyoffice/pipedrive-gateway:${PRODUCT_VERSION}
+
+  auth:
+    build:
+      context: .
+      target: auth
+    image: onlyoffice/pipedrive-auth:${PRODUCT_VERSION}
+
+  builder:
+    build:
+      context: .
+      target: builder
+    image: onlyoffice/pipedrive-builder:${PRODUCT_VERSION}
+
+  callback:
+    build:
+      context: .
+      target: callback
+    image: onlyoffice/pipedrive-callback:${PRODUCT_VERSION}
+
+  settings:
+    build:
+      context: .
+      target: settings
+    image: onlyoffice/pipedrive-settings:${PRODUCT_VERSION}
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    image: onlyoffice/pipedrive-frontend:${PRODUCT_VERSION}
