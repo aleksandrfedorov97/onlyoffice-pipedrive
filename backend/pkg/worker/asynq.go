@@ -44,6 +44,7 @@ func newAsynqWorker(config *config.WorkerConfig, logger plog.Logger) BackgroundW
 		Addr:         config.Worker.RedisAddresses[0],
 		Username:     config.Worker.RedisUsername,
 		Password:     config.Worker.RedisPassword,
+		DB:           config.Worker.RedisDatabase,
 		ReadTimeout:  4 * time.Second,
 		WriteTimeout: 7 * time.Second,
 	}
@@ -90,6 +91,7 @@ func newAsynqEnqueuer(config *config.WorkerConfig) BackgroundEnqueuer {
 		Addr:         config.Worker.RedisAddresses[0],
 		Username:     config.Worker.RedisUsername,
 		Password:     config.Worker.RedisPassword,
+		DB:           config.Worker.RedisDatabase,
 		ReadTimeout:  4 * time.Second,
 		WriteTimeout: 7 * time.Second,
 	}
