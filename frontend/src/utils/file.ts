@@ -22,6 +22,11 @@ import Xlsx from "@assets/xlsx.svg";
 import Unsupported from "@assets/unsupported.svg";
 import Supported from "@assets/supported.svg";
 
+import wordIcon from "@assets/word.ico";
+import slideIcon from "@assets/slide.ico";
+import cellIcon from "@assets/cell.ico";
+import genericIcon from "@assets/generic.ico";
+
 const DOCUMENT_EXTS = [
   "doc",
   "docx",
@@ -166,4 +171,13 @@ export const formatBytes = (bytes: number, decimals = 2) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return `${parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
+};
+
+export const getFileFavicon = (filename: string) => {
+  const e = getFileExt(filename).toLowerCase();
+  if (DOCUMENT_EXTS.includes(e)) return wordIcon;
+  if (PRESENTATION_EXTS.includes(e)) return slideIcon;
+  if (SPREADSHEET_EXTS.includes(e)) return cellIcon;
+
+  return genericIcon;
 };

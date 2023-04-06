@@ -20,12 +20,15 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import { Helmet } from "react-helmet";
 
 import { OnlyofficeButton } from "@components/button";
 import { OnlyofficeError } from "@components/error";
 import { OnlyofficeSpinner } from "@components/spinner";
 
 import { useBuildConfig } from "@hooks/useBuildConfig";
+
+import { getFileFavicon } from "@utils/file";
 
 import Icon from "@assets/nofile.svg";
 
@@ -57,6 +60,15 @@ export const OnlyofficeEditorPage: React.FC = () => {
   const validConfig = !error && !isLoading && data;
   return (
     <div className="w-full h-full overflow-hidden">
+      <Helmet
+        link={[
+          {
+            rel: "shortcut icon",
+            type: "image/x-icon",
+            href: `${getFileFavicon(params.get("name") || "new.docx")}`,
+          },
+        ]}
+      />
       {!error && (
         <div
           id="eloader"
