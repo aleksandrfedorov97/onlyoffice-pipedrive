@@ -183,7 +183,7 @@ export const SettingsPage: React.FC = () => {
                 type="password"
               />
             </div>
-            <div className="pl-5 pr-2">
+            <div className="pl-5 pr-5">
               <OnlyofficeInput
                 text={t("settings.inputs.header", "Document Server Header")}
                 valid={!!header}
