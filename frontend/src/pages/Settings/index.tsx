@@ -127,7 +127,6 @@ export const SettingsPage: React.FC = () => {
             "background.error.subtitle",
             "Could not fetch plugin settings. Something went wrong. Please reload the pipedrive window"
           )}
-          button={t("button.reload", "Reload") || "Reload"}
           onClick={() => window.location.reload()}
         />
       )}
@@ -139,7 +138,6 @@ export const SettingsPage: React.FC = () => {
             "background.access.subtitle",
             "Something went wrong or access denied"
           )}
-          button={t("button.reload", "Reload") || "Reload"}
           onClick={() => window.location.reload()}
         />
       )}
