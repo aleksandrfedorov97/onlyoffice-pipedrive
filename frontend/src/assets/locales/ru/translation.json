@@ -9,6 +9,8 @@
     "files.info.size": "Size",
     "snackbar.fileremoved.ok": "File {{file}} has been removed",
     "snackbar.fileremoved.error": "Could not remove file {{file}}",
+    "snackbar.uploaded.ok": "File {{file}} has been uploaded",
+    "snackbar.uploaded.error": "Could not upload file {{file}}",
     "creation.title": "Create with ONLYOFFICE",
     "creation.inputs.title": "Title",
     "creation.inputs.error": "File name length should be less than 190 characters",

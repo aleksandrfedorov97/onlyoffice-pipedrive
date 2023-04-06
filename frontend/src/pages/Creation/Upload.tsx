@@ -75,7 +75,28 @@ export const Upload: React.FC = () => {
               t("upload.subtext", "File size is limited") ||
               "File size is limited"
             }
-            onDrop={onDrop}
+            onDrop={async (files, rejections, event) => {
+              try {
+                onDrop(files, rejections, event);
+                await sdk?.execute(Command.SHOW_SNACKBAR, {
+                  message: t(
+                    "snackbar.uploaded.ok",
+                    "File {{file}} has been uploaded",
+                    { file: files[0].name }
+                  ),
+                });
+                return Promise.resolve();
+              } catch {
+                await sdk?.execute(Command.SHOW_SNACKBAR, {
+                  message: t(
+                    "snackbar.uploaded.error",
+                    "Could not upload file {{file}}",
+                    { file: files[0].name }
+                  ),
+                });
+                return Promise.reject();
+              }
+            }}
           />
         </div>
       </div>
