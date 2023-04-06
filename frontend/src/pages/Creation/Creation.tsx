@@ -157,6 +157,7 @@ export const Creation: React.FC = () => {
                       fres.data.data.id + fres.data.data.update_time
                     )}`
                   );
+                  await sdk?.execute(Command.CLOSE_MODAL);
                 } catch {
                   await sdk?.execute(Command.SHOW_SNACKBAR, {
                     message: t("creation.error", "Could not create a new file"),
