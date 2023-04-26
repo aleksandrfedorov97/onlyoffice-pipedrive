@@ -32,7 +32,7 @@
     "settings.saving.error": "Could not save ONLYOFFICE settings",
     "editor.error": "Could not open the file. Something went wrong",
     "background.error.title": "Error",
-    "background.error.subtitle": "Could not fetch plugin settings. Something went wrong. Please reload the pipedrive window",
+    "background.error.subtitle": "Could not fetch plugin settings. Something went wrong. Please reload the Pipedrive window",
     "background.access.title": "Access denied",
     "background.access.subtitle": "Something went wrong or access denied",
     "background.reinstall.title": "The document security token has expired",
