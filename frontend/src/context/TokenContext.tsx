@@ -17,11 +17,14 @@
  */
 
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
+import i18next from "i18next";
 import axios from "axios";
 import React, { useEffect } from "react";
 import { proxy } from "valtio";
 
-import { getMe } from "@services/me";
+import { getMe, getPipedriveMe } from "@services/me";
+
+import { getCurrentURL } from "@utils/url";
 
 export const AuthToken = proxy({
   access_token: "",
@@ -41,6 +44,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
     new AppExtensionsSDK()
       .initialize()
       .then((sdk) => {
+        const { url } = getCurrentURL();
         timerID = setTimeout(async function update() {
           if (
             !AuthToken.error &&
@@ -50,6 +54,8 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               const token = await getMe(sdk);
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
+              const resp = await getPipedriveMe(`${url}api/v1/users/me`);
+              await i18next.changeLanguage(resp.data.language.language_code);
             } catch (err) {
               if (!axios.isCancel(err)) {
                 AuthToken.error = true;
