@@ -113,7 +113,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen overflow-hidden">
+    <div className="w-screen h-screen overflow-scroll">
       {loading && !error && (
         <div className="h-full w-full flex justify-center items-center">
           <OnlyofficeSpinner />
@@ -198,7 +198,7 @@ export const SettingsPage: React.FC = () => {
                 onClick={handleSettings}
               />
             </div>
-            <div className="absolute bottom-0 ml-5 w-[568px]">
+            <div className="relative bottom-0 ml-5 w-[568px]">
               <Banner />
             </div>
           </div>

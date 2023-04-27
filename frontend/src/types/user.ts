@@ -40,6 +40,10 @@ export type PipedriveUserResponse = {
     name: string;
     access: PipedriveAccess[];
     active_flag: true;
+    language: {
+      country_code: string;
+      language_code: string;
+    };
   };
 };
 

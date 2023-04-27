@@ -61,7 +61,7 @@ export const Banner: React.FC = () => {
       <div className="w-3/12">
         <button
           type="button"
-          className="pl-5 pr-5 pt-2 pb-2 text-sm whitespace-nowrap rounded overflow-hidden text-ellipsis inline-block max-w-[200px] cursor-pointer hover:shadow-sm duration-200"
+          className="pl-5 pr-5 pt-2 pb-2 text-sm rounded overflow-hidden text-ellipsis inline-block max-w-[120px] cursor-pointer hover:shadow-sm duration-200"
           style={{ backgroundColor: "#192435", color: "#FFFFFF" }}
           onClick={() =>
             window.open(
