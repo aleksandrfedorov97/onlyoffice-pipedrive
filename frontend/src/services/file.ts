@@ -17,6 +17,7 @@
  */
 
 import axios from "axios";
+import axiosRetry from "axios-retry";
 
 import { AuthToken } from "@context/TokenContext";
 
@@ -29,8 +30,16 @@ export const fetchFiles = async (
   signal: AbortSignal | undefined = undefined,
   sort = "add_time ASC"
 ) => {
+  const client = axios.create();
+  axiosRetry(client, {
+    retries: 3,
+    retryCondition: (error) => error.status !== 200,
+    retryDelay: (count) => count * 50,
+    shouldResetTimeout: true,
+  });
+
   try {
-    const res = await axios<FileResponse>({
+    const res = await client<FileResponse>({
       method: "GET",
       url,
       params: {
@@ -43,7 +52,7 @@ export const fetchFiles = async (
         Authorization: `Bearer ${AuthToken.access_token}`,
       },
       signal,
-      timeout: 4000,
+      timeout: 3500,
     });
 
     return {
@@ -51,7 +60,6 @@ export const fetchFiles = async (
       pagination: res.data.additional_data.pagination,
     };
   } catch (err) {
-    console.log(err);
     return {
       response: [],
       pagination: {
