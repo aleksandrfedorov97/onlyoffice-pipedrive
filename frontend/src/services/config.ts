@@ -34,7 +34,9 @@ export const fetchConfig = async (
     retries: 2,
     retryCondition: (error) => error.status !== 200,
     retryDelay: (count) => count * 50,
+    shouldResetTimeout: true,
   });
+
   const res = await axios<ConfigResponse>({
     method: "GET",
     url: `${process.env.BACKEND_GATEWAY}/api/config`,
