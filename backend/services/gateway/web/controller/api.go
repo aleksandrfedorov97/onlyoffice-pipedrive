@@ -92,7 +92,7 @@ func (c *apiController) BuildGetMe() http.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		ures, status, _ := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
@@ -239,7 +239,7 @@ func (c apiController) BuildGetSettings() http.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
 
 		ures, status, _ := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
@@ -318,7 +318,7 @@ func (c apiController) BuildGetConfig() http.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 6*time.Second)
 		defer cancel()
 
 		var resp response.BuildConfigResponse
