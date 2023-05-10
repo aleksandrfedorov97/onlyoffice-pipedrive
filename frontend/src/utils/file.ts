@@ -87,13 +87,14 @@ const WORD = "word";
 const SLIDE = "slide";
 const CELL = "cell";
 
-export const getFileParts = (filename: string): [string, string] => {
-  const [name, ext] = filename.split(".");
-  return [name, ext];
-};
-
 const getFileExt = (filename: string): string =>
   filename.split(".").pop() || "";
+
+export const getFileParts = (filename: string): [string, string] => {
+  const parts = filename.split(".");
+  parts.pop();
+  return [parts.join(".") || "invalid", getFileExt(filename)];
+};
 
 export const isFileEditable = (filename: string) => {
   const ext = getFileExt(filename).toLowerCase();
