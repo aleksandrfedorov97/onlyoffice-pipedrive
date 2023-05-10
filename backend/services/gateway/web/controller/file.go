@@ -65,6 +65,8 @@ func (c *fileController) getUser(ctx context.Context, id string) (response.UserR
 
 func (c fileController) BuildGetFile() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Type", "application/json")
+
 		query := r.URL.Query()
 		lang, fileType, dealID, filename := strings.TrimSpace(query.Get("lang")),
 			strings.TrimSpace(query.Get("type")), strings.TrimSpace(query.Get("deal")),
