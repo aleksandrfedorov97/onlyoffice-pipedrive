@@ -84,7 +84,7 @@ func (c *apiController) getUser(ctx context.Context, id string) (response.UserRe
 
 func (c *apiController) BuildGetMe() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
+		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")
@@ -110,7 +110,7 @@ func (c *apiController) BuildGetMe() http.HandlerFunc {
 
 func (c *apiController) BuildPostSettings() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
+		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")
@@ -229,7 +229,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 
 func (c apiController) BuildGetSettings() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
+		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")
@@ -290,7 +290,7 @@ func (c apiController) BuildGetConfig() http.HandlerFunc {
 		id, filename, key, dealID := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
 			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id"))
 
-		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
+		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")

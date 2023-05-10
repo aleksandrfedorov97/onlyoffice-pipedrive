@@ -74,7 +74,7 @@ func (c fileController) BuildGetFile() http.HandlerFunc {
 			return
 		}
 
-		pctx, ok := r.Context().Value(request.PipedriveTokenContext{}).(request.PipedriveTokenContext)
+		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")

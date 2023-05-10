@@ -36,6 +36,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
 	"golang.org/x/sync/singleflight"
@@ -150,8 +151,8 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		CID: usr.CompanyID,
 	}
 
-	downloadToken.IssuedAt = 0
-	downloadToken.ExpiresAt = time.Now().Add(4 * time.Minute).UnixMilli()
+	downloadToken.IssuedAt = jwt.NewNumericDate(time.Now())
+	downloadToken.ExpiresAt = jwt.NewNumericDate(time.Now().Add(4 * time.Minute))
 	tkn, _ := c.jwtManager.Sign(settings.DocSecret, downloadToken)
 
 	filename := shared.EscapeFilename(req.Filename)

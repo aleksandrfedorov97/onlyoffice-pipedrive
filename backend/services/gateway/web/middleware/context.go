@@ -49,7 +49,7 @@ func BuildHandleContextMiddleware(
 				return
 			}
 
-			next.ServeHTTP(rw, r.WithContext(context.WithValue(r.Context(), request.PipedriveTokenContext{}, ctx)))
+			next.ServeHTTP(rw, r.WithContext(context.WithValue(r.Context(), "X-Pipedrive-App-Context", ctx)))
 		}
 	}
 }

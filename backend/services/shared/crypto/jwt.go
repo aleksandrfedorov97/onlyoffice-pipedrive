@@ -21,7 +21,7 @@ package crypto
 import (
 	"errors"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -33,9 +33,7 @@ var ErrJwtManagerInvalidSigningMethod = errors.New("unexpected jwt signing metho
 var ErrJwtManagerCastOrInvalidToken = errors.New("could not cast claims or invalid jwt")
 
 type JwtManager interface {
-	Sign(secret string, payload interface {
-		Valid() error
-	}) (string, error)
+	Sign(secret string, payload jwt.Claims) (string, error)
 	Verify(secret, jwtToken string, body interface{}) error
 }
 
@@ -47,9 +45,7 @@ func NewOnlyofficeJwtManager() JwtManager {
 	return onlyofficeJwtManager{}
 }
 
-func (j onlyofficeJwtManager) Sign(secret string, payload interface {
-	Valid() error
-}) (string, error) {
+func (j onlyofficeJwtManager) Sign(secret string, payload jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 	ss, err := token.SignedString([]byte(secret))
 

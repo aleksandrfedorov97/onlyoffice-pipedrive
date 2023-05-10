@@ -51,6 +51,7 @@ func Server() *cli.Command {
 			app := pkg.Bootstrap(
 				CONFIG_PATH, rpc.NewService, web.NewAuthRPCServer,
 			)
+
 			if err := app.Err(); err != nil {
 				return err
 			}

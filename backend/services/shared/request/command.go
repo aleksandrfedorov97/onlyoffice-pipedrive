@@ -21,11 +21,11 @@ package request
 import (
 	"encoding/json"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type BaseCommandRequest struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	C string `json:"c"`
 }
 

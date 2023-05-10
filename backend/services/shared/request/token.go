@@ -21,11 +21,11 @@ package request
 import (
 	"encoding/json"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type PipedriveTokenContext struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 	UID int `json:"userId" mapstructure:"userId"`
 	CID int `json:"companyId" mapstructure:"companyId"`
 	IAT int `json:"iat" mapstructure:"iat"`
