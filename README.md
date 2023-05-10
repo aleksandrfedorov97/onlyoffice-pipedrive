@@ -23,9 +23,8 @@ To get ONLYOFFICE Docs Cloud, get started [here](https://www.onlyoffice.com/docs
 ## App installation and configuration 
 
 You can add the ONLYOFFICE app from the [Pipedrive App Marketplace](https://www.pipedrive.com/en/marketplace). 
-To do it, you need to sign into your account and allow the requested app permissions.
 
-Once done, go to the ONLYOFFICE app settings page and enter the name of the server with ONLYOFFICE Docs installed in the *Document Server Address* field.
+Once done, go to the ONLYOFFICE app settings page (Tools and Integrations -> Marketplace apps -> ONLYOFFICE) and enter the name of the server with ONLYOFFICE Docs installed in the *Document Server Address* field.
 
 Starting from version 7.2 of ONLYOFFICE Docs, JWT is enabled by default and the secret key is generated automatically to restrict the access to the editors and for security reasons and data integrity. You can specify your own *Document Server Secret* on the settings page. In the ONLYOFFICE Docs [config file](https://api.onlyoffice.com/editors/signature/), specify the same secret key to enable the validation.
 
@@ -33,10 +32,9 @@ Starting from version 7.2 of ONLYOFFICE Docs, JWT is enabled by default and the 
 
 The app allows working with office documents directly within the Pipedrive frontend.
 
-You can prepare and keep necessary materials such as text documents, spreadsheets, and presentations directly within your Pipedrive session. 
-Just click the *Create with ONLYOFFICE* button on the main app screen. 
+You can create and upload text documents, spreadsheets, and presentations within your Pipedrive Deals. Just click the corresponding button (Create or upload document) in the ONLYOFFICE Documents section.
 
-To edit the created files, reach to the *ONLYOFFICE Documents* list on the main screen of the ONLYOFFICE app. You can also collaborate on documents in real time together with your colleagues.
+To edit the created files, reach to the ONLYOFFICE Documents section and open the needed document by clicking the pencil icon. Everyone who has access to the deal can open the file for editing. You can also collaborate on documents in real time together with your colleagues.
 
 ## ONLYOFFICE Docs editions
 
