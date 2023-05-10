@@ -77,16 +77,16 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   const handleEditor = async () => {
     setDisable(true);
     if (!disable && isFileSupported(file.name)) {
+      const win = window.open("/editor");
       const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
       if (token) {
         const [name, ext] = getFileParts(file.name);
-        window.open(
-          `/editor?token=${token.token}&deal_id=${
+        if (win && win.location)
+          win.location.href = `/editor?token=${token.token}&deal_id=${
             parameters.get("selectedIds") || "1"
           }&id=${file.id}&name=${`${encodeURIComponent(
             name.substring(0, 190)
-          )}.${ext}`}&key=${md5(file.id + file.update_time)}`
-        );
+          )}.${ext}`}&key=${md5(file.id + file.update_time)}`;
       }
     }
     // temporary solution
