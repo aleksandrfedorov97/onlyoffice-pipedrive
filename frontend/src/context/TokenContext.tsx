@@ -26,6 +26,8 @@ import { getMe, getPipedriveMe } from "@services/me";
 
 import { getCurrentURL } from "@utils/url";
 
+import { UserResponse } from "src/types/user";
+
 export const AuthToken = proxy({
   access_token: "",
   expires_at: Date.now(),
@@ -46,24 +48,49 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
       .then((sdk) => {
         const { url } = getCurrentURL();
         timerID = setTimeout(async function update() {
-          if (
-            !AuthToken.error &&
-            (!AuthToken.access_token || AuthToken.expires_at <= Date.now() - 1)
-          ) {
-            try {
-              const token = await getMe(sdk);
+          if (AuthToken.error) return;
+          try {
+            let token;
+            const auth = localStorage.getItem("authorization");
+            if (!auth) {
+              token = await getMe(sdk);
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
-              const resp = await getPipedriveMe(`${url}api/v1/users/me`);
-              await i18next.changeLanguage(resp.data.language.language_code);
-            } catch (err) {
-              if (!axios.isCancel(err)) {
-                AuthToken.error = true;
-                AuthToken.access_token = "";
-              }
+              localStorage.setItem(
+                "authorization",
+                JSON.stringify({
+                  access_token: token.response.access_token,
+                  expires_at: token.response.expires_at,
+                })
+              );
+              return;
             }
+
+            token = JSON.parse(auth) as UserResponse;
+            if (token.expires_at - 110 < Date.now()) {
+              localStorage.removeItem("authorization");
+              const t = await getMe(sdk);
+              AuthToken.access_token = t.response.access_token;
+              AuthToken.expires_at = t.response.expires_at;
+              return;
+            }
+
+            AuthToken.access_token = token.access_token;
+            AuthToken.expires_at = token.expires_at;
+          } catch (err) {
+            if (!axios.isCancel(err)) {
+              AuthToken.error = true;
+              AuthToken.access_token = "";
+              localStorage.removeItem("authorization");
+            }
+          } finally {
+            const resp = await getPipedriveMe(`${url}api/v1/users/me`);
+            await i18next.changeLanguage(resp.data.language.language_code);
+            timerID = setTimeout(
+              update,
+              AuthToken.expires_at - Date.now() - 100
+            );
           }
-          timerID = setTimeout(update, AuthToken.expires_at - Date.now() - 100);
         }, 0);
       })
       .catch(() => null);
