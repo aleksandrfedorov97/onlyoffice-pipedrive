@@ -113,7 +113,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen overflow-scroll">
+    <div className="w-screen h-screen overflow-y-scroll overflow-x-hidden">
       {loading && !error && (
         <div className="h-full w-full flex justify-center items-center">
           <OnlyofficeSpinner />
