@@ -84,6 +84,7 @@ func (c *apiController) getUser(ctx context.Context, id string) (response.UserRe
 
 func (c *apiController) BuildGetMe() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
@@ -110,6 +111,7 @@ func (c *apiController) BuildGetMe() http.HandlerFunc {
 
 func (c *apiController) BuildPostSettings() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
@@ -229,6 +231,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 
 func (c apiController) BuildGetSettings() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
