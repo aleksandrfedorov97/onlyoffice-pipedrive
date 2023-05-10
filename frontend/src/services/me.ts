@@ -28,10 +28,12 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
   const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create({ baseURL: process.env.BACKEND_GATEWAY });
   axiosRetry(client, {
-    retries: 0,
+    retries: 3,
     retryCondition: (error) => error.status !== 200,
     retryDelay: (count) => count * 50,
+    shouldResetTimeout: true,
   });
+
   const res = await client<UserResponse>({
     method: "GET",
     url: `/api/me`,
@@ -39,14 +41,22 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
       "Content-Type": "application/json",
       "X-Pipedrive-App-Context": pctx.token,
     },
-    timeout: 3000,
+    timeout: 5000,
   });
 
   return { response: res.data };
 };
 
 export const getPipedriveMe = async (url: string) => {
-  const res = await axios<PipedriveUserResponse>({
+  const client = axios.create();
+  axiosRetry(client, {
+    retries: 3,
+    retryCondition: (error) => error.status !== 200,
+    retryDelay: (count) => count * 50,
+    shouldResetTimeout: true,
+  });
+
+  const res = await client<PipedriveUserResponse>({
     method: "GET",
     url,
     headers: {
@@ -55,5 +65,6 @@ export const getPipedriveMe = async (url: string) => {
     },
     timeout: 3000,
   });
+
   return res.data;
 };
