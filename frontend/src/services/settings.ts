@@ -55,8 +55,10 @@ export const getSettings = async (sdk: AppExtensionsSDK) => {
   const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create({ baseURL: process.env.BACKEND_GATEWAY });
   axiosRetry(client, {
-    retries: 2,
+    retries: 3,
     retryCondition: (error) => error.status !== 200,
+    retryDelay: (count) => count * 50,
+    shouldResetTimeout: true,
   });
 
   const settings = await client<SettingsResponse>({
@@ -66,7 +68,7 @@ export const getSettings = async (sdk: AppExtensionsSDK) => {
       "Content-Type": "application/json",
       "X-Pipedrive-App-Context": pctx.token,
     },
-    timeout: 7000,
+    timeout: 3000,
   });
 
   return settings.data;
