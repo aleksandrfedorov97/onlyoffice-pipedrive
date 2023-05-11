@@ -70,7 +70,7 @@ export const Main: React.FC = () => {
 
   return (
     <div className="table-shadow h-full">
-      <div className="px-5 overflow-scroll h-[85%] md:justify-between no-scrollbar">
+      <div className="overflow-x-hidden overflow-y-auto custom-scroll px-5 h-[85%] md:justify-between mr-5">
         {isLoading && (
           <div className="h-[85%] w-full flex justify-center items-center">
             <OnlyofficeSpinner />
