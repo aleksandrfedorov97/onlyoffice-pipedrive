@@ -61,14 +61,14 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
           <button
             className={`${
               supported && onClick ? "cursor-pointer" : "cursor-default"
-            } text-left font-semibold font-sans md:text-sm text-xs px-2 w-full h-[32px] overflow-hidden text-ellipsis whitespace-nowrap`}
+            } text-left font-semibold font-sans md:text-sm text-xs px-2 w-[170px] h-[32px] overflow-hidden text-ellipsis whitespace-nowrap`}
             type="button"
             onClick={onClick}
           >
             {name}
           </button>
         </div>
-        <div className="flex items-center justify-end w-1/4">{actions}</div>
+        <div className="flex items-center justify-end w-1/3">{actions}</div>
       </div>
       <div
         className={`overflow-hidden transition-all ${
