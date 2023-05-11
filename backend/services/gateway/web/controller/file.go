@@ -133,3 +133,34 @@ func (c fileController) BuildGetFile() http.HandlerFunc {
 		rw.Write(res.ToJSON())
 	}
 }
+
+func (c fileController) BuildGetDownloadUrl() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Type", "plain/text")
+		query := r.URL.Query()
+		domain, fileID := query.Get("domain"), query.Get("file_id")
+
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+
+		dreq, _ := http.NewRequest("GET", fmt.Sprintf("%s/files/%s/download", strings.TrimSuffix(domain, "/"), fileID), nil)
+		dreq.Header.Add("Authorization", r.Header.Get("Authorization"))
+		resp, err := client.Do(dreq)
+		if err != nil {
+			c.logger.Errorf("could not build a new download url: %s", err.Error())
+			rw.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if resp.StatusCode != 302 {
+			c.logger.Errorf("unexpected status code while building a new download url: %d", resp.StatusCode)
+			rw.WriteHeader(resp.StatusCode)
+			return
+		}
+
+		rw.Write([]byte(resp.Header.Get("Location")))
+	}
+}

@@ -9,6 +9,7 @@
     "files.info.size": "Dimensione",
     "snackbar.fileremoved.ok": "Il file {{file}} è stato rimosso",
     "snackbar.fileremoved.error": "Impossibile rimuovere il file {{file}}",
+    "snackbar.filedownload.error": "Could not download file {{file}}",
     "snackbar.uploaded.ok": "Il file {{file}} è stato caricato",
     "snackbar.uploaded.error": "Impossibile caricare il file {{file}}",
     "creation.title": "Crea con ONLYOFFICE",

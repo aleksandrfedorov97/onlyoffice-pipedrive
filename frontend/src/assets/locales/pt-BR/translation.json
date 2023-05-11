@@ -9,6 +9,7 @@
     "files.info.size": "Tamanho",
     "snackbar.fileremoved.ok": "Arquivo {{arquivo}} foi removido",
     "snackbar.fileremoved.error": "Não foi possível remover o arquivo {{arquivo}}",
+    "snackbar.filedownload.error": "Could not download file {{file}}",
     "snackbar.uploaded.ok": "Arquivo {{arquivo}} foi carregado",
     "snackbar.uploaded.error": "Não foi possível carregar o arquivo {{arquivo}}",
     "creation.title": "Criar com o ONLYOFFICE",

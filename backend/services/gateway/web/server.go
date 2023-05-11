@@ -124,6 +124,7 @@ func (s *PipedriveHTTPService) InitializeRoutes() {
 		})
 
 		r.Route("/files", func(fr chi.Router) {
+			fr.Get("/download", fileController.BuildGetDownloadUrl())
 			fr.Get("/create", tokenMiddleware(fileController.BuildGetFile()))
 		})
 	})

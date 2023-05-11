@@ -9,6 +9,7 @@
     "files.info.size": "サイズ",
     "snackbar.fileremoved.ok": "{{file}}ファイルは削除されました",
     "snackbar.fileremoved.error": "{{file}}ファイルを削除できませんでした",
+    "snackbar.filedownload.error": "Could not download file {{file}}",
     "snackbar.uploaded.ok": "{{file}}ファイルがアップロードされました",
     "snackbar.uploaded.error": "{{file}}ファイルをアップロードできませんでした",
     "creation.title": "ONLYOFFICEで作成する",

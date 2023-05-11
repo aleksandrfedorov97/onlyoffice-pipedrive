@@ -23,12 +23,15 @@ import { useTranslation } from "react-i18next";
 
 import { useDeleteFile } from "@hooks/useDeleteFile";
 
+import { downloadFile } from "@services/file";
+
 import { getFileParts, isFileSupported } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
 import { File } from "src/types/file";
 
 import Pencil from "@assets/pencil.svg";
+import Download from "@assets/download.svg";
 import Trash from "@assets/trash.svg";
 
 type FileActionsProps = {
@@ -50,6 +53,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   }, []);
 
   const handleDelete = () => {
+    if (disable) return;
     setDisable(true);
     mutator
       .mutateAsync()
@@ -75,8 +79,9 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleEditor = async () => {
+    if (disable) return;
     setDisable(true);
-    if (!disable && isFileSupported(file.name)) {
+    if (isFileSupported(file.name)) {
       const win = window.open("/editor");
       const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
       if (token) {
@@ -93,6 +98,25 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
     setTimeout(() => setDisable(false), 10000);
   };
 
+  const handleDownload = async () => {
+    if (disable) return;
+    setDisable(true);
+    try {
+      const durl = await downloadFile(url, file.id);
+      window.open(durl);
+    } catch {
+      await sdk?.execute(Command.SHOW_SNACKBAR, {
+        message: t(
+          "snackbar.filedownload.error",
+          `Could not download file ${file.name}`,
+          { file: file.name }
+        ),
+      });
+    } finally {
+      setDisable(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -107,6 +131,17 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         onKeyDown={() => handleEditor()}
       >
         <Pencil />
+      </div>
+      <div
+        role="button"
+        tabIndex={0}
+        className={`mx-1 ${
+          disable ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+        }`}
+        onClick={() => handleDownload()}
+        onKeyDown={() => handleDownload()}
+      >
+        <Download />
       </div>
       <div
         role="button"

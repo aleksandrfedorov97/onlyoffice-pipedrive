@@ -72,6 +72,21 @@ export const fetchFiles = async (
   }
 };
 
+export const downloadFile = async (domain: string, id: string) => {
+  const resp = await axios.get(
+    `${process.env.BACKEND_GATEWAY}/files/download?domain=${encodeURIComponent(
+      domain
+    )}&file_id=${id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${AuthToken.access_token}`,
+      },
+    }
+  );
+
+  return resp.data;
+};
+
 export const deleteFile = async (
   url: string,
   signal: AbortSignal | undefined = undefined
