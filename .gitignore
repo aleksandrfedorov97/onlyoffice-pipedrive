@@ -29,6 +29,7 @@ dist/
 
 # Miscellaneous
 .DS_Store
+.vscode
 
 # Env
 .env
