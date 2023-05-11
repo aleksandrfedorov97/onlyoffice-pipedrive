@@ -25,7 +25,7 @@ import { proxy } from "valtio";
 import { getMe, getPipedriveMe } from "@services/me";
 
 import { getCurrentURL } from "@utils/url";
-
+import { getWithExpiry, setWithExpiry } from "@utils/storage";
 import { UserResponse } from "src/types/user";
 
 export const AuthToken = proxy({
@@ -48,49 +48,39 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
       .then((sdk) => {
         const { url } = getCurrentURL();
         timerID = setTimeout(async function update() {
-          if (AuthToken.error) return;
-          try {
-            let token;
-            const auth = localStorage.getItem("authorization");
-            if (!auth) {
-              token = await getMe(sdk);
-              AuthToken.access_token = token.response.access_token;
-              AuthToken.expires_at = token.response.expires_at;
-              localStorage.setItem(
-                "authorization",
-                JSON.stringify({
-                  access_token: token.response.access_token,
-                  expires_at: token.response.expires_at,
-                })
-              );
-              return;
+          if (
+            !AuthToken.error &&
+            (!AuthToken.access_token ||
+              AuthToken.expires_at <= Date.now() - 1000 * 19)
+          ) {
+            try {
+              const val = getWithExpiry("authorization") as UserResponse;
+              if (val) {
+                AuthToken.access_token = val.access_token;
+                AuthToken.expires_at = val.expires_at;
+              } else {
+                const token = await getMe(sdk);
+                AuthToken.access_token = token.response.access_token;
+                AuthToken.expires_at = token.response.expires_at;
+                setWithExpiry(
+                  "authorization",
+                  token.response,
+                  token.response.expires_at
+                );
+              }
+              const resp = await getPipedriveMe(`${url}api/v1/users/me`);
+              await i18next.changeLanguage(resp.data.language.language_code);
+            } catch (err) {
+              if (!axios.isCancel(err)) {
+                AuthToken.error = true;
+                AuthToken.access_token = "";
+              }
             }
-
-            token = JSON.parse(auth) as UserResponse;
-            if (token.expires_at - 110 < Date.now()) {
-              localStorage.removeItem("authorization");
-              const t = await getMe(sdk);
-              AuthToken.access_token = t.response.access_token;
-              AuthToken.expires_at = t.response.expires_at;
-              return;
-            }
-
-            AuthToken.access_token = token.access_token;
-            AuthToken.expires_at = token.expires_at;
-          } catch (err) {
-            if (!axios.isCancel(err)) {
-              AuthToken.error = true;
-              AuthToken.access_token = "";
-              localStorage.removeItem("authorization");
-            }
-          } finally {
-            const resp = await getPipedriveMe(`${url}api/v1/users/me`);
-            await i18next.changeLanguage(resp.data.language.language_code);
-            timerID = setTimeout(
-              update,
-              AuthToken.expires_at - Date.now() - 100
-            );
           }
+          timerID = setTimeout(
+            update,
+            AuthToken.expires_at - Date.now() - 1000 * 19
+          );
         }, 0);
       })
       .catch(() => null);
