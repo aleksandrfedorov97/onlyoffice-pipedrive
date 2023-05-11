@@ -24,9 +24,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	chttp "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/http"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/worker"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/callback/web/controller"
-	workerh "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/callback/web/worker"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	"github.com/gin-gonic/gin"
 	"github.com/go-chi/chi/v5"
@@ -40,8 +38,6 @@ type CallbackService struct {
 	mux           *chi.Mux
 	client        client.Client
 	logger        log.Logger
-	worker        worker.BackgroundWorker
-	enqueuer      worker.BackgroundEnqueuer
 	maxSize       int64
 	uploadTimeout int
 }
@@ -64,8 +60,6 @@ func NewServer(
 		namespace:     serverConfig.Namespace,
 		mux:           chi.NewRouter(),
 		logger:        logger,
-		worker:        worker.NewBackgroundWorker(workerConfig, logger),
-		enqueuer:      worker.NewBackgroundEnqueuer(workerConfig),
 		maxSize:       onlyofficeConfig.Onlyoffice.Callback.MaxSize,
 		uploadTimeout: onlyofficeConfig.Onlyoffice.Callback.UploadTimeout,
 	}
@@ -83,20 +77,18 @@ func (s CallbackService) NewHandler(client client.Client, cache cache.Cache) int
 // InitializeServer sets all injected dependencies.
 func (s *CallbackService) InitializeServer(c client.Client) *chi.Mux {
 	s.client = c
-	s.worker.Register("pipedrive-callback-upload", workerh.NewCallbackWorker(s.namespace, c, s.uploadTimeout, s.logger).UploadFile)
 	s.InitializeRoutes()
-	s.worker.Run()
 	return s.mux
 }
 
 // InitializeRoutes builds all http routes.
 func (s *CallbackService) InitializeRoutes() {
-	callbackController := controller.NewCallbackController(s.namespace, s.maxSize, s.logger, s.client)
+	callbackController := controller.NewCallbackController(s.namespace, s.maxSize, s.uploadTimeout, s.logger, s.client)
 	s.mux.Group(func(r chi.Router) {
 		r.Use(chimiddleware.Recoverer)
 		r.NotFound(func(rw http.ResponseWriter, r *http.Request) {
 			http.Redirect(rw, r.WithContext(r.Context()), "https://onlyoffice.com", http.StatusMovedPermanently)
 		})
-		r.Post("/callback", callbackController.BuildPostHandleCallback(s.enqueuer))
+		r.Post("/callback", callbackController.BuildPostHandleCallback())
 	})
 }
