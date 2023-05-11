@@ -61,7 +61,7 @@ func (u UserSelectHandler) GetUser(ctx context.Context, uid *string, res *domain
 			return nil, err
 		}
 
-		if user.ExpiresAt <= time.Now().UnixMilli() {
+		if user.ExpiresAt <= time.Now().Add(-20*time.Second).UnixMilli() {
 			u.logger.Debug("user token has expired. Trying to refresh!")
 			token, terr := u.pipedriveAuth.RefreshAccessToken(ctx, user.RefreshToken)
 			if terr != nil {
