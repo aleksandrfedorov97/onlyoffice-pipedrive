@@ -22,11 +22,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
@@ -36,7 +36,6 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
 	"golang.org/x/sync/singleflight"
@@ -146,21 +145,25 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		t = "mobile"
 	}
 
-	downloadToken := request.PipedriveTokenContext{
-		UID: usr.ID,
-		CID: usr.CompanyID,
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
-	downloadToken.IssuedAt = jwt.NewNumericDate(time.Now())
-	downloadToken.ExpiresAt = jwt.NewNumericDate(time.Now().Add(4 * time.Minute))
-	tkn, _ := c.jwtManager.Sign(settings.DocSecret, downloadToken)
+	dreq, _ := http.NewRequest("GET", fmt.Sprintf("%s/files/%s/download", user.ApiDomain, req.FileID), nil)
+	dreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", user.AccessToken))
+	resp, err := client.Do(dreq)
+	if err != nil {
+		return config, err
+	}
 
 	filename := shared.EscapeFilename(req.Filename)
 	config = response.BuildConfigResponse{
 		Document: response.Document{
 			Key:   req.DocKey,
 			Title: filename,
-			URL:   fmt.Sprintf("%s/files/download?cid=%d&fid=%s&token=%s", c.gatewayURL, usr.CompanyID, req.FileID, tkn),
+			URL:   resp.Header.Get("Location"),
 		},
 		EditorConfig: response.EditorConfig{
 			User: response.User{
