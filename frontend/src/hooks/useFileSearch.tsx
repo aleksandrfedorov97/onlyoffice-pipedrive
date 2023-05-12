@@ -37,9 +37,9 @@ export function useFileSearch(url: string, limit: number) {
       lastPage?.pagination?.more_items_in_collection
         ? lastPage.pagination.next_start
         : undefined,
-    staleTime: 2000,
-    cacheTime: 2500,
-    refetchInterval: 2000,
+    staleTime: 3500,
+    cacheTime: 4000,
+    refetchInterval: 3500,
   });
 
   return {
