@@ -51,7 +51,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
           if (
             !AuthToken.error &&
             (!AuthToken.access_token ||
-              AuthToken.expires_at <= Date.now() - 1000 * 90)
+              AuthToken.expires_at <= Date.now() - 1000 * 30)
           ) {
             try {
               const val = getWithExpiry("authorization") as UserResponse;
@@ -65,7 +65,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
                 setWithExpiry(
                   "authorization",
                   token.response,
-                  token.response.expires_at - 1000 * 90
+                  token.response.expires_at - 1000 * 30
                 );
               }
               const resp = await getPipedriveMe(`${url}api/v1/users/me`);
@@ -79,7 +79,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
           }
           timerID = setTimeout(
             update,
-            AuthToken.expires_at - Date.now() - 1000 * 90
+            AuthToken.expires_at - Date.now() - 1000 * 30
           );
         }, 0);
       })
