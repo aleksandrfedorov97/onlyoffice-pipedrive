@@ -32,9 +32,9 @@ export const fetchFiles = async (
 ) => {
   const client = axios.create();
   axiosRetry(client, {
-    retries: 3,
+    retries: 6,
     retryCondition: (error) => error.status !== 200,
-    retryDelay: (count) => count * 50,
+    retryDelay: (count) => count * 100,
     shouldResetTimeout: true,
   });
 
