@@ -63,6 +63,7 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
               supported && onClick ? "cursor-pointer" : "cursor-default"
             } text-left font-semibold font-sans md:text-sm text-xs px-2 w-[170px] h-[32px] overflow-hidden text-ellipsis whitespace-nowrap`}
             type="button"
+            title={name}
             onClick={onClick}
           >
             {name}
