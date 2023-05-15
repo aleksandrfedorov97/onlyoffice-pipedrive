@@ -25,8 +25,6 @@ import { proxy } from "valtio";
 import { getMe, getPipedriveMe } from "@services/me";
 
 import { getCurrentURL } from "@utils/url";
-import { getWithExpiry, setWithExpiry } from "@utils/storage";
-import { UserResponse } from "src/types/user";
 
 export const AuthToken = proxy({
   access_token: "",
@@ -54,20 +52,9 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               AuthToken.expires_at <= Date.now() - 1000 * 30)
           ) {
             try {
-              const val = getWithExpiry("authorization") as UserResponse;
-              if (val) {
-                AuthToken.access_token = val.access_token;
-                AuthToken.expires_at = val.expires_at;
-              } else {
-                const token = await getMe(sdk);
-                AuthToken.access_token = token.response.access_token;
-                AuthToken.expires_at = token.response.expires_at;
-                setWithExpiry(
-                  "authorization",
-                  token.response,
-                  token.response.expires_at - 1000 * 30
-                );
-              }
+              const token = await getMe(sdk);
+              AuthToken.access_token = token.response.access_token;
+              AuthToken.expires_at = token.response.expires_at;
               const resp = await getPipedriveMe(`${url}api/v1/users/me`);
               await i18next.changeLanguage(resp.data.language.language_code);
             } catch (err) {
