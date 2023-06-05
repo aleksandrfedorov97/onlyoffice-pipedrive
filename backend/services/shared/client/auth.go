@@ -25,10 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/go-resty/resty/v2"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"golang.org/x/oauth2"
 )
 
 type PipedriveAuthClient struct {
@@ -37,7 +38,7 @@ type PipedriveAuthClient struct {
 	clientSecret string
 }
 
-func NewPipedriveAuthClient(clientID, clientSecret string) PipedriveAuthClient {
+func NewPipedriveAuthClient(credentials *oauth2.Config) PipedriveAuthClient {
 	otelClient := otelhttp.DefaultClient
 	otelClient.Transport = otelhttp.NewTransport(&http.Transport{
 		Proxy:                 http.ProxyFromEnvironment,
@@ -49,7 +50,7 @@ func NewPipedriveAuthClient(clientID, clientSecret string) PipedriveAuthClient {
 	})
 	return PipedriveAuthClient{
 		client: resty.NewWithClient(otelClient).
-			SetHostURL("https://oauth.pipedrive.com").
+			SetBaseURL("https://oauth.pipedrive.com").
 			SetRetryCount(0).
 			SetRetryWaitTime(1000 * time.Millisecond).
 			SetRetryMaxWaitTime(1500 * time.Millisecond).
@@ -57,8 +58,8 @@ func NewPipedriveAuthClient(clientID, clientSecret string) PipedriveAuthClient {
 			AddRetryCondition(func(r *resty.Response, err error) bool {
 				return r.StatusCode() == http.StatusTooManyRequests
 			}),
-		clientID:     clientID,
-		clientSecret: clientSecret,
+		clientID:     credentials.ClientID,
+		clientSecret: credentials.ClientSecret,
 	}
 }
 

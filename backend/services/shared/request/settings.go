@@ -20,14 +20,8 @@ package request
 
 import (
 	"encoding/json"
-	"errors"
 	"strings"
 )
-
-var _ErrInvalidCompanyID = errors.New("invalid company id")
-var _ErrInvalidDocAddress = errors.New("invalid doc server address")
-var _ErrInvalidDocSecret = errors.New("invalid doc server secret")
-var _ErrInvalidDocHeader = errors.New("invalid doc server header")
 
 type DocSettings struct {
 	CompanyID  int    `json:"company_id" mapstructure:"company_id"`
@@ -46,19 +40,19 @@ func (c DocSettings) Validate() error {
 	c.DocSecret = strings.TrimSpace(c.DocSecret)
 
 	if c.CompanyID <= 0 {
-		return _ErrInvalidCompanyID
+		return ErrInvalidCompanyID
 	}
 
 	if c.DocAddress == "" {
-		return _ErrInvalidDocAddress
+		return ErrInvalidDocAddress
 	}
 
 	if c.DocSecret == "" {
-		return _ErrInvalidDocSecret
+		return ErrInvalidDocSecret
 	}
 
 	if c.DocHeader == "" {
-		return _ErrInvalidDocHeader
+		return ErrInvalidDocHeader
 	}
 
 	return nil

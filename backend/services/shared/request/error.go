@@ -16,19 +16,13 @@
  *
  */
 
-package message
+package request
 
-import "encoding/json"
+import "errors"
 
-type JobMessage struct {
-	UID      string `json:"uid"`
-	Deal     string `json:"deal"`
-	FileID   string `json:"fileID"`
-	Filename string `json:"filename"`
-	Url      string `json:"url"`
-}
-
-func (s JobMessage) ToJSON() []byte {
-	buf, _ := json.Marshal(s)
-	return buf
-}
+var (
+	ErrInvalidCompanyID  = errors.New("invalid company id")
+	ErrInvalidDocAddress = errors.New("invalid doc server address")
+	ErrInvalidDocSecret  = errors.New("invalid doc server secret")
+	ErrInvalidDocHeader  = errors.New("invalid doc server header")
+)

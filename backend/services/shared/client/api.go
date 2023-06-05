@@ -20,22 +20,19 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/go-resty/resty/v2"
 	"github.com/mitchellh/mapstructure"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
-
-var _ErrInvalidContentLength = errors.New("could not perform api actions due to exceeding content-length")
 
 type PipedriveApiClient struct {
 	client *resty.Client
@@ -122,20 +119,20 @@ func (p *PipedriveApiClient) UpdateFile(ctx context.Context, id, name string, to
 	return nil
 }
 
-func (c *PipedriveApiClient) ValidateFileSize(ctx context.Context, limit int64, url string) error {
+func (c *PipedriveApiClient) ValidateFileSize(ctx context.Context, limit int64, url string) (int64, error) {
 	headResp, err := c.client.R().
 		SetContext(ctx).
 		Head(url)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if val, err := strconv.ParseInt(headResp.Header().Get("Content-Length"), 10, 0); val > limit || err != nil {
-		return _ErrInvalidContentLength
+		return 0, ErrInvalidContentLength
+	} else {
+		return val, nil
 	}
-
-	return nil
 }
 
 func (p PipedriveApiClient) getFile(ctx context.Context, url string) (io.ReadCloser, error) {

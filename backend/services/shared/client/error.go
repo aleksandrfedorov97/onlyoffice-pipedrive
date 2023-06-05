@@ -23,7 +23,10 @@ import (
 	"fmt"
 )
 
-var ErrInvalidUrlFormat error = errors.New("url is not valid")
+var (
+	ErrInvalidUrlFormat     = errors.New("url is not valid")
+	ErrInvalidContentLength = errors.New("could not perform api actions due to exceeding content-length")
+)
 
 type UnexpectedStatusCodeError struct {
 	Action string

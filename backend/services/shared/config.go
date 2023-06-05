@@ -24,14 +24,73 @@ import (
 	"time"
 
 	"github.com/sethvargo/go-envconfig"
+	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 )
 
+type IntegrationCredentials struct {
+	Credentials struct {
+		ClientID     string   `yaml:"client_id" env:"CREDENTIALS_CLIENT_ID"`
+		ClientSecret string   `yaml:"client_secret" env:"CREDENTIALS_CLIENT_SECRET"`
+		RedirectURL  string   `yaml:"redirect_url" env:"CREDENTIALS_REDIRECT_URL"`
+		Scopes       []string `yaml:"scopes" env:"CREDENTIALS_SCOPES"`
+	} `yaml:"credentials"`
+}
 type OnlyofficeConfig struct {
 	Onlyoffice struct {
 		Builder  OnlyofficeBuilderConfig  `yaml:"builder"`
 		Callback OnlyofficeCallbackConfig `yaml:"callback"`
 	} `yaml:"onlyoffice"`
+}
+
+func (ic *IntegrationCredentials) Validate() error {
+	if ic.Credentials.ClientID == "" {
+		return &InvalidConfigurationParameterError{
+			Parameter: "ClientID",
+			Reason:    "Should not be empty",
+		}
+	}
+
+	if ic.Credentials.ClientSecret == "" {
+		return &InvalidConfigurationParameterError{
+			Parameter: "Client Secret",
+			Reason:    "Should not be empty",
+		}
+	}
+
+	return nil
+}
+
+func BuildNewIntegrationCredentialsConfig(path string) func() (*oauth2.Config, error) {
+	return func() (*oauth2.Config, error) {
+		var config IntegrationCredentials
+		if path != "" {
+			file, err := os.Open(path)
+			if err != nil {
+				return nil, err
+			}
+			defer file.Close()
+
+			decoder := yaml.NewDecoder(file)
+
+			if err := decoder.Decode(&config); err != nil {
+				return nil, err
+			}
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+		defer cancel()
+		if err := envconfig.Process(ctx, &config); err != nil {
+			return nil, err
+		}
+
+		return &oauth2.Config{
+			ClientID:     config.Credentials.ClientID,
+			ClientSecret: config.Credentials.ClientSecret,
+			RedirectURL:  config.Credentials.RedirectURL,
+			Scopes:       config.Credentials.Scopes,
+		}, nil
+	}
 }
 
 func (oc *OnlyofficeConfig) Validate() error {

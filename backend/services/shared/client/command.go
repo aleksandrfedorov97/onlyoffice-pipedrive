@@ -25,8 +25,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/go-resty/resty/v2"
