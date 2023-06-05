@@ -147,21 +147,6 @@ export const getFileIcon = (filename: string) => {
   return Unsupported;
 };
 
-export const getCreateFileUrl = (
-  fileType: "docx" | "pptx" | "xlsx" | undefined
-) => {
-  switch (fileType) {
-    case "docx":
-      return encodeURIComponent(process.env.WORD_FILE || "");
-    case "pptx":
-      return encodeURIComponent(process.env.SLIDE_FILE || "");
-    case "xlsx":
-      return encodeURIComponent(process.env.SPREADSHEET_FILE || "");
-    default:
-      return encodeURIComponent(process.env.WORD_FILE || "");
-  }
-};
-
 export const formatBytes = (bytes: number, decimals = 2) => {
   if (!+bytes) return "0 Bytes";
 
