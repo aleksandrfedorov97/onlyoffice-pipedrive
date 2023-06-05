@@ -23,49 +23,67 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
+	"golang.org/x/oauth2"
 	"golang.org/x/sync/singleflight"
 )
 
 var group singleflight.Group
 
-type authController struct {
-	namespace     string
-	redirectURI   string
+type AuthController struct {
 	client        client.Client
 	pipedriveAuth pclient.PipedriveAuthClient
 	pipedriveAPI  pclient.PipedriveApiClient
+	config        *config.ServerConfig
+	credentials   *oauth2.Config
 	logger        log.Logger
 }
 
 func NewAuthController(
-	namespace string,
-	redirectURI string,
 	client client.Client,
 	pipedriveAuth pclient.PipedriveAuthClient,
+	pipedriveAPI pclient.PipedriveApiClient,
+	config *config.ServerConfig,
+	credentials *oauth2.Config,
 	logger log.Logger,
-) *authController {
-	return &authController{
-		namespace:     namespace,
-		redirectURI:   redirectURI,
+) AuthController {
+	return AuthController{
 		client:        client,
 		pipedriveAuth: pipedriveAuth,
-		pipedriveAPI:  pclient.NewPipedriveApiClient(),
+		pipedriveAPI:  pipedriveAPI,
+		config:        config,
+		credentials:   credentials,
 		logger:        logger,
 	}
 }
 
-func (c authController) BuildGetAuth() http.HandlerFunc {
+func (c AuthController) BuildGetInstall() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		c.logger.Debug("a new install request")
+		http.Redirect(
+			rw, r,
+			fmt.Sprintf(
+				"https://oauth.pipedrive.com/oauth/authorize?client_id=%s&redirect_uri=%s",
+				c.credentials.ClientID,
+				url.QueryEscape(c.credentials.RedirectURL),
+			),
+			http.StatusMovedPermanently,
+		)
+	}
+}
+
+func (c AuthController) BuildGetAuth() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		c.logger.Debug("a new auth request")
 		code := strings.TrimSpace(r.URL.Query().Get("code"))
@@ -76,7 +94,7 @@ func (c authController) BuildGetAuth() http.HandlerFunc {
 		}
 
 		group.Do(code, func() (interface{}, error) {
-			token, err := c.pipedriveAuth.GetAccessToken(r.Context(), code, c.redirectURI)
+			token, err := c.pipedriveAuth.GetAccessToken(r.Context(), code, c.credentials.RedirectURL)
 			if err != nil {
 				rw.WriteHeader(http.StatusBadRequest)
 				c.logger.Errorf("could not get pipedrive access token: %s", err.Error())
@@ -90,17 +108,37 @@ func (c authController) BuildGetAuth() http.HandlerFunc {
 				return nil, err
 			}
 
-			if err := c.client.Publish(r.Context(), client.NewMessage("insert-auth", response.UserResponse{
-				ID:           fmt.Sprint(usr.ID + usr.CompanyID),
-				AccessToken:  token.AccessToken,
-				RefreshToken: token.RefreshToken,
-				TokenType:    token.TokenType,
-				Scope:        token.Scope,
-				ApiDomain:    token.ApiDomain,
-				ExpiresAt:    time.Now().Local().Add(time.Second * time.Duration(token.ExpiresIn-700)).UnixMilli(),
-			})); err != nil {
-				rw.WriteHeader(http.StatusInternalServerError)
-				c.logger.Errorf("insert user error: %s", err.Error())
+			var ures response.UserResponse
+			if err := c.client.Call(
+				r.Context(),
+				c.client.NewRequest(
+					fmt.Sprintf("%s:auth", c.config.Namespace),
+					"UserInsertHandler.InsertUser",
+					response.UserResponse{
+						ID:           fmt.Sprint(usr.ID + usr.CompanyID),
+						AccessToken:  token.AccessToken,
+						RefreshToken: token.RefreshToken,
+						TokenType:    token.TokenType,
+						Scope:        token.Scope,
+						ApiDomain:    token.ApiDomain,
+						ExpiresAt:    time.Now().Local().Add(time.Second * time.Duration(token.ExpiresIn-700)).UnixMilli(),
+					},
+				),
+				&ures,
+			); err != nil {
+				c.logger.Errorf("could not get user access info: %s", err.Error())
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+					rw.WriteHeader(http.StatusRequestTimeout)
+					return nil, err
+				}
+
+				microErr := response.MicroError{}
+				if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
+					rw.WriteHeader(http.StatusUnauthorized)
+					return nil, err
+				}
+
+				rw.WriteHeader(microErr.Code)
 				return nil, err
 			}
 
@@ -111,7 +149,7 @@ func (c authController) BuildGetAuth() http.HandlerFunc {
 	}
 }
 
-func (c authController) BuildDeleteAuth() http.HandlerFunc {
+func (c AuthController) BuildDeleteAuth() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		c.logger.Debug("a new uninstall request")
 		var ureq request.UninstallRequest
@@ -122,21 +160,22 @@ func (c authController) BuildDeleteAuth() http.HandlerFunc {
 			return
 		}
 
-		buf, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			c.logger.Errorf("could not parse request body: %s", err.Error())
-			return
-		}
-
-		if err := json.Unmarshal(buf, &ureq); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&ureq); err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			c.logger.Errorf("could not unmarshal request body: %s", err.Error())
 			return
 		}
 
 		var res interface{}
-		if err := c.client.Call(r.Context(), c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserDeleteHandler.DeleteUser", fmt.Sprint(ureq.UserID+ureq.CompanyID)), &res); err != nil {
+		if err := c.client.Call(
+			r.Context(),
+			c.client.NewRequest(
+				fmt.Sprintf("%s:auth", c.config.Namespace),
+				"UserDeleteHandler.DeleteUser",
+				fmt.Sprint(ureq.UserID+ureq.CompanyID),
+			),
+			&res,
+		); err != nil {
 			c.logger.Errorf("could not delete user: %s", err.Error())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				rw.WriteHeader(http.StatusRequestTimeout)

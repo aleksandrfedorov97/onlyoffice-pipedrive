@@ -9,41 +9,56 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/gateway/assets"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
 )
 
-type fileController struct {
-	namespace        string
-	allowedDownloads int
-	client           client.Client
-	apiClient        pclient.PipedriveApiClient
-	jwtManager       crypto.JwtManager
-	logger           log.Logger
+type FileController struct {
+	client     client.Client
+	apiClient  pclient.PipedriveApiClient
+	jwtManager crypto.JwtManager
+	config     *config.ServerConfig
+	onlyoffice *shared.OnlyofficeConfig
+	logger     log.Logger
 }
 
 func NewFileController(
-	namespace string, allowedDownloads int, client client.Client,
-	jwtManager crypto.JwtManager, logger log.Logger) fileController {
-	return fileController{
-		namespace:        namespace,
-		client:           client,
-		apiClient:        pclient.NewPipedriveApiClient(),
-		jwtManager:       jwtManager,
-		logger:           logger,
-		allowedDownloads: allowedDownloads,
+	client client.Client,
+	apiClient pclient.PipedriveApiClient,
+	jwtManager crypto.JwtManager,
+	config *config.ServerConfig,
+	onlyoffice *shared.OnlyofficeConfig,
+	logger log.Logger,
+) FileController {
+	return FileController{
+		client:     client,
+		apiClient:  apiClient,
+		jwtManager: jwtManager,
+		config:     config,
+		onlyoffice: onlyoffice,
+		logger:     logger,
 	}
 }
 
-func (c *fileController) getUser(ctx context.Context, id string) (response.UserResponse, int) {
+func (c *FileController) getUser(ctx context.Context, id string) (response.UserResponse, int) {
 	var ures response.UserResponse
-	if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", id), &ures); err != nil {
+	if err := c.client.Call(
+		ctx,
+		c.client.NewRequest(
+			fmt.Sprintf("%s:auth", c.config.Namespace),
+			"UserSelectHandler.GetUser",
+			id,
+		),
+		&ures,
+	); err != nil {
 		c.logger.Errorf("could not get user access info: %s", err.Error())
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return ures, http.StatusRequestTimeout
@@ -60,7 +75,7 @@ func (c *fileController) getUser(ctx context.Context, id string) (response.UserR
 	return ures, http.StatusOK
 }
 
-func (c fileController) BuildGetFile() http.HandlerFunc {
+func (c FileController) BuildGetFile() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 
@@ -134,7 +149,7 @@ func (c fileController) BuildGetFile() http.HandlerFunc {
 	}
 }
 
-func (c fileController) BuildGetDownloadUrl() http.HandlerFunc {
+func (c FileController) BuildGetDownloadUrl() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "plain/text")
 		query := r.URL.Query()

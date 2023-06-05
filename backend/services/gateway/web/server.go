@@ -21,55 +21,38 @@ package web
 import (
 	"net/http"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
-	shttp "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/http"
+	shttp "github.com/ONLYOFFICE/onlyoffice-integration-adapters/service/http"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/gateway/web/controller"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/gateway/web/middleware"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
-	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
-	"github.com/gin-gonic/gin"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/gorilla/sessions"
-	"go-micro.dev/v4/cache"
-	"go-micro.dev/v4/client"
 )
 
 type PipedriveHTTPService struct {
-	namespace        string
-	mux              *chi.Mux
-	client           client.Client
-	logger           log.Logger
-	store            sessions.Store
-	clientID         string
-	clientSecret     string
-	redirectURI      string
-	allowedDownloads int
+	apiController     controller.ApiController
+	authController    controller.AuthController
+	fileController    controller.FileController
+	authMiddleware    middleware.AuthMiddleware
+	contextMiddleware middleware.ContextMiddleware
+	mux               *chi.Mux
 }
 
 // NewService initializes http server with options.
 func NewServer(
-	serverConfig *config.ServerConfig,
-	credentialsConfig *config.OAuthCredentialsConfig,
-	onlyofficeConfig *shared.OnlyofficeConfig,
-	logger log.Logger,
+	apiController controller.ApiController,
+	authController controller.AuthController,
+	fileController controller.FileController,
+	authMiddleware middleware.AuthMiddleware,
+	contextMiddleware middleware.ContextMiddleware,
 ) shttp.ServerEngine {
-	gin.SetMode(gin.ReleaseMode)
-
-	service := PipedriveHTTPService{
-		namespace:        serverConfig.Namespace,
-		mux:              chi.NewRouter(),
-		logger:           logger,
-		clientID:         credentialsConfig.Credentials.ClientID,
-		clientSecret:     credentialsConfig.Credentials.ClientSecret,
-		redirectURI:      credentialsConfig.Credentials.RedirectURI,
-		store:            sessions.NewCookieStore([]byte(credentialsConfig.Credentials.ClientSecret)),
-		allowedDownloads: onlyofficeConfig.Onlyoffice.Builder.AllowedDownloads,
+	return PipedriveHTTPService{
+		apiController:     apiController,
+		authController:    authController,
+		fileController:    fileController,
+		authMiddleware:    authMiddleware,
+		contextMiddleware: contextMiddleware,
+		mux:               chi.NewRouter(),
 	}
-
-	return service
 }
 
 // ApplyMiddleware useed to apply http server middlewares.
@@ -78,29 +61,20 @@ func (s PipedriveHTTPService) ApplyMiddleware(middlewares ...func(http.Handler) 
 }
 
 // NewHandler returns http server engine.
-func (s PipedriveHTTPService) NewHandler(client client.Client, cache cache.Cache) interface {
+func (s PipedriveHTTPService) NewHandler() interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 } {
-	return s.InitializeServer(client)
+	return s.InitializeServer()
 }
 
 // InitializeServer sets all injected dependencies.
-func (s *PipedriveHTTPService) InitializeServer(c client.Client) *chi.Mux {
-	s.client = c
+func (s *PipedriveHTTPService) InitializeServer() *chi.Mux {
 	s.InitializeRoutes()
 	return s.mux
 }
 
 // InitializeRoutes builds all http routes.
 func (s *PipedriveHTTPService) InitializeRoutes() {
-	jwtManager := crypto.NewOnlyofficeJwtManager()
-	authMiddleware := middleware.BuildHandleAuthMiddleware(s.clientID, s.clientSecret, s.logger)
-	tokenMiddleware := middleware.BuildHandleContextMiddleware(s.clientSecret, jwtManager, s.logger)
-
-	authController := controller.NewAuthController(s.namespace, s.redirectURI, s.client, pclient.NewPipedriveAuthClient(s.clientID, s.clientSecret), s.logger)
-	apiController := controller.NewApiController(s.namespace, s.client, jwtManager, s.logger)
-	fileController := controller.NewFileController(s.namespace, s.allowedDownloads, s.client, jwtManager, s.logger)
-
 	s.mux.Group(func(r chi.Router) {
 		r.Use(chimiddleware.Recoverer)
 		r.NotFound(func(rw http.ResponseWriter, cr *http.Request) {
@@ -109,23 +83,24 @@ func (s *PipedriveHTTPService) InitializeRoutes() {
 
 		r.Route("/oauth", func(cr chi.Router) {
 			cr.Use(chimiddleware.NoCache)
-			cr.Get("/auth", authController.BuildGetAuth())
-			cr.Delete("/auth", authMiddleware(authController.BuildDeleteAuth()))
+			cr.Get("/install", s.authController.BuildGetInstall())
+			cr.Get("/auth", s.authController.BuildGetAuth())
+			cr.Delete("/auth", s.authMiddleware.Protect(s.authController.BuildDeleteAuth()))
 		})
 
 		r.Route("/api", func(cr chi.Router) {
 			cr.Use(func(h http.Handler) http.Handler {
-				return tokenMiddleware(h)
+				return s.contextMiddleware.Protect(h)
 			})
-			cr.Get("/me", apiController.BuildGetMe())
-			cr.Get("/config", apiController.BuildGetConfig())
-			cr.Post("/settings", apiController.BuildPostSettings())
-			cr.Get("/settings", apiController.BuildGetSettings())
+			cr.Get("/me", s.apiController.BuildGetMe())
+			cr.Get("/config", s.apiController.BuildGetConfig())
+			cr.Post("/settings", s.apiController.BuildPostSettings())
+			cr.Get("/settings", s.apiController.BuildGetSettings())
 		})
 
 		r.Route("/files", func(fr chi.Router) {
-			fr.Get("/download", fileController.BuildGetDownloadUrl())
-			fr.Get("/create", tokenMiddleware(fileController.BuildGetFile()))
+			fr.Get("/download", s.fileController.BuildGetDownloadUrl())
+			fr.Get("/create", s.contextMiddleware.Protect(s.fileController.BuildGetFile()))
 		})
 	})
 }

@@ -22,34 +22,48 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
+	"go-micro.dev/v4/logger"
+	"golang.org/x/oauth2"
 )
 
+type ContextMiddleware struct {
+	jwtManager  crypto.JwtManager
+	credentials *oauth2.Config
+	logger      log.Logger
+}
+
 func BuildHandleContextMiddleware(
-	clientSecret string,
 	jwtManager crypto.JwtManager,
+	credentials *oauth2.Config,
 	logger log.Logger,
-) func(next http.Handler) http.HandlerFunc {
-	logger.Debugf("pipedrive context middleware has been built with client_secret %s", clientSecret)
-	return func(next http.Handler) http.HandlerFunc {
-		return func(rw http.ResponseWriter, r *http.Request) {
-			var ctx request.PipedriveTokenContext
-			token := r.Header.Get("X-Pipedrive-App-Context")
-			if token == "" {
-				logger.Errorf("unauthorized access to an api endpoint")
-				rw.WriteHeader(http.StatusUnauthorized)
-				return
-			}
+) ContextMiddleware {
+	return ContextMiddleware{
+		jwtManager:  jwtManager,
+		credentials: credentials,
+		logger:      logger,
+	}
+}
 
-			if err := jwtManager.Verify(clientSecret, token, &ctx); err != nil {
-				logger.Errorf("could not verify X-Pipedrive-App-Context: %s", err.Error())
-				rw.WriteHeader(http.StatusForbidden)
-				return
-			}
-
-			next.ServeHTTP(rw, r.WithContext(context.WithValue(r.Context(), "X-Pipedrive-App-Context", ctx)))
+func (m ContextMiddleware) Protect(next http.Handler) http.HandlerFunc {
+	m.logger.Debugf("pipedrive context middleware has been built with client_secret %s", m.credentials.ClientSecret)
+	return func(rw http.ResponseWriter, r *http.Request) {
+		var ctx request.PipedriveTokenContext
+		token := r.Header.Get("X-Pipedrive-App-Context")
+		if token == "" {
+			logger.Errorf("unauthorized access to an api endpoint")
+			rw.WriteHeader(http.StatusUnauthorized)
+			return
 		}
+
+		if err := m.jwtManager.Verify(m.credentials.ClientSecret, token, &ctx); err != nil {
+			logger.Errorf("could not verify X-Pipedrive-App-Context: %s", err.Error())
+			rw.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(rw, r.WithContext(context.WithValue(r.Context(), "X-Pipedrive-App-Context", ctx)))
 	}
 }

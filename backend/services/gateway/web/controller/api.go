@@ -23,49 +23,54 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
 )
 
-var _ErrNotAdmin = errors.New("no admin access")
+var ErrNotAdmin = errors.New("no admin access")
 
-type apiController struct {
-	namespace     string
+type ApiController struct {
 	client        client.Client
 	apiClient     pclient.PipedriveApiClient
 	commandClient pclient.CommandClient
 	jwtManager    crypto.JwtManager
+	config        *config.ServerConfig
 	logger        log.Logger
 }
 
 func NewApiController(
-	namespace string, client client.Client,
-	jwtManager crypto.JwtManager, logger log.Logger) apiController {
-	return apiController{
-		namespace:     namespace,
+	client client.Client,
+	apiClient pclient.PipedriveApiClient,
+	commandClient pclient.CommandClient,
+	jwtManager crypto.JwtManager,
+	serverConfig *config.ServerConfig,
+	logger log.Logger,
+) ApiController {
+	return ApiController{
 		client:        client,
-		apiClient:     pclient.NewPipedriveApiClient(),
-		commandClient: pclient.NewCommandClient(jwtManager),
+		apiClient:     apiClient,
+		commandClient: commandClient,
 		jwtManager:    jwtManager,
+		config:        serverConfig,
 		logger:        logger,
 	}
 }
 
-func (c *apiController) getUser(ctx context.Context, id string) (response.UserResponse, int, error) {
+func (c *ApiController) getUser(ctx context.Context, id string) (response.UserResponse, int, error) {
 	var ures response.UserResponse
-	if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", id), &ures); err != nil {
+	if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser", id), &ures); err != nil {
 		c.logger.Errorf("could not get user access info: %s", err.Error())
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return ures, http.StatusRequestTimeout, err
@@ -82,7 +87,7 @@ func (c *apiController) getUser(ctx context.Context, id string) (response.UserRe
 	return ures, http.StatusOK, nil
 }
 
-func (c *apiController) BuildGetMe() http.HandlerFunc {
+func (c ApiController) BuildGetMe() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
@@ -109,7 +114,7 @@ func (c *apiController) BuildGetMe() http.HandlerFunc {
 	}
 }
 
-func (c *apiController) BuildPostSettings() http.HandlerFunc {
+func (c ApiController) BuildPostSettings() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
@@ -126,8 +131,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		}
 
 		var settings request.DocSettings
-		buf, _ := ioutil.ReadAll(r.Body)
-		if err := json.Unmarshal(buf, &settings); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&settings); err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			c.logger.Errorf(err.Error())
 			return
@@ -175,7 +179,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 
 			for _, access := range urs.Access {
 				if access.App == "global" && !access.Admin {
-					errChan <- _ErrNotAdmin
+					errChan <- ErrNotAdmin
 					return
 				}
 			}
@@ -201,15 +205,19 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 		default:
 		}
 
-		msg := c.client.NewMessage("insert-settings", request.DocSettings{
-			CompanyID:  <-cidChan,
-			DocAddress: settings.DocAddress,
-			DocSecret:  settings.DocSecret,
-			DocHeader:  settings.DocHeader,
-		})
-
-		if err := c.client.Publish(ctx, msg); err != nil {
-			c.logger.Errorf("could not insert settings: %s", err.Error())
+		var sres interface{}
+		if err := c.client.Call(
+			ctx, c.client.NewRequest(
+				fmt.Sprintf("%s:settings", c.config.Namespace),
+				"SettingsInsertHandler.InsertSettings",
+				request.DocSettings{
+					CompanyID:  <-cidChan,
+					DocAddress: settings.DocAddress,
+					DocHeader:  settings.DocHeader,
+					DocSecret:  settings.DocSecret,
+				},
+			), &sres); err != nil {
+			c.logger.Errorf("could not get user access info: %s", err.Error())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				rw.WriteHeader(http.StatusRequestTimeout)
 				return
@@ -218,6 +226,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 			microErr := response.MicroError{}
 			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
 				rw.WriteHeader(http.StatusUnauthorized)
+				c.logger.Errorf("could not post new settings: %s", err.Error())
 				return
 			}
 
@@ -229,7 +238,7 @@ func (c *apiController) BuildPostSettings() http.HandlerFunc {
 	}
 }
 
-func (c apiController) BuildGetSettings() http.HandlerFunc {
+func (c ApiController) BuildGetSettings() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
@@ -264,7 +273,15 @@ func (c apiController) BuildGetSettings() http.HandlerFunc {
 		}
 
 		var docs response.DocSettingsResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:settings", c.namespace), "SettingsSelectHandler.GetSettings", fmt.Sprint(pctx.CID)), &docs); err != nil {
+		if err := c.client.Call(
+			ctx,
+			c.client.NewRequest(
+				fmt.Sprintf("%s:settings", c.config.Namespace),
+				"SettingsSelectHandler.GetSettings",
+				fmt.Sprint(pctx.CID),
+			),
+			&docs,
+		); err != nil {
 			c.logger.Errorf("could not get settings: %s", err.Error())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				rw.WriteHeader(http.StatusRequestTimeout)
@@ -285,7 +302,7 @@ func (c apiController) BuildGetSettings() http.HandlerFunc {
 	}
 }
 
-func (c apiController) BuildGetConfig() http.HandlerFunc {
+func (c ApiController) BuildGetConfig() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 
@@ -322,15 +339,23 @@ func (c apiController) BuildGetConfig() http.HandlerFunc {
 		defer cancel()
 
 		var resp response.BuildConfigResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:builder", c.namespace), "ConfigHandler.BuildConfig", request.BuildConfigRequest{
-			UID:       pctx.UID,
-			CID:       pctx.CID,
-			Deal:      dealID,
-			UserAgent: r.UserAgent(),
-			Filename:  filename,
-			FileID:    id,
-			DocKey:    key,
-		}), &resp); err != nil {
+		if err := c.client.Call(
+			ctx,
+			c.client.NewRequest(
+				fmt.Sprintf("%s:builder", c.config.Namespace),
+				"ConfigHandler.BuildConfig",
+				request.BuildConfigRequest{
+					UID:       pctx.UID,
+					CID:       pctx.CID,
+					Deal:      dealID,
+					UserAgent: r.UserAgent(),
+					Filename:  filename,
+					FileID:    id,
+					DocKey:    key,
+				},
+			),
+			&resp,
+		); err != nil {
 			c.logger.Errorf("could not build onlyoffice config: %s", err.Error())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				rw.WriteHeader(http.StatusRequestTimeout)
