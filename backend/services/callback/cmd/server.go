@@ -19,10 +19,12 @@
 package cmd
 
 import (
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg"
-	chttp "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/http"
+	pkg "github.com/ONLYOFFICE/onlyoffice-integration-adapters"
+	chttp "github.com/ONLYOFFICE/onlyoffice-integration-adapters/service/http"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/callback/web"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/callback/web/controller"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/urfave/cli/v2"
 )
 
@@ -37,22 +39,18 @@ func Server() *cli.Command {
 				Usage:   "sets custom configuration path",
 				Aliases: []string{"config", "conf", "c"},
 			},
-			&cli.StringFlag{
-				Name:    "environment",
-				Usage:   "sets servers environment (development, testing, production)",
-				Aliases: []string{"env", "e"},
-			},
 		},
 		Action: func(c *cli.Context) error {
 			var (
 				CONFIG_PATH = c.String("config_path")
-				// ENVIRONMENT = c.String("environment")
 			)
 
-			app := pkg.Bootstrap(
-				CONFIG_PATH, chttp.NewService, web.NewServer,
+			app := pkg.NewBootstrapper(CONFIG_PATH, pkg.WithModules(
+				chttp.NewService, web.NewServer,
+				controller.NewCallbackController,
 				shared.BuildNewOnlyofficeConfig(CONFIG_PATH),
-			)
+				client.NewPipedriveApiClient,
+			)).Bootstrap()
 
 			if err := app.Err(); err != nil {
 				return err

@@ -1,21 +1,15 @@
 namespace: "pipedrive"
 name: "callback"
 version: 0
-address: ":5044"
+address: ":5454"
 repl_address: ":3132"
 debug: false
-persistence:
-  url: ""
 registry:
-  addresses: ["127.0.0.1:8500"]
+  addresses: [""]
   type: 2
-messaging:
-  type: 1
-  addresses: ["0.0.0.0:5672"]
-  durable: true
 tracer:
   enable: false
-  address: "http://127.0.0.1:9411/api/v2/spans"
+  address: ""
   type: 1
 resilience:
   rate_limiter:
@@ -23,15 +17,21 @@ resilience:
     iplimit: 100
   circuit_breaker:
     timeout: 2500
-cors:
-  origins: ["", ""]
 logger:
   name: "callback-logger"
   level: 1
   color: true
-worker:
-  addresses: ["0.0.0.0:6379"]
+credentials:
+  client_id: ""
+  client_secret: ""
+  redirect_url: ""
 onlyoffice:
+  builder:
+    document_server_url: ""
+    document_server_secret: ""
+    document_server_header: ""
+    gateway_url: ""
+    callback_url: ""
   callback:
     max_size: 210000000000
     upload_timeout: 120

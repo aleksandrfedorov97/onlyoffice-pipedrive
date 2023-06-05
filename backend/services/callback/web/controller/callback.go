@@ -23,124 +23,49 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
-	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/message"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
 	"go-micro.dev/v4/util/backoff"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-type callbackController struct {
-	namespace     string
-	maxSize       int64
-	uploadTimeout int
-	logger        plog.Logger
-	client        client.Client
-	pipedriveAPI  pclient.PipedriveApiClient
-	jwtManager    crypto.JwtManager
+type CallbackController struct {
+	client       client.Client
+	pipedriveAPI pclient.PipedriveApiClient
+	jwtManager   crypto.JwtManager
+	config       *config.ServerConfig
+	onlyoffice   *shared.OnlyofficeConfig
+	logger       plog.Logger
 }
 
 func NewCallbackController(
-	namespace string,
-	maxSize int64,
-	uploadTimeout int,
-	logger plog.Logger,
 	client client.Client,
-) *callbackController {
-	return &callbackController{
-		namespace:     namespace,
-		maxSize:       maxSize,
-		uploadTimeout: uploadTimeout,
-		logger:        logger,
-		client:        client,
-		pipedriveAPI:  pclient.NewPipedriveApiClient(),
-		jwtManager:    crypto.NewOnlyofficeJwtManager(),
+	pipedriveAPI pclient.PipedriveApiClient,
+	jwtManager crypto.JwtManager,
+	config *config.ServerConfig,
+	onlyoffice *shared.OnlyofficeConfig,
+	logger plog.Logger,
+) *CallbackController {
+	return &CallbackController{
+		client:       client,
+		pipedriveAPI: pipedriveAPI,
+		jwtManager:   jwtManager,
+		config:       config,
+		onlyoffice:   onlyoffice,
+		logger:       logger,
 	}
 }
 
-func (c callbackController) UploadFile(ctx context.Context, msg message.JobMessage) error {
-	var wg sync.WaitGroup
-	wg.Add(2)
-	userChan := make(chan response.UserResponse, 1)
-	sizeChan := make(chan int64, 1)
-	errChan := make(chan error, 2)
-
-	go func() {
-		defer wg.Done()
-
-		c.logger.Debugf("trying to get an access token")
-		req := c.client.NewRequest(fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser", msg.UID)
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, req, &ures, client.WithRetries(3), client.WithBackoff(func(ctx context.Context, req client.Request, attempts int) (time.Duration, error) {
-			return backoff.Do(attempts), nil
-		})); err != nil {
-			errChan <- err
-			return
-		}
-
-		c.logger.Debugf("populating user channel")
-		userChan <- ures
-		c.logger.Debugf("successfully populated user channel")
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		headResp, err := otelhttp.Head(ctx, msg.Url)
-		if err != nil {
-			errChan <- err
-			return
-		}
-
-		size, err := strconv.ParseInt(headResp.Header.Get("Content-Length"), 10, 64)
-		if err != nil {
-			errChan <- err
-			return
-		}
-
-		c.logger.Debugf("populating file size channel")
-		sizeChan <- size
-		c.logger.Debugf("successfully populated file size channel")
-	}()
-
-	c.logger.Debugf("callback is waiting for waitgroup")
-	wg.Wait()
-	c.logger.Debugf("callback waitgroup ok")
-
-	select {
-	case err := <-errChan:
-		c.logger.Debugf("an error from the channel: %s", err.Error())
-		return err
-	default:
-		c.logger.Debugf("select default")
-	}
-
-	ures := <-userChan
-	if err := c.pipedriveAPI.UploadFile(ctx, msg.Url, msg.Deal, msg.FileID, msg.Filename, <-sizeChan, model.Token{
-		AccessToken:  ures.AccessToken,
-		RefreshToken: ures.RefreshToken,
-		TokenType:    ures.TokenType,
-		Scope:        ures.Scope,
-		ApiDomain:    ures.ApiDomain,
-	}); err != nil {
-		c.logger.Debugf("could not upload an onlyoffice file to pipedrive: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (c callbackController) BuildPostHandleCallback() http.HandlerFunc {
+func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		cid, did, fid := strings.TrimSpace(query.Get("cid")), strings.TrimSpace(query.Get("did")), strings.TrimSpace(query.Get("fid"))
@@ -174,7 +99,7 @@ func (c callbackController) BuildPostHandleCallback() http.HandlerFunc {
 			return
 		}
 
-		req := c.client.NewRequest(fmt.Sprintf("%s:settings", c.namespace), "SettingsSelectHandler.GetSettings", cid)
+		req := c.client.NewRequest(fmt.Sprintf("%s:settings", c.config.Namespace), "SettingsSelectHandler.GetSettings", cid)
 		var res response.DocSettingsResponse
 		if err := c.client.Call(r.Context(), req, &res); err != nil {
 			c.logger.Errorf("could not extract doc server settings %s", cid)
@@ -219,7 +144,8 @@ func (c callbackController) BuildPostHandleCallback() http.HandlerFunc {
 
 			usr := body.Users[0]
 			if usr != "" {
-				if err := c.pipedriveAPI.ValidateFileSize(ctx, c.maxSize, body.URL); err != nil {
+				size, err := c.pipedriveAPI.ValidateFileSize(ctx, c.onlyoffice.Onlyoffice.Callback.MaxSize, body.URL)
+				if err != nil {
 					c.logger.Errorf("could not validate file %s: %s", filename, err.Error())
 					rw.WriteHeader(http.StatusBadRequest)
 					rw.Write(response.CallbackResponse{
@@ -228,20 +154,35 @@ func (c callbackController) BuildPostHandleCallback() http.HandlerFunc {
 					return
 				}
 
-				uctx, cancel := context.WithTimeout(ctx, time.Duration(c.uploadTimeout)*time.Second)
+				uctx, cancel := context.WithTimeout(ctx, time.Duration(c.onlyoffice.Onlyoffice.Callback.UploadTimeout)*time.Second)
 				defer cancel()
-				if err := c.UploadFile(uctx, message.JobMessage{
-					UID:      usr,
-					Deal:     did,
-					FileID:   fid,
-					Filename: filename,
-					Url:      body.URL,
-				}); err != nil {
-					c.logger.Errorf("could not upload file %s: %s", filename, err.Error())
+
+				req := c.client.NewRequest(fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser", usr)
+				var ures response.UserResponse
+				if err := c.client.Call(uctx, req, &ures, client.WithRetries(3), client.WithBackoff(func(ctx context.Context, req client.Request, attempts int) (time.Duration, error) {
+					return backoff.Do(attempts), nil
+				})); err != nil {
+					c.logger.Errorf("could not get user tokens: %s", err.Error())
 					rw.WriteHeader(http.StatusBadRequest)
 					rw.Write(response.CallbackResponse{
 						Error: 1,
 					}.ToJSON())
+					return
+				}
+
+				if err := c.pipedriveAPI.UploadFile(ctx, body.URL, did, fid, filename, size, model.Token{
+					AccessToken:  ures.AccessToken,
+					RefreshToken: ures.RefreshToken,
+					TokenType:    ures.TokenType,
+					Scope:        ures.Scope,
+					ApiDomain:    ures.ApiDomain,
+				}); err != nil {
+					c.logger.Debugf("could not upload an onlyoffice file to pipedrive: %s", err.Error())
+					rw.WriteHeader(http.StatusBadRequest)
+					rw.Write(response.CallbackResponse{
+						Error: 1,
+					}.ToJSON())
+					return
 				}
 			}
 		}
