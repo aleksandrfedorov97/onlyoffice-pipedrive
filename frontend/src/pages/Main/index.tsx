@@ -54,6 +54,11 @@ export const MainPage: React.FC = () => {
             "background.reinstall.subtitle",
             "Something went wrong. Please reload or reinstall the app."
           )}
+          button={t(
+            "background.reinstall.button",
+            "Reinstall"
+          ) || "Reinstall"}
+          onClick={() => window.open(`${process.env.BACKEND_GATEWAY}/oauth/install`, "_blank")}
         />
       )}
       {loaded && <Main />}
