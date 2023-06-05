@@ -20,7 +20,6 @@ package adapter
 
 import (
 	"context"
-	"errors"
 	"log"
 	"strings"
 	"time"
@@ -33,8 +32,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-var _ErrInvalidCompanyID error = errors.New("invalid cid format")
 
 type docSettingsCollection struct {
 	mgm.DefaultModel `bson:",inline"`
@@ -101,7 +98,7 @@ func (m *mongoUserAdapter) SelectSettings(ctx context.Context, cid string) (doma
 	cid = strings.TrimSpace(cid)
 
 	if cid == "" {
-		return domain.DocSettings{}, _ErrInvalidCompanyID
+		return domain.DocSettings{}, ErrInvalidCompanyID
 	}
 
 	settings := &docSettingsCollection{}
@@ -126,7 +123,7 @@ func (m *mongoUserAdapter) DeleteSettings(ctx context.Context, cid string) error
 	cid = strings.TrimSpace(cid)
 
 	if cid == "" {
-		return _ErrInvalidCompanyID
+		return ErrInvalidCompanyID
 	}
 
 	_, err := mgm.Coll(&docSettingsCollection{}).DeleteMany(ctx, bson.M{"company_id": bson.M{operator.Eq: cid}})

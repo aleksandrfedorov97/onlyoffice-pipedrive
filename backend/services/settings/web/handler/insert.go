@@ -16,40 +16,49 @@
  *
  */
 
-package message
+package handler
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
-	"github.com/mitchellh/mapstructure"
 )
 
-type InsertMessageHandler struct {
+type SettingsInsertHandler struct {
 	service port.DocSettingsService
+	logger  log.Logger
 }
 
-func BuildInsertMessageHandler(service port.DocSettingsService) InsertMessageHandler {
-	return InsertMessageHandler{
+func NewSettingsInsertHandler(
+	service port.DocSettingsService,
+	logger log.Logger,
+) SettingsInsertHandler {
+	return SettingsInsertHandler{
 		service: service,
+		logger:  logger,
 	}
 }
 
-func (i InsertMessageHandler) GetHandler() func(context.Context, interface{}) error {
-	return func(ctx context.Context, payload interface{}) error {
-		var settings request.DocSettings
-		if err := mapstructure.Decode(payload, &settings); err != nil {
-			return err
-		}
-		_, err := i.service.UpdateSettings(ctx, domain.DocSettings{
-			CompanyID:  fmt.Sprint(settings.CompanyID),
-			DocAddress: settings.DocAddress,
-			DocSecret:  settings.DocSecret,
-			DocHeader:  settings.DocHeader,
+func (i SettingsInsertHandler) InsertSettings(ctx context.Context, req request.DocSettings, res *interface{}) error {
+	_, err, _ := group.Do(fmt.Sprintf("insert-%d", req.CompanyID), func() (interface{}, error) {
+		settings, err := i.service.UpdateSettings(ctx, domain.DocSettings{
+			CompanyID:  fmt.Sprint(req.CompanyID),
+			DocAddress: req.DocAddress,
+			DocHeader:  req.DocHeader,
+			DocSecret:  req.DocSecret,
 		})
-		return err
-	}
+
+		if err != nil {
+			i.logger.Errorf("could not update settings: %s", err.Error())
+			return nil, err
+		}
+
+		return settings, nil
+	})
+
+	return err
 }

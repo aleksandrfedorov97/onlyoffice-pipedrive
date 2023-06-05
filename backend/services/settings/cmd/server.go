@@ -19,9 +19,13 @@
 package cmd
 
 import (
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/rpc"
+	pkg "github.com/ONLYOFFICE/onlyoffice-integration-adapters"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/service/rpc"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/adapter"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/service"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/handler"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	"github.com/urfave/cli/v2"
 )
 
@@ -36,19 +40,22 @@ func Server() *cli.Command {
 				Usage:   "sets custom configuration path",
 				Aliases: []string{"config", "conf", "c"},
 			},
-			&cli.StringFlag{
-				Name:    "environment",
-				Usage:   "sets servers environment (development, testing, production)",
-				Aliases: []string{"env", "e"},
-			},
 		},
 		Action: func(c *cli.Context) error {
 			var (
 				CONFIG_PATH = c.String("config_path")
-				// ENVIRONMENT = c.String("environment")
 			)
 
-			app := pkg.Bootstrap(CONFIG_PATH, rpc.NewService, web.NewDocserverRPCServer)
+			app := pkg.NewBootstrapper(CONFIG_PATH, pkg.WithModules(
+				rpc.NewService, web.NewDocserverRPCServer,
+				adapter.BuildNewSettingsAdapter,
+				service.NewSettingsService,
+				handler.NewSettingsSelectHandler,
+				handler.NewSettingsInsertHandler,
+				handler.NewSettingsDeleteHandler,
+				shared.BuildNewIntegrationCredentialsConfig(CONFIG_PATH),
+			)).Bootstrap()
+
 			if err := app.Err(); err != nil {
 				return err
 			}

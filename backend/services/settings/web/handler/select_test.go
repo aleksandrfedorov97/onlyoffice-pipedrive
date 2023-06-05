@@ -22,29 +22,36 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/cache"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/adapter"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/service"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 )
 
 type mockEncryptor struct{}
 
-func (e mockEncryptor) Encrypt(text string) (string, error) {
+func (e mockEncryptor) Encrypt(text string, key []byte) (string, error) {
 	return string(text), nil
 }
 
-func (e mockEncryptor) Decrypt(ciphertext string) (string, error) {
+func (e mockEncryptor) Decrypt(ciphertext string, key []byte) (string, error) {
 	return string(ciphertext), nil
 }
 
 func TestSelectCaching(t *testing.T) {
 	adapter := adapter.NewMemoryDocserverAdapter()
-	service := service.NewSettingsService(adapter, mockEncryptor{}, cache.NewCache(&config.CacheConfig{}), log.NewEmptyLogger())
+	service := service.NewSettingsService(
+		adapter, mockEncryptor{}, cache.NewCache(&config.CacheConfig{}),
+		&oauth2.Config{
+			ClientID:     "mock",
+			ClientSecret: "mock",
+		}, log.NewEmptyLogger(),
+	)
 
 	sel := NewSettingsSelectHandler(service, nil, log.NewEmptyLogger())
 
@@ -52,7 +59,7 @@ func TestSelectCaching(t *testing.T) {
 		CompanyID:  "mock",
 		DocAddress: "mock",
 		DocSecret:  "mock",
-		DocHeader:  "mocj",
+		DocHeader:  "mock",
 	})
 
 	t.Run("get settings", func(t *testing.T) {

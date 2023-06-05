@@ -19,60 +19,32 @@
 package web
 
 import (
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/rpc"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/adapter"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/service"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/service/rpc"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/handler"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/message"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
-	"go-micro.dev/v4/cache"
-	mclient "go-micro.dev/v4/client"
 )
 
 type DocserverRPCServer struct {
-	service port.DocSettingsService
-	logger  log.Logger
+	selectHandler handler.SettingsSelectHandler
+	insertHandler handler.SettingsInsertHandler
+	deleteHandler handler.SettingsDeleteHandler
 }
 
 func NewDocserverRPCServer(
-	persistenceConfig *config.PersistenceConfig,
-	credentialsConfig *config.OAuthCredentialsConfig,
-	cache cache.Cache, logger log.Logger,
+	selectHandler handler.SettingsSelectHandler,
+	insertHandler handler.SettingsInsertHandler,
+	deleteHandler handler.SettingsDeleteHandler,
 ) rpc.RPCEngine {
-	adptr := adapter.NewMemoryDocserverAdapter()
-	if persistenceConfig.Persistence.URL != "" {
-		adptr = adapter.NewMongoDocserverAdapter(persistenceConfig.Persistence.URL)
-	}
-
-	service := service.NewSettingsService(
-		adptr, crypto.NewAesEncryptor([]byte(credentialsConfig.Credentials.ClientSecret)), cache, logger,
-	)
 	return DocserverRPCServer{
-		service: service,
-		logger:  logger,
+		selectHandler: selectHandler,
+		insertHandler: insertHandler,
+		deleteHandler: deleteHandler,
 	}
 }
 
 func (a DocserverRPCServer) BuildMessageHandlers() []rpc.RPCMessageHandler {
-	return []rpc.RPCMessageHandler{
-		{
-			Topic:   "insert-settings",
-			Queue:   "pipedrive-docserver",
-			Handler: message.BuildInsertMessageHandler(a.service).GetHandler(),
-		},
-		{
-			Topic:   "delete-settings",
-			Queue:   "pipedrive-docserver",
-			Handler: message.BuildDeleteMessageHandler(a.service).GetHandler(),
-		},
-	}
+	return nil
 }
 
-func (a DocserverRPCServer) BuildHandlers(client mclient.Client, cache cache.Cache) []interface{} {
-	return []interface{}{
-		handler.NewSettingsSelectHandler(a.service, client, a.logger),
-	}
+func (a DocserverRPCServer) BuildHandlers() []interface{} {
+	return []interface{}{a.selectHandler, a.insertHandler, a.deleteHandler}
 }

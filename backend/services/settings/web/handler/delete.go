@@ -20,51 +20,41 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
 )
 
-type SettingsSelectHandler struct {
+type SettingsDeleteHandler struct {
 	service port.DocSettingsService
 	client  client.Client
 	logger  log.Logger
 }
 
-func NewSettingsSelectHandler(
+func NewSettingsDeleteHandler(
 	service port.DocSettingsService,
 	client client.Client,
 	logger log.Logger,
-) SettingsSelectHandler {
-	return SettingsSelectHandler{
+) SettingsDeleteHandler {
+	return SettingsDeleteHandler{
 		service: service,
 		client:  client,
 		logger:  logger,
 	}
 }
 
-func (u SettingsSelectHandler) GetSettings(ctx context.Context, cid *string, res *response.DocSettingsResponse) error {
-	settings, err, _ := group.Do(*cid, func() (interface{}, error) {
-		settings, err := u.service.GetSettings(ctx, *cid)
-		if err != nil {
-			u.logger.Warnf("could not get company %s settings. Reason: %s", *cid, err.Error())
-			return settings, nil
+func (u SettingsDeleteHandler) DeleteSettings(ctx context.Context, cid *string, res *interface{}) error {
+	_, err, _ := group.Do(fmt.Sprintf("remove-%s", *cid), func() (interface{}, error) {
+		u.logger.Debugf("removing settings %s", *cid)
+		if err := u.service.RemoveSettings(ctx, *cid); err != nil {
+			u.logger.Debugf("could not delete settings %s: %s", *cid, err.Error())
+			return nil, err
 		}
 
-		return settings, nil
+		return nil, nil
 	})
-
-	if set, ok := settings.(domain.DocSettings); ok {
-		*res = response.DocSettingsResponse{
-			DocAddress: set.DocAddress,
-			DocSecret:  set.DocSecret,
-			DocHeader:  set.DocHeader,
-		}
-		return nil
-	}
 
 	return err
 }

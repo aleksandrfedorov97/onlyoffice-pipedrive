@@ -21,13 +21,10 @@ package adapter
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
 )
-
-var _ErrNoCompanySettings = errors.New("no company settings")
 
 type memoryDocserverAdapter struct {
 	kvs map[string][]byte
@@ -60,7 +57,7 @@ func (m *memoryDocserverAdapter) SelectSettings(ctx context.Context, cid string)
 	var settings domain.DocSettings
 
 	if !ok {
-		return settings, _ErrNoCompanySettings
+		return settings, ErrNoCompanySettings
 	}
 
 	if err := json.Unmarshal(buffer, &settings); err != nil {
@@ -80,7 +77,7 @@ func (m *memoryDocserverAdapter) UpsertSettings(ctx context.Context, settings do
 
 func (m *memoryDocserverAdapter) DeleteSettings(ctx context.Context, cid string) error {
 	if _, ok := m.kvs[cid]; !ok {
-		return _ErrNoCompanySettings
+		return ErrNoCompanySettings
 	}
 
 	delete(m.kvs, cid)

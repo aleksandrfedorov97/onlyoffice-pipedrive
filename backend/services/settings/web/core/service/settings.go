@@ -20,38 +20,39 @@ package service
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
-	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/mitchellh/mapstructure"
 	"go-micro.dev/v4/cache"
+	"golang.org/x/oauth2"
 )
 
-var _ErrOperationTimeout = errors.New("operation timeout")
-
 type settingsService struct {
-	adapter   port.DocSettingsServiceAdapter
-	encryptor crypto.Encryptor
-	cache     cache.Cache
-	logger    plog.Logger
+	adapter     port.DocSettingsServiceAdapter
+	encryptor   crypto.Encryptor
+	cache       cache.Cache
+	credentials *oauth2.Config
+	logger      plog.Logger
 }
 
 func NewSettingsService(
 	adapter port.DocSettingsServiceAdapter,
 	encryptor crypto.Encryptor,
 	cache cache.Cache,
+	credentials *oauth2.Config,
 	logger plog.Logger,
 ) port.DocSettingsService {
 	return settingsService{
-		adapter:   adapter,
-		encryptor: encryptor,
-		cache:     cache,
-		logger:    logger,
+		adapter:     adapter,
+		encryptor:   encryptor,
+		cache:       cache,
+		credentials: credentials,
+		logger:      logger,
 	}
 }
 
@@ -61,7 +62,7 @@ func (s settingsService) CreateSettings(ctx context.Context, settings domain.Doc
 		return err
 	}
 
-	esecret, err := s.encryptor.Encrypt(settings.DocSecret)
+	esecret, err := s.encryptor.Encrypt(settings.DocSecret, []byte(s.credentials.ClientSecret))
 	if err != nil {
 		return err
 	}
@@ -108,7 +109,7 @@ func (s settingsService) GetSettings(ctx context.Context, cid string) (domain.Do
 	}
 
 	s.logger.Debugf("found settings: %v", settings)
-	dsecret, err := s.encryptor.Decrypt(settings.DocSecret)
+	dsecret, err := s.encryptor.Decrypt(settings.DocSecret, []byte(s.credentials.ClientSecret))
 	if err != nil {
 		return settings, err
 	}
@@ -127,7 +128,7 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 		return settings, err
 	}
 
-	esecret, err := s.encryptor.Encrypt(settings.DocSecret)
+	esecret, err := s.encryptor.Encrypt(settings.DocSecret, []byte(s.credentials.ClientSecret))
 	if err != nil {
 		return settings, err
 	}
@@ -150,7 +151,7 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 	return settings, nil
 }
 
-func (s settingsService) DeleteSettings(ctx context.Context, cid string) error {
+func (s settingsService) RemoveSettings(ctx context.Context, cid string) error {
 	id := strings.TrimSpace(cid)
 	s.logger.Debugf("validating cid %s to perform a delete action", id)
 

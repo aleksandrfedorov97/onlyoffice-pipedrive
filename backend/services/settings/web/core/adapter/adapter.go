@@ -16,17 +16,18 @@
  *
  */
 
-package port
+package adapter
 
 import (
-	"context"
-
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/domain"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/settings/web/core/port"
 )
 
-type DocSettingsService interface {
-	CreateSettings(ctx context.Context, settings domain.DocSettings) error
-	GetSettings(ctx context.Context, cid string) (domain.DocSettings, error)
-	UpdateSettings(ctx context.Context, settings domain.DocSettings) (domain.DocSettings, error)
-	RemoveSettings(ctx context.Context, cid string) error
+func BuildNewSettingsAdapter(config *config.StorageConfig) port.DocSettingsServiceAdapter {
+	adapter := NewMemoryDocserverAdapter()
+	if config.Storage.URL != "" {
+		adapter = NewMongoDocserverAdapter(config.Storage.URL)
+	}
+
+	return adapter
 }

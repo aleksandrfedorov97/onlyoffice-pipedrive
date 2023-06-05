@@ -4,18 +4,15 @@ version: 0
 address: ":5150"
 repl_address: ":8889"
 debug: false
-# persistence:
-#   url: ""
-registry:
-  addresses: ["127.0.0.1:8500"]
-  type: 2
-messaging:
+storage:
+  url: ""
   type: 1
-  addresses: ["0.0.0.0:5672"]
-  durable: true
+registry:
+  addresses: [""]
+  type: 2
 tracer:
   enable: false
-  address: "http://127.0.0.1:9411/api/v2/spans"
+  address: ""
   type: 1
 resilience:
     rate_limiter:
@@ -26,6 +23,7 @@ logger:
   name: "settings-logger"
   level: 1
   color: true
-oauth:
+credentials:
   client_id: ""
   client_secret: ""
+  redirect_url: ""
