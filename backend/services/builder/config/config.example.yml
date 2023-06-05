@@ -1,21 +1,15 @@
 namespace: "pipedrive"
 name: "builder"
 version: 0
-address: ":6060"
+address: ":6260"
 repl_address: ":7979"
 debug: false
-persistence:
-  url: ""
 registry:
-  addresses: ["127.0.0.1:8500"]
+  addresses: [""]
   type: 2
-messaging:
-  type: 1
-  addresses: ["0.0.0.0:5672"]
-  durable: true
 tracer:
   enable: false
-  address: "http://127.0.0.1:9411/api/v2/spans"
+  address: ""
   type: 1
 resilience:
   rate_limiter:
@@ -26,10 +20,14 @@ logger:
   name: "builder-logger"
   level: 1
   color: true
-oauth:
+credentials:
   client_id: ""
   client_secret: ""
+  redirect_url: ""
 onlyoffice:
   builder:
-    callback_url: ""
+    document_server_url: ""
+    document_server_secret: ""
+    document_server_header: ""
     gateway_url: ""
+    callback_url: ""

@@ -18,12 +18,6 @@
 
 package handler
 
-import "errors"
+import "golang.org/x/sync/singleflight"
 
-var (
-	ErrInvalidContextValue = errors.New("could not extract context value")
-	ErrEmptyIdValue        = errors.New("could not perform current action with an empty id")
-	ErrUnauthorizedAccess  = errors.New("unauthorized file access")
-	ErrNoSettingsFound     = errors.New("could not find document server settings")
-	ErrOperationTimeout    = errors.New("operation timeout")
-)
+var group singleflight.Group

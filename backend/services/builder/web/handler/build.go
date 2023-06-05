@@ -20,7 +20,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -28,49 +27,43 @@ import (
 	"strings"
 	"sync"
 
-	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/constants"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
-	"golang.org/x/sync/singleflight"
 )
 
-var _ErrNoSettingsFound = errors.New("could not find document server settings")
-var _ErrOperationTimeout = errors.New("operation timeout")
-
 type ConfigHandler struct {
-	namespace   string
-	logger      plog.Logger
-	client      client.Client
-	apiClient   pclient.PipedriveApiClient
-	jwtManager  crypto.JwtManager
-	gatewayURL  string
-	callbackURL string
-	group       singleflight.Group
+	client     client.Client
+	apiClient  pclient.PipedriveApiClient
+	jwtManager crypto.JwtManager
+	config     *config.ServerConfig
+	onlyoffice *shared.OnlyofficeConfig
+	logger     plog.Logger
 }
 
 func NewConfigHandler(
-	namespace string,
-	logger plog.Logger,
 	client client.Client,
 	jwtManager crypto.JwtManager,
-	gatewayURL string,
-	callbackURL string,
+	apiClient pclient.PipedriveApiClient,
+	config *config.ServerConfig,
+	onlyoffice *shared.OnlyofficeConfig,
+	logger plog.Logger,
 ) ConfigHandler {
 	return ConfigHandler{
-		namespace:   namespace,
-		logger:      logger,
-		client:      client,
-		apiClient:   pclient.NewPipedriveApiClient(),
-		jwtManager:  jwtManager,
-		gatewayURL:  gatewayURL,
-		callbackURL: callbackURL,
+		client:     client,
+		apiClient:  apiClient,
+		jwtManager: jwtManager,
+		config:     config,
+		onlyoffice: onlyoffice,
+		logger:     logger,
 	}
 }
 
@@ -106,7 +99,15 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 	go func() {
 		defer wg.Done()
 		var docs response.DocSettingsResponse
-		if err := c.client.Call(ctx, c.client.NewRequest(fmt.Sprintf("%s:settings", c.namespace), "SettingsSelectHandler.GetSettings", fmt.Sprint(req.CID)), &docs); err != nil {
+		if err := c.client.Call(
+			ctx,
+			c.client.NewRequest(
+				fmt.Sprintf("%s:settings", c.config.Namespace),
+				"SettingsSelectHandler.GetSettings",
+				fmt.Sprint(req.CID),
+			),
+			&docs,
+		); err != nil {
 			c.logger.Debugf("could not document server settings: %s", err.Error())
 			errorsChan <- err
 			return
@@ -114,7 +115,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 
 		if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
 			c.logger.Debugf("no settings found")
-			errorsChan <- _ErrNoSettingsFound
+			errorsChan <- ErrNoSettingsFound
 			return
 		}
 
@@ -131,7 +132,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 	case err := <-errorsChan:
 		return config, err
 	case <-ctx.Done():
-		return config, _ErrOperationTimeout
+		return config, ErrOperationTimeout
 	default:
 		c.logger.Debugf("select default")
 	}
@@ -172,7 +173,9 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			},
 			CallbackURL: fmt.Sprintf(
 				"%s/callback?cid=%d&did=%s&fid=%s&filename=%s",
-				c.callbackURL, usr.CompanyID, req.Deal, req.FileID, url.QueryEscape(filename),
+				c.onlyoffice.Onlyoffice.Builder.CallbackURL,
+				usr.CompanyID, req.Deal, req.FileID,
+				url.QueryEscape(filename),
 			),
 			Customization: response.Customization{
 				Goback: response.Goback{
@@ -220,9 +223,9 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 func (c ConfigHandler) BuildConfig(ctx context.Context, payload request.BuildConfigRequest, res *response.BuildConfigResponse) error {
 	c.logger.Debugf("processing a docs config: %s", payload.Filename)
 
-	config, err, _ := c.group.Do(fmt.Sprint(payload.UID+payload.CID), func() (interface{}, error) {
+	config, err, _ := group.Do(fmt.Sprint(payload.UID+payload.CID), func() (interface{}, error) {
 		req := c.client.NewRequest(
-			fmt.Sprintf("%s:auth", c.namespace), "UserSelectHandler.GetUser",
+			fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser",
 			fmt.Sprint(payload.UID+payload.CID),
 		)
 
