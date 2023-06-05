@@ -23,20 +23,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/cache"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 )
 
 type mockEncryptor struct{}
 
-func (e mockEncryptor) Encrypt(text string) (string, error) {
+func (e mockEncryptor) Encrypt(text string, key []byte) (string, error) {
 	return string(text), nil
 }
 
-func (e mockEncryptor) Decrypt(ciphertext string) (string, error) {
+func (e mockEncryptor) Decrypt(ciphertext string, key []byte) (string, error) {
 	return string(ciphertext), nil
 }
 
@@ -57,7 +58,7 @@ func (m mockAdapter) InsertUser(ctx context.Context, user domain.UserAccess) err
 	return nil
 }
 
-func (m mockAdapter) SelectUserByID(ctx context.Context, uid string) (domain.UserAccess, error) {
+func (m mockAdapter) SelectUser(ctx context.Context, uid string) (domain.UserAccess, error) {
 	return user, nil
 }
 
@@ -68,12 +69,15 @@ func (m mockAdapter) UpsertUser(ctx context.Context, user domain.UserAccess) (do
 	}, nil
 }
 
-func (m mockAdapter) DeleteUserByID(ctx context.Context, uid string) error {
+func (m mockAdapter) DeleteUser(ctx context.Context, uid string) error {
 	return nil
 }
 
 func TestUserService(t *testing.T) {
-	service := NewUserService(mockAdapter{}, mockEncryptor{}, cache.NewCache(&config.CacheConfig{}), log.NewEmptyLogger())
+	service := NewUserService(mockAdapter{}, mockEncryptor{}, cache.NewCache(&config.CacheConfig{}), &oauth2.Config{
+		ClientID:     "mock",
+		ClientSecret: "mock",
+	}, log.NewEmptyLogger())
 
 	t.Run("save user", func(t *testing.T) {
 		assert.NoError(t, service.CreateUser(context.Background(), user))
@@ -121,6 +125,6 @@ func TestUserService(t *testing.T) {
 	})
 
 	t.Run("delete user", func(t *testing.T) {
-		assert.NoError(t, service.DeleteUser(context.Background(), "mock"))
+		assert.NoError(t, service.RemoveUser(context.Background(), "mock"))
 	})
 }

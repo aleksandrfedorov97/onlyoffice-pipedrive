@@ -56,12 +56,12 @@ func TestMongoAdapter(t *testing.T) {
 	t.Run("get user by id with timeout", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Second)
 		defer cancel()
-		_, err := adapter.SelectUserByID(ctx, "mock")
+		_, err := adapter.SelectUser(ctx, "mock")
 		assert.Error(t, err)
 	})
 
 	t.Run("get user by id", func(t *testing.T) {
-		u, err := adapter.SelectUserByID(context.Background(), "mock")
+		u, err := adapter.SelectUser(context.Background(), "mock")
 		assert.NoError(t, err)
 		assert.Equal(t, user, u)
 	})
@@ -69,15 +69,15 @@ func TestMongoAdapter(t *testing.T) {
 	t.Run("delete user by id with timeout", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Second)
 		defer cancel()
-		assert.Error(t, adapter.DeleteUserByID(ctx, "mock"))
+		assert.Error(t, adapter.DeleteUser(ctx, "mock"))
 	})
 
 	t.Run("delete user by id", func(t *testing.T) {
-		assert.NoError(t, adapter.DeleteUserByID(context.Background(), "mock"))
+		assert.NoError(t, adapter.DeleteUser(context.Background(), "mock"))
 	})
 
 	t.Run("get invalid user", func(t *testing.T) {
-		_, err := adapter.SelectUserByID(context.Background(), "mock")
+		_, err := adapter.SelectUser(context.Background(), "mock")
 		assert.Error(t, err)
 	})
 
@@ -116,10 +116,10 @@ func TestMongoAdapter(t *testing.T) {
 	})
 
 	t.Run("get updated user", func(t *testing.T) {
-		u, err := adapter.SelectUserByID(context.Background(), "mock")
+		u, err := adapter.SelectUser(context.Background(), "mock")
 		assert.NoError(t, err)
 		assert.Equal(t, "BRuh", u.AccessToken)
 	})
 
-	adapter.DeleteUserByID(context.Background(), "mock")
+	adapter.DeleteUser(context.Background(), "mock")
 }

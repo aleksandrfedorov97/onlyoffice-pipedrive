@@ -53,7 +53,7 @@ func (m *memoryUserAdapter) InsertUser(ctx context.Context, user domain.UserAcce
 	return m.save(user)
 }
 
-func (m *memoryUserAdapter) SelectUserByID(ctx context.Context, uid string) (domain.UserAccess, error) {
+func (m *memoryUserAdapter) SelectUser(ctx context.Context, uid string) (domain.UserAccess, error) {
 	buffer, ok := m.kvs[uid]
 	var user domain.UserAccess
 
@@ -76,7 +76,7 @@ func (m *memoryUserAdapter) UpsertUser(ctx context.Context, user domain.UserAcce
 	return user, nil
 }
 
-func (m *memoryUserAdapter) DeleteUserByID(ctx context.Context, uid string) error {
+func (m *memoryUserAdapter) DeleteUser(ctx context.Context, uid string) error {
 	if _, ok := m.kvs[uid]; !ok {
 		return errors.New("user with this id doesn't exist")
 	}

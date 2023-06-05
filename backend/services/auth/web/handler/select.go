@@ -22,15 +22,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/port"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"go-micro.dev/v4/client"
-	"golang.org/x/sync/singleflight"
 )
-
-var group singleflight.Group
 
 type UserSelectHandler struct {
 	service       port.UserAccessService

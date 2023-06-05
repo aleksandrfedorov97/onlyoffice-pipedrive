@@ -38,7 +38,7 @@ func TestMemoryAdapter(t *testing.T) {
 	})
 
 	t.Run("get user by id", func(t *testing.T) {
-		u, err := adapter.SelectUserByID(context.Background(), "mock")
+		u, err := adapter.SelectUser(context.Background(), "mock")
 		assert.NoError(t, err)
 		assert.Equal(t, user, u)
 	})
@@ -53,11 +53,11 @@ func TestMemoryAdapter(t *testing.T) {
 	})
 
 	t.Run("delete user by id", func(t *testing.T) {
-		assert.NoError(t, adapter.DeleteUserByID(context.Background(), "mock"))
+		assert.NoError(t, adapter.DeleteUser(context.Background(), "mock"))
 	})
 
 	t.Run("get invalid user", func(t *testing.T) {
-		_, err := adapter.SelectUserByID(context.Background(), "mock")
+		_, err := adapter.SelectUser(context.Background(), "mock")
 		assert.Error(t, err)
 	})
 }

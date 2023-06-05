@@ -19,9 +19,14 @@
 package cmd
 
 import (
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/rpc"
+	pkg "github.com/ONLYOFFICE/onlyoffice-integration-adapters"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/service/rpc"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/adapter"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/service"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/handler"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/urfave/cli/v2"
 )
 
@@ -36,21 +41,20 @@ func Server() *cli.Command {
 				Usage:   "sets custom configuration path",
 				Aliases: []string{"config", "conf", "c"},
 			},
-			&cli.StringFlag{
-				Name:    "environment",
-				Usage:   "sets servers environment (development, testing, production)",
-				Aliases: []string{"env", "e"},
-			},
 		},
 		Action: func(c *cli.Context) error {
 			var (
 				CONFIG_PATH = c.String("config_path")
-				// ENVIRONMENT = c.String("environment")
 			)
 
-			app := pkg.Bootstrap(
-				CONFIG_PATH, rpc.NewService, web.NewAuthRPCServer,
-			)
+			app := pkg.NewBootstrapper(CONFIG_PATH, pkg.WithModules(
+				shared.BuildNewIntegrationCredentialsConfig(CONFIG_PATH),
+				rpc.NewService, web.NewAuthRPCServer,
+				adapter.BuildNewUserAdapter, service.NewUserService,
+				handler.NewUserSelectHandler, handler.NewUserInsertHandler,
+				handler.NewUserDeleteHandler,
+				client.NewPipedriveAuthClient,
+			)).Bootstrap()
 
 			if err := app.Err(); err != nil {
 				return err

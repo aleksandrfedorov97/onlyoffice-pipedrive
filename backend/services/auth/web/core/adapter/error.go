@@ -16,17 +16,11 @@
  *
  */
 
-package port
+package adapter
 
-import (
-	"context"
+import "errors"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
+var (
+	ErrInvalidUserId     error = errors.New("invalid uid format")
+	ErrUserAlreadyExists error = errors.New("user already exists")
 )
-
-type UserAccessService interface {
-	CreateUser(ctx context.Context, user domain.UserAccess) error
-	GetUser(ctx context.Context, uid string) (domain.UserAccess, error)
-	UpdateUser(ctx context.Context, user domain.UserAccess) (domain.UserAccess, error)
-	RemoveUser(ctx context.Context, uid string) error
-}

@@ -23,31 +23,38 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/cache"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/cache"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/adapter"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/service"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 )
 
 type mockEncryptor struct{}
 
-func (e mockEncryptor) Encrypt(text string) (string, error) {
+func (e mockEncryptor) Encrypt(text string, key []byte) (string, error) {
 	return string(text), nil
 }
 
-func (e mockEncryptor) Decrypt(ciphertext string) (string, error) {
+func (e mockEncryptor) Decrypt(ciphertext string, key []byte) (string, error) {
 	return string(ciphertext), nil
 }
 
 func TestSelectCaching(t *testing.T) {
 	adapter := adapter.NewMemoryUserAdapter()
 	cache := cache.NewCache(&config.CacheConfig{})
-	service := service.NewUserService(adapter, mockEncryptor{}, cache, log.NewEmptyLogger())
-	pclient := pclient.NewPipedriveAuthClient("clientID", "clientSecret")
+	service := service.NewUserService(adapter, mockEncryptor{}, cache, &oauth2.Config{
+		ClientID:     "mock",
+		ClientSecret: "mock",
+	}, log.NewEmptyLogger())
+	pclient := pclient.NewPipedriveAuthClient(&oauth2.Config{
+		ClientID:     "mock",
+		ClientSecret: "mock",
+	})
 
 	sel := NewUserSelectHandler(service, nil, pclient, log.NewEmptyLogger())
 

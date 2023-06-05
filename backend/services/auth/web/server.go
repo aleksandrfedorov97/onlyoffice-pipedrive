@@ -19,57 +19,32 @@
 package web
 
 import (
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/config"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/service/rpc"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/adapter"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/port"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/service"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/service/rpc"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/handler"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/message"
-	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
-	"go-micro.dev/v4/cache"
-	mclient "go-micro.dev/v4/client"
 )
 
 type AuthRPCServer struct {
-	service       port.UserAccessService
-	pipedriveAuth pclient.PipedriveAuthClient
-	logger        log.Logger
+	selectHandler handler.UserSelectHandler
+	insertHandler handler.UserInsertHandler
+	deleteHandler handler.UserDeleteHandler
 }
 
 func NewAuthRPCServer(
-	persistenceConfig *config.PersistenceConfig, oauthConfig *config.OAuthCredentialsConfig,
-	cache cache.Cache, logger log.Logger) rpc.RPCEngine {
-	adptr := adapter.NewMemoryUserAdapter()
-	if persistenceConfig.Persistence.URL != "" {
-		adptr = adapter.NewMongoUserAdapter(persistenceConfig.Persistence.URL)
-	}
-
-	service := service.NewUserService(adptr, crypto.NewAesEncryptor([]byte(oauthConfig.Credentials.ClientSecret)), cache, logger)
+	selectHandler handler.UserSelectHandler,
+	insetHandler handler.UserInsertHandler,
+	deleteHandler handler.UserDeleteHandler,
+) rpc.RPCEngine {
 	return AuthRPCServer{
-		service: service,
-		pipedriveAuth: pclient.NewPipedriveAuthClient(
-			oauthConfig.Credentials.ClientID, oauthConfig.Credentials.ClientSecret,
-		),
-		logger: logger,
+		selectHandler: selectHandler,
+		insertHandler: insetHandler,
+		deleteHandler: deleteHandler,
 	}
 }
 
 func (a AuthRPCServer) BuildMessageHandlers() []rpc.RPCMessageHandler {
-	return []rpc.RPCMessageHandler{
-		{
-			Topic:   "insert-auth",
-			Queue:   "pipedrive-auth",
-			Handler: message.BuildInsertMessageHandler(a.service).GetHandler(),
-		},
-	}
+	return nil
 }
 
-func (a AuthRPCServer) BuildHandlers(client mclient.Client, cache cache.Cache) []interface{} {
-	return []interface{}{
-		handler.NewUserSelectHandler(a.service, client, a.pipedriveAuth, a.logger),
-		handler.NewUserDeleteHandler(a.service, client, a.logger),
-	}
+func (a AuthRPCServer) BuildHandlers() []interface{} {
+	return []interface{}{a.selectHandler, a.insertHandler, a.deleteHandler}
 }

@@ -23,37 +23,41 @@ import (
 	"fmt"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/port"
-	"go-micro.dev/v4/client"
+	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 )
 
-type UserDeleteHandler struct {
+type UserInsertHandler struct {
 	service port.UserAccessService
-	client  client.Client
 	logger  log.Logger
 }
 
-func NewUserDeleteHandler(
-	service port.UserAccessService,
-	client client.Client,
-	logger log.Logger,
-) UserDeleteHandler {
-	return UserDeleteHandler{
+func NewUserInsertHandler(service port.UserAccessService, logger log.Logger) UserInsertHandler {
+	return UserInsertHandler{
 		service: service,
-		client:  client,
 		logger:  logger,
 	}
 }
 
-func (u UserDeleteHandler) DeleteUser(ctx context.Context, uid *string, res *interface{}) error {
-	_, err, _ := group.Do(fmt.Sprintf("remove-%s", *uid), func() (interface{}, error) {
-		u.logger.Debugf("removing user %s", *uid)
-		if err := u.service.RemoveUser(ctx, *uid); err != nil {
-			u.logger.Debugf("could not delete user %s: %s", *uid, err.Error())
+func (i UserInsertHandler) InsertUser(ctx context.Context, req response.UserResponse, res *domain.UserAccess) error {
+	_, err, _ := group.Do(fmt.Sprintf("insert-%s", req.ID), func() (interface{}, error) {
+		usr, err := i.service.UpdateUser(ctx, domain.UserAccess{
+			ID:           req.ID,
+			AccessToken:  req.AccessToken,
+			RefreshToken: req.RefreshToken,
+			TokenType:    req.TokenType,
+			Scope:        req.Scope,
+			ExpiresAt:    req.ExpiresAt,
+			ApiDomain:    req.ApiDomain,
+		})
+
+		if err != nil {
+			i.logger.Errorf("could not update user: %s", err.Error())
 			return nil, err
 		}
 
-		return nil, nil
+		return usr, nil
 	})
 
 	return err

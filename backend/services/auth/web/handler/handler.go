@@ -16,8 +16,8 @@
  *
  */
 
-package message
+package handler
 
-import "errors"
+import "golang.org/x/sync/singleflight"
 
-var _ErrInvalidHandlerPayload = errors.New("invalid handler payload")
+var group singleflight.Group

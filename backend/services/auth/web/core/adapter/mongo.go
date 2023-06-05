@@ -20,7 +20,6 @@ package adapter
 
 import (
 	"context"
-	"errors"
 	"log"
 	"strings"
 	"time"
@@ -33,9 +32,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-var _ErrInvalidUserId error = errors.New("invalid uid format")
-var _ErrUserAlreadyExists error = errors.New("user already exists")
 
 type userAccessCollection struct {
 	mgm.DefaultModel `bson:",inline"`
@@ -107,11 +103,11 @@ func (m *mongoUserAdapter) InsertUser(ctx context.Context, user domain.UserAcces
 	return m.save(ctx, user)
 }
 
-func (m *mongoUserAdapter) SelectUserByID(ctx context.Context, uid string) (domain.UserAccess, error) {
+func (m *mongoUserAdapter) SelectUser(ctx context.Context, uid string) (domain.UserAccess, error) {
 	uid = strings.TrimSpace(uid)
 
 	if uid == "" {
-		return domain.UserAccess{}, _ErrInvalidUserId
+		return domain.UserAccess{}, ErrInvalidUserId
 	}
 
 	user := &userAccessCollection{}
@@ -135,11 +131,11 @@ func (m *mongoUserAdapter) UpsertUser(ctx context.Context, user domain.UserAcces
 	return user, m.save(ctx, user)
 }
 
-func (m *mongoUserAdapter) DeleteUserByID(ctx context.Context, uid string) error {
+func (m *mongoUserAdapter) DeleteUser(ctx context.Context, uid string) error {
 	uid = strings.TrimSpace(uid)
 
 	if uid == "" {
-		return _ErrInvalidUserId
+		return ErrInvalidUserId
 	}
 
 	_, err := mgm.Coll(&userAccessCollection{}).DeleteMany(ctx, bson.M{"uid": bson.M{operator.Eq: uid}})

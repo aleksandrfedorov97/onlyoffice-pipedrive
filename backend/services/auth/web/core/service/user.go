@@ -20,39 +20,40 @@ package service
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"sync"
 	"time"
 
-	plog "github.com/ONLYOFFICE/onlyoffice-pipedrive/pkg/log"
+	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
+	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/domain"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/auth/web/core/port"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/crypto"
 	"github.com/mitchellh/mapstructure"
 	"go-micro.dev/v4/cache"
+	"golang.org/x/oauth2"
 )
 
-var _ErrOperationTimeout = errors.New("operation timeout")
-
 type userService struct {
-	adapter   port.UserAccessServiceAdapter
-	encryptor crypto.Encryptor
-	cache     cache.Cache
-	logger    plog.Logger
+	adapter     port.UserAccessServiceAdapter
+	encryptor   crypto.Encryptor
+	cache       cache.Cache
+	credentials *oauth2.Config
+	logger      plog.Logger
 }
 
 func NewUserService(
 	adapter port.UserAccessServiceAdapter,
 	encryptor crypto.Encryptor,
 	cache cache.Cache,
+	credentials *oauth2.Config,
 	logger plog.Logger,
 ) port.UserAccessService {
 	return userService{
-		adapter:   adapter,
-		encryptor: encryptor,
-		cache:     cache,
-		logger:    logger,
+		adapter:     adapter,
+		encryptor:   encryptor,
+		cache:       cache,
+		credentials: credentials,
+		logger:      logger,
 	}
 }
 
@@ -70,7 +71,7 @@ func (s userService) CreateUser(ctx context.Context, user domain.UserAccess) err
 
 	go func() {
 		defer wg.Done()
-		aToken, err := s.encryptor.Encrypt(user.AccessToken)
+		aToken, err := s.encryptor.Encrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
 		if err != nil {
 			errChan <- err
 			return
@@ -80,7 +81,7 @@ func (s userService) CreateUser(ctx context.Context, user domain.UserAccess) err
 
 	go func() {
 		defer wg.Done()
-		rToken, err := s.encryptor.Encrypt(user.RefreshToken)
+		rToken, err := s.encryptor.Encrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
 		if err != nil {
 			errChan <- err
 			return
@@ -94,7 +95,7 @@ func (s userService) CreateUser(ctx context.Context, user domain.UserAccess) err
 	case err := <-errChan:
 		return err
 	case <-ctx.Done():
-		return _ErrOperationTimeout
+		return ErrOperationTimeout
 	default:
 	}
 
@@ -141,7 +142,7 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 	}
 
 	if user.Validate() != nil {
-		user, err = s.adapter.SelectUserByID(ctx, id)
+		user, err = s.adapter.SelectUser(ctx, id)
 		if err != nil {
 			return user, err
 		}
@@ -153,7 +154,7 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 
 	go func() {
 		defer wg.Done()
-		aToken, err := s.encryptor.Decrypt(user.AccessToken)
+		aToken, err := s.encryptor.Decrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
 		if err != nil {
 			errChan <- err
 			return
@@ -163,7 +164,7 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 
 	go func() {
 		defer wg.Done()
-		rToken, err := s.encryptor.Decrypt(user.RefreshToken)
+		rToken, err := s.encryptor.Decrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
 		if err != nil {
 			errChan <- err
 			return
@@ -177,7 +178,7 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 	case err := <-errChan:
 		return domain.UserAccess{}, err
 	case <-ctx.Done():
-		return domain.UserAccess{}, _ErrOperationTimeout
+		return domain.UserAccess{}, ErrOperationTimeout
 	default:
 		return domain.UserAccess{
 			ID:           user.ID,
@@ -205,7 +206,7 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 
 	go func() {
 		defer wg.Done()
-		aToken, err := s.encryptor.Encrypt(user.AccessToken)
+		aToken, err := s.encryptor.Encrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
 		if err != nil {
 			errChan <- err
 			return
@@ -215,7 +216,7 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 
 	go func() {
 		defer wg.Done()
-		rToken, err := s.encryptor.Encrypt(user.RefreshToken)
+		rToken, err := s.encryptor.Encrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
 		if err != nil {
 			errChan <- err
 			return
@@ -227,7 +228,7 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 	case err := <-errChan:
 		return user, err
 	case <-ctx.Done():
-		return user, _ErrOperationTimeout
+		return user, ErrOperationTimeout
 	default:
 	}
 
@@ -254,7 +255,7 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 	return user, nil
 }
 
-func (s userService) DeleteUser(ctx context.Context, uid string) error {
+func (s userService) RemoveUser(ctx context.Context, uid string) error {
 	id := strings.TrimSpace(uid)
 	s.logger.Debugf("validating uid %s to perform a delete action", id)
 
@@ -270,5 +271,5 @@ func (s userService) DeleteUser(ctx context.Context, uid string) error {
 	}
 
 	s.logger.Debugf("uid %s is valid to perform a delete action", id)
-	return s.adapter.DeleteUserByID(ctx, uid)
+	return s.adapter.DeleteUser(ctx, uid)
 }
