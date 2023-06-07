@@ -143,9 +143,7 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 		return settings, err
 	}
 
-	if err := s.cache.Delete(ctx, settings.CompanyID); err != nil {
-		return settings, err
-	}
+	s.cache.Delete(ctx, settings.CompanyID)
 
 	s.logger.Debugf("successfully persisted %s settings", settings.CompanyID)
 	return settings, nil
@@ -162,9 +160,7 @@ func (s settingsService) RemoveSettings(ctx context.Context, cid string) error {
 		}
 	}
 
-	if err := s.cache.Delete(ctx, cid); err != nil {
-		return err
-	}
+	s.cache.Delete(ctx, cid)
 
 	s.logger.Debugf("uid %s is valid to perform a delete action", id)
 	return s.adapter.DeleteSettings(ctx, id)
