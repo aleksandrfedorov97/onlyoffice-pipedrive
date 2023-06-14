@@ -76,6 +76,7 @@ func (m *mongoUserAdapter) save(ctx context.Context, settings domain.DocSettings
 		u.CompanyID = settings.CompanyID
 		u.DocAddress = settings.DocAddress
 		u.DocSecret = settings.DocSecret
+		u.DocHeader = settings.DocHeader
 		u.UpdatedAt = time.Now()
 
 		if err := collection.UpdateWithCtx(ctx, u); err != nil {
