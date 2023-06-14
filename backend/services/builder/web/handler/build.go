@@ -196,7 +196,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		if err != nil {
 			return config, err
 		}
-		config.Document.FileType = ext
+		config.Document.FileType = strings.ToLower(ext)
 		config.Document.Permissions = response.Permissions{
 			Edit:                 constants.IsExtensionEditable(ext),
 			Comment:              true,
