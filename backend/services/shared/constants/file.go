@@ -79,6 +79,8 @@ var OnlyofficeFileExtensions map[string]string = map[string]string{
 	"fb2":  _OnlyofficeWordType,
 	"epub": _OnlyofficeWordType,
 	"xps":  _OnlyofficeWordType,
+	"oxps": _OnlyofficeWordType,
+	"xml":  _OnlyofficeWordType,
 }
 
 func IsExtensionSupported(fileExt string) bool {
