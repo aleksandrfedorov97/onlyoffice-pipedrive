@@ -56,7 +56,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
               const resp = await getPipedriveMe(`${url}api/v1/users/me`);
-              await i18next.changeLanguage(resp.data.language.language_code);
+              await i18next.changeLanguage(`${resp.data.language.language_code}-${resp.data.language.country_code}`);
             } catch (err) {
               if (!axios.isCancel(err)) {
                 AuthToken.error = true;
