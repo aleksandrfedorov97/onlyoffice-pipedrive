@@ -17,11 +17,13 @@
  */
 
 import i18n from "i18next";
+import ChainedBackend from "i18next-chained-backend";
 import I18NextHttpBackend from "i18next-http-backend";
+import LocalStorageBackend from "i18next-localstorage-backend";
 import { initReactI18next } from "react-i18next";
 
 i18n
-  .use(I18NextHttpBackend)
+  .use(ChainedBackend)
   .use(initReactI18next)
   .init({
     fallbackLng: "en-US",
@@ -29,6 +31,16 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    backend: {
+      backends: [
+        LocalStorageBackend,
+        I18NextHttpBackend,
+      ],
+      backendOptions: [{
+        expirationTime: 24 * 60 * 60 * 1000
+      }
+    ]
+    }
   });
 
 export default i18n;
