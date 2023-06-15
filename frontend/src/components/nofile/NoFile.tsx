@@ -27,7 +27,7 @@ type NoFileProps = {
 export const OnlyofficeNoFile: React.FC<NoFileProps> = ({ title }) => (
   <div className="h-full w-full flex flex-col justify-center items-center">
     <Nofiles />
-    <span className="font-sans font-bold text-sm max-w-max text-ellipsis truncate">
+    <span className="font-sans font-bold text-sm max-w-max break-words text-center">
       {title}
     </span>
   </div>
