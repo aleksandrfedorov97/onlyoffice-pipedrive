@@ -34,6 +34,7 @@
     "editor.error": "Impossibile aprire il file. Qualcosa è andato storto",
     "background.error.title": "Errore",
     "background.error.subtitle": "Impossibile recuperare le impostazioni del plugin. Qualcosa è andato storto. Ricarica la finestra di Pipedrive",
+    "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
     "background.access.title": "Accesso negato",
     "background.access.subtitle": "Si è verificato un problema o l'accesso è stato negato",
     "background.reinstall.title": "Il token di sicurezza del documento è scaduto",

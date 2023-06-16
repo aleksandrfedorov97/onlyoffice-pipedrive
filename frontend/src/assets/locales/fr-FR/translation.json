@@ -34,6 +34,7 @@
     "editor.error": "Impossible d'ouvrir le fichier. Une erreur s'est produite.",
     "background.error.title": "Erreur",
     "background.error.subtitle": "Impossible de récupérer les paramètres du plugin. Une erreur s'est produite. Veuillez recharger la fenêtre Pipedrive",
+    "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
     "background.access.title": "Accès refusé",
     "background.access.subtitle": "Une erreur s'est produite ou l'accès a été refusé",
     "background.reinstall.title": "Le jeton de sécurité du document a expiré",

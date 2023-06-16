@@ -39,7 +39,7 @@ import { getCurrentURL } from "@utils/url";
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
-  const { access_token: accessToken, error } = useSnapshot(AuthToken);
+  const { access_token: accessToken, error, status } = useSnapshot(AuthToken);
   const [admin, setAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [address, setAddress] = useState<string | undefined>(undefined);
@@ -124,10 +124,24 @@ export const SettingsPage: React.FC = () => {
           Icon={<SettingsError />}
           title={t("background.error.title", "Error")}
           subtitle={t(
-            "background.error.subtitle",
-            "Could not fetch plugin settings. Something went wrong. Please reload the pipedrive window"
+            status !== 401
+              ? "background.error.subtitle"
+              : "background.error.subtitle.token",
+            status !== 401
+              ? "Could not fetch plugin settings. Something went wrong. Please reload the pipedrive window"
+              : "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app"
           )}
-          onClick={() => window.location.reload()}
+          button={
+            status === 401 && t("background.reinstall.button", "Reinstall") ||
+            "Reinstall"
+          }
+          onClick={status === 401 ? () => {
+            if (status === 401)
+              window.open(
+                `${getCurrentURL().url}settings/marketplace`,
+                "_blank"
+              );
+          } : undefined}
         />
       )}
       {!loading && !error && !admin && (
@@ -138,7 +152,6 @@ export const SettingsPage: React.FC = () => {
             "background.access.subtitle",
             "Something went wrong or access denied"
           )}
-          onClick={() => window.location.reload()}
         />
       )}
       {!loading && !error && admin && (

@@ -34,6 +34,7 @@
     "editor.error": "ファイルを開くことに失敗しました。エラーが発生しました",
     "background.error.title": "エラー",
     "background.error.subtitle": "プラグイン設定を取得できませんでした。何らかのエラーが発生しました。pipedriveのウィンドウを再読み込みしてください",
+    "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
     "background.access.title": "アクセスが拒否されました",
     "background.access.subtitle": "エラーが発生しました。或いは、この文書へのアクセス許可がありません",
     "background.reinstall.title": "文書のセキュリティトークンの有効期限が切れています",

@@ -18,7 +18,7 @@
 
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
 import i18next from "i18next";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import React, { useEffect } from "react";
 import { proxy } from "valtio";
 
@@ -30,6 +30,7 @@ export const AuthToken = proxy({
   access_token: "",
   expires_at: Date.now(),
   error: false,
+  status: 200,
 });
 
 type ProviderProps = {
@@ -58,7 +59,13 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
             } catch (err) {
-              if (!axios.isCancel(err)) {
+              if (axios.isAxiosError(err) && !axios.isCancel(err)) {
+                const aerr = err as AxiosError;
+                if (aerr.response && aerr.response.status) {
+                  AuthToken.status = aerr.response.status;
+                } else {
+                  AuthToken.status = 500;
+                }
                 AuthToken.error = true;
                 AuthToken.access_token = "";
               }
