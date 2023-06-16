@@ -26,13 +26,15 @@ import { OnlyofficeBackgroundError } from "@layouts/ErrorBackground";
 
 import { AuthToken } from "@context/TokenContext";
 
+import { getCurrentURL } from "@utils/url";
+
 import TokenError from "@assets/token-error.svg";
 
 import { Main } from "./Main";
 
 export const MainPage: React.FC = () => {
   const { t } = useTranslation();
-  const { access_token: accessToken, error } = useSnapshot(AuthToken);
+  const { access_token: accessToken, error, status } = useSnapshot(AuthToken);
   const loading = !accessToken && !error;
   const loadingError = !accessToken && error;
   const loaded = accessToken && !error;
@@ -47,18 +49,25 @@ export const MainPage: React.FC = () => {
         <OnlyofficeBackgroundError
           Icon={<TokenError className="mb-5" />}
           title={t(
-            "background.reinstall.title",
-            "The document security token has expired"
+            status === 401 ? "background.reinstall.title" : "background.error.title",
+            status === 401 ? "The document security token has expired" : "Error"
           )}
           subtitle={t(
-            "background.reinstall.subtitle",
-            "Something went wrong. Please reload or reinstall the app."
+            status === 401 ? "background.reinstall.subtitle.token" : "background.reinstall.subtitle",
+            status === 401
+              ? "Something went wrong. Please reinstall the app."
+              : "Something went wrong. Please reload the app."
           )}
-          button={t(
-            "background.reinstall.button",
-            "Reinstall"
-          ) || "Reinstall"}
-          onClick={() => window.open(`${process.env.BACKEND_GATEWAY}/oauth/install`, "_blank")}
+          button={t("background.reinstall.button", "Reinstall") || "Reinstall"}
+          onClick={
+            status === 401
+              ? () =>
+                  window.open(
+                    `${getCurrentURL().url}settings/marketplace`,
+                    "_blank"
+                  )
+              : undefined
+          }
         />
       )}
       {loaded && <Main />}
