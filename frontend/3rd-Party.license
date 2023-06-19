@@ -24,13 +24,21 @@ i18next       - i18next: learn once - translate everywhere. (https://github.com/
 License:        MIT
 License File:   i18next.license
 
-i18next-browser - languagedetector - language detector used in browser environment for i18next. (https://github.com/i18next/i18next-browser-languageDetector/blob/master/LICENSE)
+i18next-browser-languagedetector - language detector used in browser environment for i18next. (https://github.com/i18next/i18next-browser-languageDetector/blob/master/LICENSE)
 License:        MIT
 License File:   i18next-detector.license
 
 i18next-http-backend - i18next-http-backend is a backend layer for i18next using in Node.js, in the browser and for Deno. (https://github.com/i18next/i18next-http-backend/blob/master/licence)
 License:        MIT
 License File:   i18next-backend.license
+
+i18next-chained-backend - An i18next backend to chain multiple backends (add fallbacks, caches, ...). (https://github.com/i18next/i18next-chained-backend/blob/master/LICENSE)
+License:        MIT
+License File:   i18next-chained-backend.license
+
+i18next-localstorage-backend.license - This is a i18next cache layer to be used in the browser. It will load and cache resources from localStorage and can be used in combination with the chained backend. (https://github.com/i18next/i18next-localstorage-backend/blob/master/LICENSE)
+License:        MIT
+License File:   i18next-localstorage-backend.license
 
 md5           - a JavaScript function for hashing messages with MD5. (https://github.com/pvorb/node-md5/blob/master/LICENSE)
 License:        BSD 3-Clause
