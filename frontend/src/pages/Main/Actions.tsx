@@ -17,6 +17,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import i18next from "i18next";
 import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 import { useTranslation } from "react-i18next";
@@ -91,7 +92,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
             parameters.get("selectedIds") || "1"
           }&id=${file.id}&name=${`${encodeURIComponent(
             name.substring(0, 190)
-          )}.${ext}`}&key=${md5(file.id + file.update_time)}`;
+          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${i18next.language}`;
       }
     }
     // temporary solution

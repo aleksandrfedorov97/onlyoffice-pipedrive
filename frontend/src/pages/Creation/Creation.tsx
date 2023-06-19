@@ -155,7 +155,7 @@ export const Creation: React.FC = () => {
                       file.substring(0, 190)
                     )}.${fileType}`}&key=${md5(
                       fres.data.data.id + fres.data.data.update_time
-                    )}`
+                    )}&lng=${i18next.language}`
                   );
                   await sdk?.execute(Command.CLOSE_MODAL);
                 } catch {
