@@ -6,7 +6,7 @@
     "Ascensio System SIA <integration@onlyoffice.com> (https://www.onlyoffice.com)"
   ],
   "license": "Apache-2.0",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "repository": {
     "type": "git",
