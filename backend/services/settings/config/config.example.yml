@@ -1,0 +1,29 @@
+namespace: "pipedrive"
+name: "settings"
+version: 0
+address: ":5150"
+repl_address: ":8889"
+debug: false
+storage:
+  url: ""
+  type: 1
+registry:
+  addresses: [""]
+  type: 2
+tracer:
+  enable: false
+  address: ""
+  type: 1
+resilience:
+    rate_limiter:
+      limit: 500
+    circuit_breaker:
+      timeout: 2500
+logger:
+  name: "settings-logger"
+  level: 1
+  color: true
+credentials:
+  client_id: ""
+  client_secret: ""
+  redirect_url: ""
