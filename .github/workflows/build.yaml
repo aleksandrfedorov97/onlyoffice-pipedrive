@@ -1,0 +1,55 @@
+name: Build pipedrive connector
+
+run-name: >
+     Build pipedrive with version: ${{ github.event.inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Set version that will be used for images tag'
+        type: string
+        required: true
+      type:
+        type: choice
+        description: For which environment should substitute arguments?
+        options:
+        - 'prod'
+        - 'dev'
+
+env: 
+  PRODUCT_VERSION: ${{ github.event.inputs.version }}
+  BRANCH: ${{ github.ref_name }}
+          
+jobs:
+  build:
+    name: "Build tag: ${{ github.event.inputs.version }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build
+        shell: bash
+        env: 
+          ARG_POSTFIX: ${{ github.event.inputs.type }}
+        run: |
+          declare -A ArgsArray=( 
+                     [backend_gateway_prod]=https://pipedrive-gateway.onlyoffice.com
+                     [backend_gateway_dev]=<dev_value>
+                     [create_modal_id_prod]=${{ secrets.CREATE_MODAL_ID_PROD }}
+                     [create_modal_id_dev]=${{ secrets.CREATE_MODAL_ID_DEV }}
+                     )
+          docker compose build \
+              --build-arg "BACKEND_GATEWAY=${ArgsArray[backend_gateway_${ARG_POSTFIX}]}" \
+              --build-arg "PIPEDRIVE_CREATE_MODAL_ID=${ArgsArray[create_modal_id_${ARG_POSTFIX}]}" 
+          docker compose push
+          docker images
