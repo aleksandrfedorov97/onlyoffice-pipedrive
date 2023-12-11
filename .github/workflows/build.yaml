@@ -10,6 +10,10 @@ on:
         description: 'Set version that will be used for images tag'
         type: string
         required: true
+      create_modal_id:
+        description: 'If set, overwrite create-modal-id with value that you specify'
+        type: string
+        required: false
       type:
         type: choice
         description: For which environment should substitute arguments?
@@ -31,6 +35,14 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Mask custom value
+        if: github.event.inputs.create_modal_id != ''
+        id: mask-value
+        run: |
+          MODAL_ID=$(jq -r '.inputs.create_modal_id' $GITHUB_EVENT_PATH)
+          echo ::add-mask::${MODAL_ID}
+          echo "CUSTOM_MODAL_ID=${MODAL_ID}" >> "$GITHUB_ENV"
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -44,12 +56,12 @@ jobs:
         run: |
           declare -A ArgsArray=( 
                      [backend_gateway_prod]=https://pipedrive-gateway.onlyoffice.com
-                     [backend_gateway_dev]=<dev_value>
+                     [backend_gateway_dev]=https://pipedrive-gateway.teamlab.info
                      [create_modal_id_prod]=${{ secrets.CREATE_MODAL_ID_PROD }}
                      [create_modal_id_dev]=${{ secrets.CREATE_MODAL_ID_DEV }}
                      )
           docker compose build \
               --build-arg "BACKEND_GATEWAY=${ArgsArray[backend_gateway_${ARG_POSTFIX}]}" \
-              --build-arg "PIPEDRIVE_CREATE_MODAL_ID=${ArgsArray[create_modal_id_${ARG_POSTFIX}]}" 
+              --build-arg "PIPEDRIVE_CREATE_MODAL_ID=${CUSTOM_MODAL_ID:-${ArgsArray[create_modal_id_${ARG_POSTFIX}]}}" 
           docker compose push
           docker images
