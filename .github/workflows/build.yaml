@@ -23,7 +23,6 @@ on:
 
 env: 
   PRODUCT_VERSION: ${{ github.event.inputs.version }}
-  BRANCH: ${{ github.ref_name }}
           
 jobs:
   build:
