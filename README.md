@@ -1,4 +1,4 @@
-# ONLYOFFICE App for Pipedrive 
+# ONLYOFFICE app for Pipedrive
 
 This app allows users to edit and collaborate on office documents right within [Pipedrive](https://www.pipedrive.com/) deals using ONLYOFFICE Docs.
 
