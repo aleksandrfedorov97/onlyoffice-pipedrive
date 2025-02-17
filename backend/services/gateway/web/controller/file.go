@@ -113,6 +113,8 @@ func (c FileController) BuildGetFile() http.HandlerFunc {
 				c.logger.Errorf("could not get a new file: %s", err.Error())
 				return
 			}
+
+			defer file.Close()
 			res, ferr := c.apiClient.CreateFile(ctx, dealID, filename, file, model.Token{
 				AccessToken:  ures.AccessToken,
 				RefreshToken: ures.AccessToken,
@@ -131,6 +133,7 @@ func (c FileController) BuildGetFile() http.HandlerFunc {
 			return
 		}
 
+		defer file.Close()
 		res, ferr := c.apiClient.CreateFile(ctx, dealID, filename, file, model.Token{
 			AccessToken:  ures.AccessToken,
 			RefreshToken: ures.AccessToken,
@@ -168,6 +171,10 @@ func (c FileController) BuildGetDownloadUrl() http.HandlerFunc {
 			c.logger.Errorf("could not build a new download url: %s", err.Error())
 			rw.WriteHeader(http.StatusBadRequest)
 			return
+		}
+
+		if resp != nil {
+			defer resp.Body.Close()
 		}
 
 		if resp.StatusCode != 302 {

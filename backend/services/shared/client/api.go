@@ -144,6 +144,11 @@ func (p PipedriveApiClient) getFile(ctx context.Context, url string) (io.ReadClo
 		return nil, err
 	}
 
+	if fileResp.RawResponse.StatusCode != http.StatusOK {
+		fileResp.RawBody().Close()
+		return nil, fmt.Errorf("unexpected status code: %d", fileResp.RawResponse.StatusCode)
+	}
+
 	return fileResp.RawBody(), nil
 }
 

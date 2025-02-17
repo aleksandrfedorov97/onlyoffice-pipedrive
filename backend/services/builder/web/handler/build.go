@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
@@ -38,6 +38,16 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
+	"golang.org/x/sync/errgroup"
+)
+
+var (
+	defaultClient = &http.Client{
+		Timeout: 15 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 )
 
 type ConfigHandler struct {
@@ -69,38 +79,35 @@ func NewConfigHandler(
 
 func (c ConfigHandler) processConfig(user response.UserResponse, req request.BuildConfigRequest, ctx context.Context) (response.BuildConfigResponse, error) {
 	var config response.BuildConfigResponse
-	var wg sync.WaitGroup
-	wg.Add(2)
-	usrChan := make(chan model.User, 1)
-	settingsChan := make(chan response.DocSettingsResponse, 1)
-	errorsChan := make(chan error, 2)
 
-	go func() {
-		defer wg.Done()
-		u, err := c.apiClient.GetMe(ctx, model.Token{
+	tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	g, gctx := errgroup.WithContext(tctx)
+
+	var usr model.User
+	var settings response.DocSettingsResponse
+
+	g.Go(func() error {
+		u, err := c.apiClient.GetMe(gctx, model.Token{
 			AccessToken:  user.AccessToken,
 			RefreshToken: user.RefreshToken,
 			TokenType:    user.TokenType,
 			Scope:        user.Scope,
 			ApiDomain:    user.ApiDomain,
 		})
-
 		if err != nil {
 			c.logger.Debugf("could not get pipedrive user: %s", err.Error())
-			errorsChan <- err
-			return
+			return err
 		}
+		usr = u
+		return nil
+	})
 
-		c.logger.Debugf("populating pipedrive user %d channel", u.ID)
-		usrChan <- u
-		c.logger.Debugf("successfully populated pipedrive channel")
-	}()
-
-	go func() {
-		defer wg.Done()
+	g.Go(func() error {
 		var docs response.DocSettingsResponse
 		if err := c.client.Call(
-			ctx,
+			gctx,
 			c.client.NewRequest(
 				fmt.Sprintf("%s:settings", c.config.Namespace),
 				"SettingsSelectHandler.GetSettings",
@@ -109,55 +116,40 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			&docs,
 		); err != nil {
 			c.logger.Debugf("could not document server settings: %s", err.Error())
-			errorsChan <- err
-			return
+			return err
 		}
-
 		if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
 			c.logger.Debugf("no settings found")
-			errorsChan <- ErrNoSettingsFound
-			return
+			return ErrNoSettingsFound
 		}
+		settings = docs
+		return nil
+	})
 
-		c.logger.Debugf("populating document server %d settings channel", req.CID)
-		settingsChan <- docs
-		c.logger.Debugf("successfully populated document server settings channel")
-	}()
-
-	c.logger.Debugf("waiting for goroutines to finish execution")
-	wg.Wait()
-	c.logger.Debugf("goroutines have finished the execution")
-
-	select {
-	case err := <-errorsChan:
+	if err := g.Wait(); err != nil {
 		return config, err
-	case <-ctx.Done():
-		return config, ErrOperationTimeout
-	default:
-		c.logger.Debugf("select default")
 	}
 
-	usr := <-usrChan
-	settings := <-settingsChan
 	t := "desktop"
 	ua := useragent.Parse(req.UserAgent)
-
 	if ua.Mobile || ua.Tablet {
 		t = "mobile"
 	}
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	dreq, _ := http.NewRequest("GET", fmt.Sprintf("%s/files/%s/download", user.ApiDomain, req.FileID), nil)
-	dreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", user.AccessToken))
-	resp, err := client.Do(dreq)
+	dreq, err := http.NewRequestWithContext(tctx, "GET", fmt.Sprintf("%s/files/%s/download", user.ApiDomain, req.FileID), nil)
 	if err != nil {
-		return config, err
+		return config, fmt.Errorf("failed to create request: %w", err)
 	}
+	dreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", user.AccessToken))
+	resp, err := defaultClient.Do(dreq)
+	if err != nil {
+		return config, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+	}()
 
 	filename := shared.EscapeFilename(req.Filename)
 	config = response.BuildConfigResponse{
@@ -223,30 +215,22 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 func (c ConfigHandler) BuildConfig(ctx context.Context, payload request.BuildConfigRequest, res *response.BuildConfigResponse) error {
 	c.logger.Debugf("processing a docs config: %s", payload.Filename)
 
-	config, err, _ := group.Do(fmt.Sprint(payload.UID+payload.CID), func() (interface{}, error) {
-		req := c.client.NewRequest(
-			fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser",
-			fmt.Sprint(payload.UID+payload.CID),
-		)
+	req := c.client.NewRequest(
+		fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser",
+		fmt.Sprint(payload.UID+payload.CID),
+	)
 
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, req, &ures); err != nil {
-			c.logger.Debugf("could not get user %d access info: %s", payload.UID+payload.CID, err.Error())
-			return nil, err
-		}
-
-		config, err := c.processConfig(ures, payload, ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		return config, nil
-	})
-
-	if cfg, ok := config.(response.BuildConfigResponse); ok {
-		*res = cfg
-		return nil
+	var ures response.UserResponse
+	if err := c.client.Call(ctx, req, &ures); err != nil {
+		c.logger.Debugf("could not get user %d access info: %s", payload.UID+payload.CID, err.Error())
+		return err
 	}
 
-	return err
+	config, err := c.processConfig(ures, payload, ctx)
+	if err != nil {
+		return err
+	}
+
+	*res = config
+	return nil
 }
