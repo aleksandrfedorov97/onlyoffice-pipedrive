@@ -139,7 +139,7 @@ func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 				return
 			}
 
-			ctx, cancel := context.WithTimeout(r.Context(), 7*time.Second)
+			ctx, cancel := context.WithTimeout(r.Context(), time.Duration(c.onlyoffice.Onlyoffice.Callback.UploadTimeout)*time.Second)
 			defer cancel()
 
 			usr := body.Users[0]
@@ -154,12 +154,9 @@ func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 					return
 				}
 
-				uctx, cancel := context.WithTimeout(ctx, time.Duration(c.onlyoffice.Onlyoffice.Callback.UploadTimeout)*time.Second)
-				defer cancel()
-
 				req := c.client.NewRequest(fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser", usr)
 				var ures response.UserResponse
-				if err := c.client.Call(uctx, req, &ures, client.WithRetries(3), client.WithBackoff(func(ctx context.Context, req client.Request, attempts int) (time.Duration, error) {
+				if err := c.client.Call(ctx, req, &ures, client.WithRetries(3), client.WithBackoff(func(ctx context.Context, req client.Request, attempts int) (time.Duration, error) {
 					return backoff.Do(attempts), nil
 				})); err != nil {
 					c.logger.Errorf("could not get user tokens: %s", err.Error())

@@ -26,7 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
@@ -37,6 +37,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
+	"golang.org/x/sync/errgroup"
 )
 
 var ErrNotAdmin = errors.New("no admin access")
@@ -147,77 +148,83 @@ func (c ApiController) BuildPostSettings() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
 		defer cancel()
 
-		var wg sync.WaitGroup
-		wg.Add(2)
-		errChan := make(chan error, 2)
-		cidChan := make(chan int, 1)
+		var companyID int64
 
-		go func() {
-			defer wg.Done()
-			if err := c.commandClient.License(ctx, settings.DocAddress, settings.DocSecret); err != nil {
-				c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
-				errChan <- err
-				return
-			}
-		}()
-
-		go func() {
-			defer wg.Done()
-			ures, _, err := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
-			if err != nil {
-				errChan <- err
-				return
-			}
-
-			urs, err := c.apiClient.GetMe(ctx, model.Token{
-				AccessToken:  ures.AccessToken,
-				RefreshToken: ures.RefreshToken,
-				TokenType:    ures.TokenType,
-				Scope:        ures.Scope,
-				ApiDomain:    ures.ApiDomain,
-			})
-
-			for _, access := range urs.Access {
-				if access.App == "global" && !access.Admin {
-					errChan <- ErrNotAdmin
-					return
+		eg, ectx := errgroup.WithContext(ctx)
+		eg.Go(func() error {
+			select {
+			case <-ectx.Done():
+				return ectx.Err()
+			default:
+				if err := c.commandClient.License(ectx, settings.DocAddress, settings.DocSecret); err != nil {
+					c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
+					return err
 				}
+				return nil
 			}
+		})
 
-			if err != nil {
-				c.logger.Errorf("could not get pipedrive user or no user has admin permissions")
-				errChan <- err
-				return
+		eg.Go(func() error {
+			select {
+			case <-ectx.Done():
+				return ectx.Err()
+			default:
+				ures, _, err := c.getUser(ectx, fmt.Sprint(pctx.UID+pctx.CID))
+				if err != nil {
+					return err
+				}
+
+				urs, err := c.apiClient.GetMe(ectx, model.Token{
+					AccessToken:  ures.AccessToken,
+					RefreshToken: ures.RefreshToken,
+					TokenType:    ures.TokenType,
+					Scope:        ures.Scope,
+					ApiDomain:    ures.ApiDomain,
+				})
+				if err != nil {
+					c.logger.Errorf("could not get pipedrive user or no user has admin permissions")
+					return err
+				}
+
+				for _, access := range urs.Access {
+					if access.App == "global" && !access.Admin {
+						return ErrNotAdmin
+					}
+				}
+
+				atomic.StoreInt64(&companyID, int64(urs.CompanyID))
+				return nil
 			}
+		})
 
-			cidChan <- urs.CompanyID
-		}()
-
-		wg.Wait()
-
-		select {
-		case <-errChan:
-			rw.WriteHeader(http.StatusForbidden)
+		if err := eg.Wait(); err != nil {
+			if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+				rw.WriteHeader(http.StatusRequestTimeout)
+			} else {
+				rw.WriteHeader(http.StatusForbidden)
+			}
 			return
-		case <-ctx.Done():
-			rw.WriteHeader(http.StatusRequestTimeout)
-			return
-		default:
 		}
+
+		sreq := request.DocSettings{
+			CompanyID:  int(atomic.LoadInt64(&companyID)),
+			DocAddress: settings.DocAddress,
+			DocHeader:  settings.DocHeader,
+			DocSecret:  settings.DocSecret,
+		}
+
+		tctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
 
 		var sres interface{}
 		if err := c.client.Call(
-			ctx, c.client.NewRequest(
+			tctx,
+			c.client.NewRequest(
 				fmt.Sprintf("%s:settings", c.config.Namespace),
 				"SettingsInsertHandler.InsertSettings",
-				request.DocSettings{
-					CompanyID:  <-cidChan,
-					DocAddress: settings.DocAddress,
-					DocHeader:  settings.DocHeader,
-					DocSecret:  settings.DocSecret,
-				},
+				sreq,
 			), &sres); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
+			c.logger.Errorf("could not post new settings: %s", err.Error())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				rw.WriteHeader(http.StatusRequestTimeout)
 				return

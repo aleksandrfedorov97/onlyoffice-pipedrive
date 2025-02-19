@@ -21,7 +21,6 @@ package service
 import (
 	"context"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
@@ -63,47 +62,21 @@ func (s userService) CreateUser(ctx context.Context, user domain.UserAccess) err
 		return err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	errChan := make(chan error, 2)
-	atokenChan := make(chan string, 1)
-	rtokenChan := make(chan string, 1)
-
-	go func() {
-		defer wg.Done()
-		aToken, err := s.encryptor.Encrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
-		if err != nil {
-			errChan <- err
-			return
-		}
-		atokenChan <- aToken
-	}()
-
-	go func() {
-		defer wg.Done()
-		rToken, err := s.encryptor.Encrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
-		if err != nil {
-			errChan <- err
-			return
-		}
-		rtokenChan <- rToken
-	}()
-
-	wg.Wait()
-
-	select {
-	case err := <-errChan:
+	aToken, err := s.encryptor.Encrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
+	if err != nil {
 		return err
-	case <-ctx.Done():
-		return ErrOperationTimeout
-	default:
+	}
+
+	rToken, err := s.encryptor.Encrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
+	if err != nil {
+		return err
 	}
 
 	s.logger.Debugf("user %s is valid. Persisting to database: %s", user.ID, user.AccessToken)
 	if err := s.adapter.InsertUser(ctx, domain.UserAccess{
 		ID:           user.ID,
-		AccessToken:  <-atokenChan,
-		RefreshToken: <-rtokenChan,
+		AccessToken:  aToken,
+		RefreshToken: rToken,
 		TokenType:    user.TokenType,
 		Scope:        user.Scope,
 		ExpiresAt:    user.ExpiresAt,
@@ -126,12 +99,6 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 		}
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	errChan := make(chan error, 2)
-	atokenChan := make(chan string, 1)
-	rtokenChan := make(chan string, 1)
-
 	var user domain.UserAccess
 	var err error
 	if res, _, err := s.cache.Get(ctx, id); err == nil && res != nil {
@@ -152,44 +119,25 @@ func (s userService) GetUser(ctx context.Context, uid string) (domain.UserAccess
 
 	s.logger.Debugf("found a user: %v", user)
 
-	go func() {
-		defer wg.Done()
-		aToken, err := s.encryptor.Decrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
-		if err != nil {
-			errChan <- err
-			return
-		}
-		atokenChan <- aToken
-	}()
-
-	go func() {
-		defer wg.Done()
-		rToken, err := s.encryptor.Decrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
-		if err != nil {
-			errChan <- err
-			return
-		}
-		rtokenChan <- rToken
-	}()
-
-	wg.Wait()
-
-	select {
-	case err := <-errChan:
+	aToken, err := s.encryptor.Decrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
+	if err != nil {
 		return domain.UserAccess{}, err
-	case <-ctx.Done():
-		return domain.UserAccess{}, ErrOperationTimeout
-	default:
-		return domain.UserAccess{
-			ID:           user.ID,
-			AccessToken:  <-atokenChan,
-			RefreshToken: <-rtokenChan,
-			TokenType:    user.TokenType,
-			Scope:        user.Scope,
-			ExpiresAt:    user.ExpiresAt,
-			ApiDomain:    user.ApiDomain,
-		}, nil
 	}
+
+	rToken, err := s.encryptor.Decrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
+	if err != nil {
+		return domain.UserAccess{}, err
+	}
+
+	return domain.UserAccess{
+		ID:           user.ID,
+		AccessToken:  aToken,
+		RefreshToken: rToken,
+		TokenType:    user.TokenType,
+		Scope:        user.Scope,
+		ExpiresAt:    user.ExpiresAt,
+		ApiDomain:    user.ApiDomain,
+	}, nil
 }
 
 func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (domain.UserAccess, error) {
@@ -198,44 +146,20 @@ func (s userService) UpdateUser(ctx context.Context, user domain.UserAccess) (do
 		return domain.UserAccess{}, err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	errChan := make(chan error, 2)
-	atokenChan := make(chan string, 1)
-	rtokenChan := make(chan string, 1)
-
-	go func() {
-		defer wg.Done()
-		aToken, err := s.encryptor.Encrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
-		if err != nil {
-			errChan <- err
-			return
-		}
-		atokenChan <- aToken
-	}()
-
-	go func() {
-		defer wg.Done()
-		rToken, err := s.encryptor.Encrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
-		if err != nil {
-			errChan <- err
-			return
-		}
-		rtokenChan <- rToken
-	}()
-
-	select {
-	case err := <-errChan:
+	aToken, err := s.encryptor.Encrypt(user.AccessToken, []byte(s.credentials.ClientSecret))
+	if err != nil {
 		return user, err
-	case <-ctx.Done():
-		return user, ErrOperationTimeout
-	default:
+	}
+
+	rToken, err := s.encryptor.Encrypt(user.RefreshToken, []byte(s.credentials.ClientSecret))
+	if err != nil {
+		return user, err
 	}
 
 	euser := domain.UserAccess{
 		ID:           user.ID,
-		AccessToken:  <-atokenChan,
-		RefreshToken: <-rtokenChan,
+		AccessToken:  aToken,
+		RefreshToken: rToken,
 		TokenType:    user.TokenType,
 		Scope:        user.Scope,
 		ExpiresAt:    user.ExpiresAt,
