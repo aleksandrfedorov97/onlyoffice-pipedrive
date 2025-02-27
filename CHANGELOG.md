@@ -1,5 +1,9 @@
 # Change Log
 
+##
+## Changed
+- default empty file templates
+
 ## 1.0.1
 ## Changed
 - update of vulnerable dependencies

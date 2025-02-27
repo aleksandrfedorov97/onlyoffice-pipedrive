@@ -106,7 +106,7 @@ func (c FileController) BuildGetFile() http.HandlerFunc {
 
 		file, err := assets.Files.Open(fmt.Sprintf("assets/%s/new.%s", lang, fileType))
 		if err != nil {
-			lang = "en-US"
+			lang = "default"
 			file, err = assets.Files.Open(fmt.Sprintf("assets/%s/new.%s", lang, fileType))
 			if err != nil {
 				rw.WriteHeader(http.StatusBadRequest)
