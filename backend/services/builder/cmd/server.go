@@ -50,6 +50,7 @@ func Server() *cli.Command {
 				handler.NewConfigHandler,
 				shared.BuildNewOnlyofficeConfig(CONFIG_PATH),
 				client.NewPipedriveApiClient,
+				shared.NewMapFormatManager,
 			)).Bootstrap()
 
 			if err := app.Err(); err != nil {

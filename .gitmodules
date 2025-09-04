@@ -2,3 +2,9 @@
 	path = backend/services/gateway/assets/assets
 	url = https://github.com/ONLYOFFICE/document-templates.git
 	branch = main/new
+[submodule "frontend/src/assets/document-formats"]
+	path = frontend/src/assets/document-formats
+	url = https://github.com/ONLYOFFICE/document-formats.git
+[submodule "backend/services/shared/format"]
+	path = backend/services/shared/format
+	url = https://github.com/ONLYOFFICE/document-formats.git

@@ -28,65 +28,46 @@ import slideIcon from "@assets/slide.ico";
 import cellIcon from "@assets/cell.ico";
 import genericIcon from "@assets/generic.ico";
 
-const DOCUMENT_EXTS = [
-  "doc",
-  "docx",
-  "docm",
-  "dot",
-  "dotx",
-  "dotm",
-  "odt",
-  "fodt",
-  "ott",
-  "rtf",
-  "txt",
-  "html",
-  "htm",
-  "mht",
-  "xml",
-  "pdf",
-  "djvu",
-  "fb2",
-  "epub",
-  "xps",
-  "oxps",
-];
+import formatsData from "@assets/document-formats/onlyoffice-docs-formats.json";
 
-const SPREADSHEET_EXTS = [
-  "xls",
-  "xlsx",
-  "xlsm",
-  "xlt",
-  "xltx",
-  "xltm",
-  "ods",
-  "fods",
-  "ots",
-  "csv",
-];
+interface Format {
+  name: string;
+  type: string;
+  actions: string[];
+  convert: string[];
+  mime: string[];
+}
 
-const PRESENTATION_EXTS = [
-  "pps",
-  "ppsx",
-  "ppsm",
-  "ppt",
-  "pptx",
-  "pptm",
-  "pot",
-  "potx",
-  "potm",
-  "odp",
-  "fodp",
-  "otp",
-];
+const formats = formatsData as Format[];
 
-const EDITABLE_EXTS = ["docx", "pptx", "xlsx"];
+const DOCUMENT_EXTS = formats
+  .filter(f => f.type === "word" && f.actions.includes("view"))
+  .map(f => f.name);
+
+const SPREADSHEET_EXTS = formats
+  .filter(f => f.type === "cell" && f.actions.includes("view"))
+  .map(f => f.name);
+
+const PRESENTATION_EXTS = formats
+  .filter(f => f.type === "slide" && f.actions.includes("view"))
+  .map(f => f.name);
+
+const DIAGRAM_EXTS = formats
+  .filter(f => f.type === "diagram" && f.actions.includes("view"))
+  .map(f => f.name);
+
+const EDITABLE_EXTS = formats
+  .filter(f => f.actions.includes("edit"))
+  .map(f => f.name);
+
+
 const OPENABLE_EXTS =
-  DOCUMENT_EXTS.concat(SPREADSHEET_EXTS).concat(PRESENTATION_EXTS);
+  DOCUMENT_EXTS.concat(SPREADSHEET_EXTS).concat(PRESENTATION_EXTS).concat(DIAGRAM_EXTS);
 
 const WORD = "word";
 const SLIDE = "slide";
 const CELL = "cell";
+const DIAGRAM = "diagram";
 
 const getFileExt = (filename: string): string =>
   filename.split(".").pop() || "";
@@ -113,12 +94,18 @@ export const getFileType = (filename: string) => {
   if (DOCUMENT_EXTS.includes(e)) return WORD;
   if (SPREADSHEET_EXTS.includes(e)) return CELL;
   if (PRESENTATION_EXTS.includes(e)) return SLIDE;
+  if (DIAGRAM_EXTS.includes(e)) return DIAGRAM;
 
   return null;
 };
 
 export const getMimeType = (filename: string) => {
   const e = getFileExt(filename).toLowerCase();
+  
+  const format = formats.find(f => f.name === e);
+  if (format && format.mime.length > 0) {
+    return format.mime[0];
+  }
 
   switch (e) {
     case "docx":
@@ -142,7 +129,8 @@ export const getFileIcon = (filename: string) => {
   if (
     DOCUMENT_EXTS.includes(e) ||
     SPREADSHEET_EXTS.includes(e) ||
-    PRESENTATION_EXTS.includes(e)
+    PRESENTATION_EXTS.includes(e) ||
+    DIAGRAM_EXTS.includes(e)
   )
     return Supported;
 
@@ -166,6 +154,7 @@ export const getFileFavicon = (filename: string) => {
   if (DOCUMENT_EXTS.includes(e)) return wordIcon;
   if (PRESENTATION_EXTS.includes(e)) return slideIcon;
   if (SPREADSHEET_EXTS.includes(e)) return cellIcon;
+  if (DIAGRAM_EXTS.includes(e)) return genericIcon;
 
   return genericIcon;
 };

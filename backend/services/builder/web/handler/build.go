@@ -33,7 +33,6 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/constants"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/mileusna/useragent"
@@ -51,12 +50,13 @@ var (
 )
 
 type ConfigHandler struct {
-	client     client.Client
-	apiClient  pclient.PipedriveApiClient
-	jwtManager crypto.JwtManager
-	config     *config.ServerConfig
-	onlyoffice *shared.OnlyofficeConfig
-	logger     plog.Logger
+	client        client.Client
+	apiClient     pclient.PipedriveApiClient
+	jwtManager    crypto.JwtManager
+	config        *config.ServerConfig
+	onlyoffice    *shared.OnlyofficeConfig
+	logger        plog.Logger
+	formatManager shared.FormatManager
 }
 
 func NewConfigHandler(
@@ -65,15 +65,17 @@ func NewConfigHandler(
 	apiClient pclient.PipedriveApiClient,
 	config *config.ServerConfig,
 	onlyoffice *shared.OnlyofficeConfig,
+	formatManager shared.FormatManager,
 	logger plog.Logger,
 ) ConfigHandler {
 	return ConfigHandler{
-		client:     client,
-		apiClient:  apiClient,
-		jwtManager: jwtManager,
-		config:     config,
-		onlyoffice: onlyoffice,
-		logger:     logger,
+		client:        client,
+		apiClient:     apiClient,
+		jwtManager:    jwtManager,
+		config:        config,
+		onlyoffice:    onlyoffice,
+		logger:        logger,
+		formatManager: formatManager,
 	}
 }
 
@@ -151,7 +153,8 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		}
 	}()
 
-	filename := shared.EscapeFilename(req.Filename)
+	filename := c.formatManager.EscapeFileName(req.Filename)
+
 	config = response.BuildConfigResponse{
 		Document: response.Document{
 			Key:   req.DocKey,
@@ -182,15 +185,22 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		ServerURL: settings.DocAddress,
 	}
 
+	var fileType string
+	var isEditable bool
+
 	if strings.TrimSpace(filename) != "" {
 		ext := strings.ReplaceAll(filepath.Ext(filename), ".", "")
-		fileType, err := constants.GetFileType(ext)
-		if err != nil {
-			return config, err
-		}
 		config.Document.FileType = strings.ToLower(ext)
+		format, exists := c.formatManager.GetFormatByName(ext)
+		if !exists {
+			return config, fmt.Errorf("format not supported: %s", ext)
+		}
+
+		fileType = format.Type
+		isEditable = format.IsEditable()
+
 		config.Document.Permissions = response.Permissions{
-			Edit:                 constants.IsExtensionEditable(ext),
+			Edit:                 isEditable,
 			Comment:              true,
 			Download:             true,
 			Print:                false,
