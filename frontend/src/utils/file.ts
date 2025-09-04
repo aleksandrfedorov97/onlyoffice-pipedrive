@@ -27,6 +27,7 @@ import Supported from "@assets/supported.svg";
 import wordIcon from "@assets/word.ico";
 import slideIcon from "@assets/slide.ico";
 import cellIcon from "@assets/cell.ico";
+import pdfIcon from "@assets/pdf.ico";
 import vsdIcon from "@assets/vsd.ico";
 import genericIcon from "@assets/generic.ico";
 
@@ -58,18 +59,23 @@ const DIAGRAM_EXTS = formats
   .filter(f => f.type === "diagram" && f.actions.includes("view"))
   .map(f => f.name);
 
+const PDF_EXTS = formats
+  .filter(f => f.type === "pdf" && f.actions.includes("view"))
+  .map(f => f.name);
+
 const EDITABLE_EXTS = formats
   .filter(f => f.actions.includes("edit"))
   .map(f => f.name);
 
 
 const OPENABLE_EXTS =
-  DOCUMENT_EXTS.concat(SPREADSHEET_EXTS).concat(PRESENTATION_EXTS).concat(DIAGRAM_EXTS);
+  DOCUMENT_EXTS.concat(SPREADSHEET_EXTS).concat(PRESENTATION_EXTS).concat(DIAGRAM_EXTS).concat(PDF_EXTS);
 
 const WORD = "word";
 const SLIDE = "slide";
 const CELL = "cell";
 const DIAGRAM = "diagram";
+const PDF = "pdf";
 
 const getFileExt = (filename: string): string =>
   filename.split(".").pop() || "";
@@ -97,6 +103,7 @@ export const getFileType = (filename: string) => {
   if (SPREADSHEET_EXTS.includes(e)) return CELL;
   if (PRESENTATION_EXTS.includes(e)) return SLIDE;
   if (DIAGRAM_EXTS.includes(e)) return DIAGRAM;
+  if (PDF_EXTS.includes(e)) return PDF;
 
   return null;
 };
@@ -124,18 +131,12 @@ export const getMimeType = (filename: string) => {
 export const getFileIcon = (filename: string) => {
   const e = getFileExt(filename).toLowerCase();
 
-  if (e === "docx") return Docx;
-  if (e === "xlsx") return Xlsx;
-  if (e === "pptx") return Pptx;
   if (e === "pdf") return Pdf;
-  if (e === "vsd" || e === "vsdx") return Vsd;
-  if (
-    DOCUMENT_EXTS.includes(e) ||
-    SPREADSHEET_EXTS.includes(e) ||
-    PRESENTATION_EXTS.includes(e) ||
-    DIAGRAM_EXTS.includes(e)
-  )
-    return Supported;
+  if (DOCUMENT_EXTS.includes(e)) return Docx;
+  if (SPREADSHEET_EXTS.includes(e)) return Xlsx;
+  if (PRESENTATION_EXTS.includes(e)) return Pptx;
+  if (DIAGRAM_EXTS.includes(e)) return Vsd;
+  if (OPENABLE_EXTS.includes(e)) return Supported;
 
   return Unsupported;
 };
@@ -154,6 +155,8 @@ export const formatBytes = (bytes: number, decimals = 2) => {
 
 export const getFileFavicon = (filename: string) => {
   const e = getFileExt(filename).toLowerCase();
+
+  if (PDF_EXTS.includes(e)) return pdfIcon;
   if (DOCUMENT_EXTS.includes(e)) return wordIcon;
   if (PRESENTATION_EXTS.includes(e)) return slideIcon;
   if (SPREADSHEET_EXTS.includes(e)) return cellIcon;
