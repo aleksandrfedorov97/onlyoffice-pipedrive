@@ -35,6 +35,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
 	"golang.org/x/sync/errgroup"
@@ -212,6 +213,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		config.DocumentType = fileType
 	}
 
+	config.ExpiresAt = jwt.NewNumericDate(time.Now().Add(5 * time.Minute))
 	token, err := c.jwtManager.Sign(settings.DocSecret, config)
 	if err != nil {
 		c.logger.Debugf("could not sign document server config: %s", err.Error())
