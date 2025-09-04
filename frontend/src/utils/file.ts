@@ -27,6 +27,7 @@ import Supported from "@assets/supported.svg";
 import wordIcon from "@assets/word.ico";
 import slideIcon from "@assets/slide.ico";
 import cellIcon from "@assets/cell.ico";
+import vsdIcon from "@assets/vsd.ico";
 import genericIcon from "@assets/generic.ico";
 
 import formatsData from "@assets/document-formats/onlyoffice-docs-formats.json";
@@ -156,7 +157,7 @@ export const getFileFavicon = (filename: string) => {
   if (DOCUMENT_EXTS.includes(e)) return wordIcon;
   if (PRESENTATION_EXTS.includes(e)) return slideIcon;
   if (SPREADSHEET_EXTS.includes(e)) return cellIcon;
-  if (DIAGRAM_EXTS.includes(e)) return genericIcon;
+  if (DIAGRAM_EXTS.includes(e)) return vsdIcon;
 
   return genericIcon;
 };
