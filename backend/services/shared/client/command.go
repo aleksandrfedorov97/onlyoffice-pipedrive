@@ -30,6 +30,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -80,7 +81,7 @@ func (p *CommandClient) License(ctx context.Context, url, secret string) error {
 			Token: token,
 		}).
 		SetResult(&resp).
-		Post(fmt.Sprintf("%scoauthoring/CommandService.ashx", url))
+		Post(fmt.Sprintf("%scommand?shardkey=%s", url, uuid.New().String()))
 
 	if err != nil {
 		return err
