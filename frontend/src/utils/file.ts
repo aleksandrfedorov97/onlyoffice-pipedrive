@@ -20,6 +20,7 @@ import Docx from "@assets/docx.svg";
 import Pdf from "@assets/pdf.svg";
 import Pptx from "@assets/pptx.svg";
 import Xlsx from "@assets/xlsx.svg";
+import Vsd from "@assets/vsd.svg";
 import Unsupported from "@assets/unsupported.svg";
 import Supported from "@assets/supported.svg";
 
@@ -126,6 +127,7 @@ export const getFileIcon = (filename: string) => {
   if (e === "xlsx") return Xlsx;
   if (e === "pptx") return Pptx;
   if (e === "pdf") return Pdf;
+  if (e === "vsd" || e === "vsdx") return Vsd;
   if (
     DOCUMENT_EXTS.includes(e) ||
     SPREADSHEET_EXTS.includes(e) ||
