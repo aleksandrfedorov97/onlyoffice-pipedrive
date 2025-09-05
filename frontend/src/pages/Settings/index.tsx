@@ -150,6 +150,7 @@ export const SettingsPage: React.FC = () => {
         setSaving(true);
         const finalAddress = address && !address.endsWith("/") ? `${address}/` : address;
         await postSettings(sdk, finalAddress || "", secret || "", header || "", demoEnabled);
+        setDemoStarted(demoStarted ? demoStarted : new Date().toISOString());
         await sdk.execute(Command.SHOW_SNACKBAR, {
           message: t(
             "settings.saving.ok",
