@@ -33,6 +33,7 @@
     "settings.saving.error": "ONLYOFFICEの設定を保存できませんでした",
     "editor.error": "ファイルを開くことに失敗しました。エラーが発生しました",
     "background.error.title": "エラー",
+    "background.error.title.main": "Something went wrong",
     "background.error.title.settings": "Something went wrong",
     "background.error.subtitle": "プラグイン設定を取得できませんでした。何らかのエラーが発生しました。pipedriveのウィンドウを再読み込みしてください",
     "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",

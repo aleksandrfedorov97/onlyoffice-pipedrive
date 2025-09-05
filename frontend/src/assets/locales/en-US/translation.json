@@ -33,6 +33,7 @@
     "settings.saving.error": "Could not save ONLYOFFICE settings",
     "editor.error": "Could not open the file. Something went wrong",
     "background.error.title": "Error",
+    "background.error.title.main": "Something went wrong",
     "background.error.title.settings": "Something went wrong",
     "background.error.subtitle": "Could not fetch plugin settings. Something went wrong. Please reload the Pipedrive window",
     "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
