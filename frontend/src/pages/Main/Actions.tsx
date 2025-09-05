@@ -54,7 +54,6 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   }, []);
 
   const handleDelete = () => {
-    if (disable) return;
     setDisable(true);
     mutator
       .mutateAsync()
@@ -80,7 +79,6 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleEditor = async () => {
-    if (disable) return;
     setDisable(true);
     if (isFileSupported(file.name)) {
       const win = window.open("/editor");
@@ -100,7 +98,6 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleDownload = async () => {
-    if (disable) return;
     setDisable(true);
     try {
       const durl = await downloadFile(url, file.id);
@@ -118,40 +115,65 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
     }
   };
 
+  const handleClick = (handler: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!disable) {
+      handler();
+    }
+  };
+
+  const handleKeyDown = (handler: () => void) => (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disable) {
+        handler();
+      }
+    }
+  };
+
+  const isEditorDisabled = !isFileSupported(file.name) || disable;
+  const isDownloadDisabled = disable;
+  const isDeleteDisabled = disable;
+
   return (
     <>
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={isEditorDisabled ? -1 : 0}
         className={`${
-          !isFileSupported(file.name) || disable
+          isEditorDisabled
             ? "hover:cursor-default opacity-50"
             : "hover:cursor-pointer"
         } mx-1`}
-        onClick={() => handleEditor()}
-        onKeyDown={() => handleEditor()}
+        onClick={isEditorDisabled ? undefined : handleClick(handleEditor)}
+        onKeyDown={isEditorDisabled ? undefined : handleKeyDown(handleEditor)}
+        aria-disabled={isEditorDisabled}
       >
         <Pencil />
       </div>
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={isDownloadDisabled ? -1 : 0}
         className={`mx-1 ${
-          disable ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+          isDownloadDisabled ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
         }`}
-        onClick={() => handleDownload()}
-        onKeyDown={() => handleDownload()}
+        onClick={handleClick(handleDownload)}
+        onKeyDown={handleKeyDown(handleDownload)}
+        aria-disabled={isDownloadDisabled}
       >
         <Download />
       </div>
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={isDeleteDisabled ? -1 : 0}
         className={`mx-1 ${
-          disable ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+          isDeleteDisabled ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
         }`}
-        onClick={() => handleDelete()}
-        onKeyDown={() => handleDelete()}
+        onClick={handleClick(handleDelete)}
+        onKeyDown={handleKeyDown(handleDelete)}
+        aria-disabled={isDeleteDisabled}
       >
         <Trash />
       </div>
