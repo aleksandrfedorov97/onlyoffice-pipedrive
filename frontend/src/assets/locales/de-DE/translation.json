@@ -33,6 +33,7 @@
     "settings.saving.error": "ONLYOFFICE-Einstellungen konnten nicht gespeichert werden",
     "editor.error": "Die Datei konnte nicht geöffnet werden. Etwas ist schief gelaufen",
     "background.error.title": "Fehler",
+    "background.error.title.settings": "Something went wrong",
     "background.error.subtitle": "Plugin-Einstellungen konnten nicht abgerufen werden. Etwas ist schief gelaufen. Bitte laden Sie das Pipedrive-Fenster neu",
     "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
     "background.access.title": "Zugriff verweigert",

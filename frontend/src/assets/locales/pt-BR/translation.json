@@ -33,6 +33,7 @@
     "settings.saving.error": "Could not save ONLYOFFICE settings",
     "editor.error": "Não foi possível abrir o arquivo. Algo deu errado",
     "background.error.title": "Erro",
+    "background.error.title.settings": "Something went wrong",
     "background.error.subtitle": "Não foi possível obter as configurações do plug-in. Algo deu errado. Recarregue a janela do Pipedrive",
     "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
     "background.access.title": "Acesso negado",

@@ -32,6 +32,7 @@
     "settings.saving.error": "Не удалось сохранить настройки ONLYOFFICE",
     "editor.error": "Не удалось открыть файл. Что-то пошло не так",
     "background.error.title": "Ошибка",
+    "background.error.title.settings": "Что-то пошло не так",
     "background.error.subtitle": "Не удалось получить настройки плагина. Что-то пошло не так. Пожалуйста, перезагрузите окно Pipedrive",
     "background.error.subtitle.token": "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app",
     "background.access.title": "Доступ запрещен",

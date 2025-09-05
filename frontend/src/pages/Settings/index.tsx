@@ -33,8 +33,18 @@ import { getPipedriveMe } from "@services/me";
 
 import { AuthToken } from "@context/TokenContext";
 
+import OnlyofficeLogo from "@assets/onlyoffice-logo.svg";
 import SettingsError from "@assets/settings-error.svg";
 import { getCurrentURL } from "@utils/url";
+
+const SettingsErrorIcon = () => {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <OnlyofficeLogo />
+      <SettingsError />
+    </div>
+  );
+}
 
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -121,8 +131,8 @@ export const SettingsPage: React.FC = () => {
       )}
       {!loading && error && (
         <OnlyofficeBackgroundError
-          Icon={<SettingsError />}
-          title={t("background.error.title", "Error")}
+          Icon={<SettingsErrorIcon />}
+          title={t("background.error.title.settings", "Something went wrong")}
           subtitle={t(
             status !== 401
               ? "background.error.subtitle"
@@ -132,8 +142,9 @@ export const SettingsPage: React.FC = () => {
               : "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app"
           )}
           button={
-            status === 401 && t("background.reinstall.button", "Reinstall") ||
-            "Reinstall"
+            status === 401 
+              ? t("background.reinstall.button", "Reinstall") || "Reinstall"
+              : t("button.reload", "Reload") || "Reload"
           }
           onClick={status === 401 ? () => {
             if (status === 401)
@@ -141,17 +152,19 @@ export const SettingsPage: React.FC = () => {
                 `${getCurrentURL().url}settings/marketplace`,
                 "_blank"
               );
-          } : undefined}
+          } : () => window.location.reload()}
         />
       )}
       {!loading && !error && !admin && (
         <OnlyofficeBackgroundError
-          Icon={<SettingsError />}
+          Icon={<SettingsErrorIcon />}
           title={t("background.access.title", "Access Denied")}
           subtitle={t(
             "background.access.subtitle",
             "Something went wrong or access denied"
           )}
+          button={t("button.reload", "Reload") || "Reload"}
+          onClick={() => window.location.reload()}
         />
       )}
       {!loading && !error && admin && (
