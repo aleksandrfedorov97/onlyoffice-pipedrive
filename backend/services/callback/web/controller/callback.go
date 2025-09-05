@@ -65,6 +65,19 @@ func NewCallbackController(
 	}
 }
 
+func (c CallbackController) isDemoModeValid(settings response.DocSettingsResponse) bool {
+	if !settings.DemoEnabled {
+		return false
+	}
+
+	if settings.DemoStarted.IsZero() {
+		return true
+	}
+
+	fiveDaysAgo := time.Now().AddDate(0, 0, -5)
+	return settings.DemoStarted.After(fiveDaysAgo)
+}
+
 func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
@@ -110,7 +123,32 @@ func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 			return
 		}
 
-		if err := c.jwtManager.Verify(res.DocSecret, body.Token, &body); err != nil {
+		var jwtSecret string
+		if c.isDemoModeValid(res) {
+			if c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret == "" {
+				c.logger.Errorf("demo mode is enabled but demo secret is not configured")
+				rw.WriteHeader(http.StatusInternalServerError)
+				rw.Write(response.CallbackResponse{
+					Error: 1,
+				}.ToJSON())
+				return
+			}
+
+			jwtSecret = c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret
+		} else {
+			if res.DocSecret == "" {
+				c.logger.Errorf("no document server secret found and demo mode not valid (company %s)", cid)
+				rw.WriteHeader(http.StatusBadRequest)
+				rw.Write(response.CallbackResponse{
+					Error: 1,
+				}.ToJSON())
+				return
+			}
+
+			jwtSecret = res.DocSecret
+		}
+
+		if err := c.jwtManager.Verify(jwtSecret, body.Token, &body); err != nil {
 			c.logger.Errorf("could not verify callback jwt (%s). Reason: %s", body.Token, err.Error())
 			rw.WriteHeader(http.StatusForbidden)
 			rw.Write(response.CallbackResponse{

@@ -40,6 +40,7 @@ type OnlyofficeConfig struct {
 	Onlyoffice struct {
 		Builder  OnlyofficeBuilderConfig  `yaml:"builder"`
 		Callback OnlyofficeCallbackConfig `yaml:"callback"`
+		Demo     OnlyofficeDemoConfig     `yaml:"demo"`
 	} `yaml:"onlyoffice"`
 }
 
@@ -98,7 +99,11 @@ func (oc *OnlyofficeConfig) Validate() error {
 		return err
 	}
 
-	return oc.Onlyoffice.Callback.Validate()
+	if err := oc.Onlyoffice.Callback.Validate(); err != nil {
+		return err
+	}
+
+	return oc.Onlyoffice.Demo.Validate()
 }
 
 func BuildNewOnlyofficeConfig(path string) func() (*OnlyofficeConfig, error) {
@@ -146,5 +151,37 @@ type OnlyofficeCallbackConfig struct {
 }
 
 func (c *OnlyofficeCallbackConfig) Validate() error {
+	return nil
+}
+
+type OnlyofficeDemoConfig struct {
+	DocumentServerURL    string `yaml:"document_server_url" env:"ONLYOFFICE_DEMO_DOCUMENT_SERVER_URL,overwrite"`
+	DocumentServerSecret string `yaml:"document_server_secret" env:"ONLYOFFICE_DEMO_DOCUMENT_SERVER_SECRET,overwrite"`
+	DocumentServerHeader string `yaml:"document_server_header" env:"ONLYOFFICE_DEMO_DOCUMENT_SERVER_HEADER,overwrite"`
+}
+
+func (c *OnlyofficeDemoConfig) Validate() error {
+	if c.DocumentServerURL != "" || c.DocumentServerSecret != "" || c.DocumentServerHeader != "" {
+		if c.DocumentServerURL == "" {
+			return &InvalidConfigurationParameterError{
+				Parameter: "Demo DocumentServerURL",
+				Reason:    "Should not be empty when other demo credentials are provided",
+			}
+		}
+
+		if c.DocumentServerSecret == "" {
+			return &InvalidConfigurationParameterError{
+				Parameter: "Demo DocumentServerSecret",
+				Reason:    "Should not be empty when other demo credentials are provided",
+			}
+		}
+
+		if c.DocumentServerHeader == "" {
+			return &InvalidConfigurationParameterError{
+				Parameter: "Demo DocumentServerHeader",
+				Reason:    "Should not be empty when other demo credentials are provided",
+			}
+		}
+	}
 	return nil
 }

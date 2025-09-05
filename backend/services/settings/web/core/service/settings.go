@@ -69,10 +69,12 @@ func (s settingsService) CreateSettings(ctx context.Context, settings domain.Doc
 
 	s.logger.Debugf("settings %s are valid. Persisting to database", settings.CompanyID)
 	if err := s.adapter.InsertSettings(ctx, domain.DocSettings{
-		CompanyID:  settings.CompanyID,
-		DocAddress: settings.DocAddress,
-		DocSecret:  esecret,
-		DocHeader:  settings.DocHeader,
+		CompanyID:   settings.CompanyID,
+		DocAddress:  settings.DocAddress,
+		DocSecret:   esecret,
+		DocHeader:   settings.DocHeader,
+		DemoEnabled: settings.DemoEnabled,
+		DemoStarted: settings.DemoStarted,
 	}); err != nil {
 		return err
 	}
@@ -115,10 +117,12 @@ func (s settingsService) GetSettings(ctx context.Context, cid string) (domain.Do
 	}
 
 	return domain.DocSettings{
-		CompanyID:  cid,
-		DocAddress: settings.DocAddress,
-		DocSecret:  dsecret,
-		DocHeader:  settings.DocHeader,
+		CompanyID:   cid,
+		DocAddress:  settings.DocAddress,
+		DocSecret:   dsecret,
+		DocHeader:   settings.DocHeader,
+		DemoEnabled: settings.DemoEnabled,
+		DemoStarted: settings.DemoStarted,
 	}, nil
 }
 
@@ -128,6 +132,21 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 		return settings, err
 	}
 
+	persistedSettings, err := s.adapter.SelectSettings(ctx, settings.CompanyID)
+	if err != nil {
+		if settings.DemoEnabled {
+			settings.DemoStarted = time.Now()
+		}
+	} else {
+		if settings.DemoEnabled {
+			if persistedSettings.DemoEnabled && !persistedSettings.DemoStarted.IsZero() {
+				settings.DemoStarted = persistedSettings.DemoStarted
+			} else {
+				settings.DemoStarted = time.Now()
+			}
+		}
+	}
+
 	esecret, err := s.encryptor.Encrypt(settings.DocSecret, []byte(s.credentials.ClientSecret))
 	if err != nil {
 		return settings, err
@@ -135,10 +154,12 @@ func (s settingsService) UpdateSettings(ctx context.Context, settings domain.Doc
 
 	s.logger.Debugf("settings %s are valid to perform an update action", settings.CompanyID)
 	if _, err := s.adapter.UpsertSettings(ctx, domain.DocSettings{
-		CompanyID:  settings.CompanyID,
-		DocAddress: settings.DocAddress,
-		DocSecret:  esecret,
-		DocHeader:  settings.DocHeader,
+		CompanyID:   settings.CompanyID,
+		DocAddress:  settings.DocAddress,
+		DocSecret:   esecret,
+		DocHeader:   settings.DocHeader,
+		DemoEnabled: settings.DemoEnabled,
+		DemoStarted: settings.DemoStarted,
 	}); err != nil {
 		return settings, err
 	}

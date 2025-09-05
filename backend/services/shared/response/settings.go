@@ -18,12 +18,17 @@
 
 package response
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type DocSettingsResponse struct {
-	DocAddress string `json:"doc_address"`
-	DocSecret  string `json:"doc_secret"`
-	DocHeader  string `json:"doc_header"`
+	DocAddress  string    `json:"doc_address"`
+	DocSecret   string    `json:"doc_secret"`
+	DocHeader   string    `json:"doc_header"`
+	DemoEnabled bool      `json:"demo_enabled"`
+	DemoStarted time.Time `json:"demo_started"`
 }
 
 func (r DocSettingsResponse) ToJSON() []byte {

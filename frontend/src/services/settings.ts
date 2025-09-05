@@ -26,7 +26,8 @@ export const postSettings = async (
   sdk: AppExtensionsSDK,
   address: string,
   secret: string,
-  header: string
+  header: string,
+  demoEnabled: boolean = false
 ) => {
   const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create({ baseURL: process.env.BACKEND_GATEWAY });
@@ -46,6 +47,7 @@ export const postSettings = async (
       doc_address: address,
       doc_secret: secret,
       doc_header: header,
+      demo_enabled: demoEnabled,
     },
     timeout: 4000,
   });

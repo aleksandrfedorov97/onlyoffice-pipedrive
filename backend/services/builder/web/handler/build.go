@@ -30,7 +30,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
 	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
+	shared "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
@@ -80,6 +80,22 @@ func NewConfigHandler(
 	}
 }
 
+// isDemoModeValid checks if demo is enabled and within the 5-day period
+func (c ConfigHandler) isDemoModeValid(settings response.DocSettingsResponse) bool {
+	if !settings.DemoEnabled {
+		return false
+	}
+
+	// If demo hasn't started yet, it's valid
+	if settings.DemoStarted.IsZero() {
+		return true
+	}
+
+	// Check if demo is within 5 days
+	fiveDaysAgo := time.Now().AddDate(0, 0, -5)
+	return settings.DemoStarted.After(fiveDaysAgo)
+}
+
 func (c ConfigHandler) processConfig(user response.UserResponse, req request.BuildConfigRequest, ctx context.Context) (response.BuildConfigResponse, error) {
 	var config response.BuildConfigResponse
 
@@ -121,10 +137,31 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			c.logger.Debugf("could not document server settings: %s", err.Error())
 			return err
 		}
-		if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
-			c.logger.Debugf("no settings found")
-			return ErrNoSettingsFound
+
+		// Check if we should use demo mode
+		if c.isDemoModeValid(docs) {
+			// Ensure demo credentials are configured
+			if c.onlyoffice.Onlyoffice.Demo.DocumentServerURL == "" ||
+				c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret == "" ||
+				c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader == "" {
+				c.logger.Errorf("demo mode is enabled but demo credentials are not configured")
+				return ErrNoSettingsFound
+			}
+
+			c.logger.Debugf("using demo mode for company %d", req.CID)
+			// Use demo credentials from configuration
+			docs.DocAddress = c.onlyoffice.Onlyoffice.Demo.DocumentServerURL
+			docs.DocSecret = c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret
+			docs.DocHeader = c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader
+		} else {
+			// Validate regular credentials are available
+			if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
+				c.logger.Debugf("no settings found and demo mode not valid")
+				return ErrNoSettingsFound
+			}
+			c.logger.Debugf("using regular document server settings for company %d", req.CID)
 		}
+
 		settings = docs
 		return nil
 	})

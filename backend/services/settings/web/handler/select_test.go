@@ -21,6 +21,7 @@ package handler
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/cache"
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
@@ -56,10 +57,12 @@ func TestSelectCaching(t *testing.T) {
 	sel := NewSettingsSelectHandler(service, nil, log.NewEmptyLogger())
 
 	service.CreateSettings(context.Background(), domain.DocSettings{
-		CompanyID:  "mock",
-		DocAddress: "mock",
-		DocSecret:  "mock",
-		DocHeader:  "mock",
+		CompanyID:   "mock",
+		DocAddress:  "mock",
+		DocSecret:   "mock",
+		DocHeader:   "mock",
+		DemoEnabled: true,
+		DemoStarted: time.Now(),
 	})
 
 	t.Run("get settings", func(t *testing.T) {
