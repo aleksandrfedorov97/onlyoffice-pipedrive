@@ -27,6 +27,7 @@ export const fetchConfig = async (
   name: string,
   key: string,
   dealID: string,
+  dark: boolean = false,
   signal?: AbortSignal
 ) => {
   const client = axios.create();
@@ -45,6 +46,7 @@ export const fetchConfig = async (
       name,
       key,
       deal_id: dealID,
+      dark: dark.toString(),
     },
     headers: {
       "Content-Type": "application/json",

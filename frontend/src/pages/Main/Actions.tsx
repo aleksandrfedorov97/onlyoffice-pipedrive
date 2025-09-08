@@ -95,7 +95,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
             parameters.get("selectedIds") || "1"
           }&id=${file.id}&name=${`${encodeURIComponent(
             name.substring(0, 190)
-          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${i18next.language}`;
+          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${i18next.language}&dark=${isDark}`;
       }
     }
     // temporary solution

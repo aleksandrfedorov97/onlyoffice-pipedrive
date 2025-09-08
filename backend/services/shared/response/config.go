@@ -78,6 +78,7 @@ type Customization struct {
 	Goback        Goback `json:"goback"`
 	Plugins       bool   `json:"plugins"`
 	HideRightMenu bool   `json:"hideRightMenu"`
+	UiTheme       string `json:"uiTheme"`
 }
 
 type Goback struct {

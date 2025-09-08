@@ -80,18 +80,15 @@ func NewConfigHandler(
 	}
 }
 
-// isDemoModeValid checks if demo is enabled and within the 5-day period
 func (c ConfigHandler) isDemoModeValid(settings response.DocSettingsResponse) bool {
 	if !settings.DemoEnabled {
 		return false
 	}
 
-	// If demo hasn't started yet, it's valid
 	if settings.DemoStarted.IsZero() {
 		return true
 	}
 
-	// Check if demo is within 5 days
 	fiveDaysAgo := time.Now().AddDate(0, 0, -5)
 	return settings.DemoStarted.After(fiveDaysAgo)
 }
@@ -138,9 +135,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			return err
 		}
 
-		// Check if we should use demo mode
 		if c.isDemoModeValid(docs) {
-			// Ensure demo credentials are configured
 			if c.onlyoffice.Onlyoffice.Demo.DocumentServerURL == "" ||
 				c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret == "" ||
 				c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader == "" {
@@ -149,12 +144,10 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			}
 
 			c.logger.Debugf("using demo mode for company %d", req.CID)
-			// Use demo credentials from configuration
 			docs.DocAddress = c.onlyoffice.Onlyoffice.Demo.DocumentServerURL
 			docs.DocSecret = c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret
 			docs.DocHeader = c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader
 		} else {
-			// Validate regular credentials are available
 			if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
 				c.logger.Debugf("no settings found and demo mode not valid")
 				return ErrNoSettingsFound
@@ -192,6 +185,10 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 	}()
 
 	filename := c.formatManager.EscapeFileName(req.Filename)
+	theme := "default-light"
+	if req.Dark {
+		theme = "default-dark"
+	}
 
 	config = response.BuildConfigResponse{
 		Document: response.Document{
@@ -216,6 +213,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 				},
 				Plugins:       false,
 				HideRightMenu: false,
+				UiTheme:       theme,
 			},
 			Lang: usr.Language.Lang,
 		},

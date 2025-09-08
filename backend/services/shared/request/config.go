@@ -28,6 +28,7 @@ type BuildConfigRequest struct {
 	FileID    string `json:"file_id"`
 	Filename  string `json:"file_name"`
 	DocKey    string `json:"doc_key"`
+	Dark      bool   `json:"dark"`
 }
 
 func (c BuildConfigRequest) ToJSON() []byte {

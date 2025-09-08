@@ -326,8 +326,8 @@ func (c ApiController) BuildGetConfig() http.HandlerFunc {
 		rw.Header().Set("Content-Type", "application/json")
 
 		query := r.URL.Query()
-		id, filename, key, dealID := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
-			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id"))
+		id, filename, key, dealID, dark := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
+			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id")), query.Get("dark") == "true"
 
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
@@ -371,6 +371,7 @@ func (c ApiController) BuildGetConfig() http.HandlerFunc {
 					Filename:  filename,
 					FileID:    id,
 					DocKey:    key,
+					Dark:      dark,
 				},
 			),
 			&resp,

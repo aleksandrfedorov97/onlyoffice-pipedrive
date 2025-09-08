@@ -49,17 +49,21 @@ const onEditor = () => {
 export const OnlyofficeEditorPage: React.FC = () => {
   const { t } = useTranslation();
   const [params] = useSearchParams();
+
+  const isDark = params.get("dark") === "true";
   const { isLoading, error, data } = useBuildConfig(
     params.get("token") || "",
     params.get("id") || "",
     params.get("name") || "new.docx",
     params.get("key") || new Date().toTimeString(),
-    params.get("deal_id") || "1"
+    params.get("deal_id") || "1",
+    isDark
   );
 
   const validConfig = !error && !isLoading && data;
+  const backgroundClass = isDark ? "bg-dark-bg" : "bg-white";
   return (
-    <div className="w-full h-full overflow-hidden bg-white dark:bg-dark-bg">
+    <div className={`w-full h-full overflow-hidden ${backgroundClass}`}>
       <Helmet
         link={[
           {
@@ -72,10 +76,10 @@ export const OnlyofficeEditorPage: React.FC = () => {
       {!error && (
         <div
           id="eloader"
-          className="relative w-full h-full flex flex-col small:justify-between justify-center items-center transition duration-250 ease-linear"
+          className={`relative w-full h-full flex flex-col small:justify-between justify-center items-center transition duration-250 ease-linear ${backgroundClass}`}
         >
           <div className="pb-5 small:h-full small:flex small:items-center">
-            <OnlyofficeSpinner />
+            <OnlyofficeSpinner isDark={isDark} />
           </div>
           <div className="small:mb-5 small:px-5 small:w-full">
             <OnlyofficeButton
@@ -88,7 +92,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
         </div>
       )}
       {!!error && (
-        <div className="w-full h-full flex justify-center flex-col items-center mb-1">
+        <div className={`w-full h-full flex justify-center flex-col items-center mb-1 ${backgroundClass}`}>
           <Icon />
           <OnlyofficeError
             text={t(
