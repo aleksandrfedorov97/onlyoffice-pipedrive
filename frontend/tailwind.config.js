@@ -71,9 +71,12 @@ module.exports = {
                 dark: {
                     bg: "#1e2029",
                     surface: "#2d2d2d",
-                    border: "#404040",
-                    text: "#e5e5e5",
-                    muted: "#a3a3a3"
+                    border: "#3d444d",
+                    text: "#E2E2E4",
+                    muted: "#a3a3a3",
+                    primary: "#3C824E",
+                    hover: "#2A2C35",
+                    selected: "#3D444DB3"
                 }
             },
             screens: {

@@ -101,7 +101,7 @@ export const Upload: React.FC = () => {
           />
         </div>
       </div>
-      <div className="h-[48px] flex items-center w-full bg-white dark:bg-dark-surface border-t dark:border-dark-border">
+      <div className="h-[48px] flex items-center w-full bg-white dark:bg-dark-bg border-t dark:border-dark-border">
         <div className="flex justify-between items-center w-full">
           <div className="mx-5">
             <OnlyofficeButton

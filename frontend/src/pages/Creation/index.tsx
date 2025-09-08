@@ -57,7 +57,7 @@ export const CreatePage: React.FC = () => {
           onSelect={(index) => setSelected(index)}
         >
           <TabList
-            className="flex justify-start items-center min-h-[40px] w-full bg-gray-100 dark:bg-dark-surface"
+            className="flex justify-start items-center min-h-[40px] w-full bg-gray-100 dark:bg-dark-bg"
           >
             <Tab
               id="create-file"

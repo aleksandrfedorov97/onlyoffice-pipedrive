@@ -41,9 +41,10 @@ export const OnlyofficeTile: React.FC<TileProps> = ({
     "transition duration-100 ease-linear": true,
     "h-[82px]": true,
     "max-h-36 flex flex-col justify-center": true,
-    "hover:bg-gray-100 dark:hover:bg-dark-border cursor-pointer": !selected,
-    "bg-white dark:bg-dark-surface": !selected,
-    "bg-gray-200 dark:bg-dark-border": selected,
+    "border border-gray-300 dark:border-dark-border": true,
+    "hover:bg-gray-100 dark:hover:bg-dark-hover cursor-pointer": !selected,
+    "bg-white dark:bg-dark-bg": !selected,
+    "bg-gray-200 dark:bg-dark-selected": selected,
   });
 
   const spn = cx({

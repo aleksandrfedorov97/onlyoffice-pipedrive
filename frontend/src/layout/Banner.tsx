@@ -27,7 +27,7 @@ export const Banner: React.FC = () => {
   const { t } = useTranslation();
   return (
     <div
-      className="flex justify-between items-center p-5 mt-5 mb-5 bg-gray-100 dark:bg-dark-surface border border-gray-300 dark:border-dark-border"
+      className="flex justify-between items-center p-5 mt-5 mb-5 bg-gray-100 dark:bg-dark-bg border border-gray-300 dark:border-dark-border"
     >
       <div className="w-2/12">
         <BannerIcon />

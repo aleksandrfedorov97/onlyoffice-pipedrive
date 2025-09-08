@@ -18,7 +18,10 @@
 
 import React, { useState } from "react";
 
+import { useTheme } from "@context/ThemeContext";
+
 import DetailsIcon from "@assets/arrow-down.svg";
+import DetailsIconDark from "@assets/arrow-down_dark.svg";
 
 type FileProps = {
   Icon: any;
@@ -38,6 +41,7 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
   onClick,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const { isDark } = useTheme();
   return (
     <>
       <div className="flex items-center w-full border-b dark:border-dark-border py-2 my-1">
@@ -47,11 +51,11 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
             tabIndex={0}
             onClick={() => setShowDetails(!showDetails)}
             onKeyDown={() => setShowDetails(!showDetails)}
-            className={`w-[16px] h-[16px] hover:cursor-pointer mx-1 ${
+            className={`w-[16px] h-[16px] hover:cursor-pointer mx-1 text-black dark:text-dark-text ${
               showDetails ? "rotate-180" : "rotate-0"
             }`}
           >
-            <DetailsIcon />
+            {isDark ? <DetailsIconDark className="fill-current" /> : <DetailsIcon className="fill-current" />}
           </div>
         </div>
         <div className="flex items-center justify-start w-3/4">

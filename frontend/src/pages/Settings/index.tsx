@@ -272,7 +272,7 @@ export const SettingsPage: React.FC = () => {
                   checked={demoEnabled}
                   onChange={(e) => setDemoEnabled(e.target.checked)}
                   disabled={saving}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-surface border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-bg border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2"
                 />
                 <label htmlFor="demo-enabled" className="ml-2 text-sm font-medium text-gray-900 dark:text-dark-text">
                   {t("settings.inputs.demo", "Enable Demo Mode")}

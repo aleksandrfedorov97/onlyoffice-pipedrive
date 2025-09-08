@@ -37,7 +37,7 @@ export const OnlyofficeSearchBar: React.FC<SearchProps> = ({
     <div className="border dark:border-dark-border rounded overflow-hidden flex">
       <input
         type="text"
-        className="py-2 px-2 w-full select-auto outline-none bg-white dark:bg-dark-surface text-black dark:text-dark-text"
+        className="py-2 px-2 w-full select-auto outline-none bg-white dark:bg-dark-bg text-black dark:text-dark-text"
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -47,7 +47,7 @@ export const OnlyofficeSearchBar: React.FC<SearchProps> = ({
       />
       <button
         type="button"
-        className={`px-6 ${disabled && "bg-gray-50 dark:bg-dark-surface"}`}
+        className={`px-6 ${disabled && "bg-gray-50 dark:bg-dark-bg"}`}
         disabled={disabled}
       >
         <svg

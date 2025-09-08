@@ -70,7 +70,7 @@ code {
 }
 
 .dark .spinner {
-  background: conic-gradient(from 90deg at 50% 50%, rgba(255, 255, 255, 0.0001) 0deg, #e5e5e5 359.96deg, rgba(255, 255, 255, 0.0001) 360deg);
+  background: conic-gradient(from 90deg at 50% 50%, rgba(255, 255, 255, 0.0001) 0deg, #E2E2E4 359.96deg, rgba(255, 255, 255, 0.0001) 360deg);
 }
 
 .spinner::before {
@@ -98,7 +98,7 @@ code {
 }
 
 .dark .spinner::after {
-  background: #e5e5e5;
+  background: #E2E2E4;
 }
 
 @keyframes rotate {

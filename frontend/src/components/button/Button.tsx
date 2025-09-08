@@ -38,8 +38,8 @@ export const OnlyofficeButton: React.FC<ButtonProps> = ({
 }) => {
   const classes = cx({
     "hover:shadow-lg duration-200 transition-all": !disabled,
-    "bg-green-700 text-white": primary,
-    "bg-white dark:bg-dark-surface text-black dark:text-dark-text border-2 border-slate-300 dark:border-dark-border border-solid": !primary,
+    "bg-green-700 dark:bg-dark-primary text-white": primary,
+    "bg-white dark:bg-dark-bg text-black dark:text-dark-text border-2 border-slate-300 dark:border-dark-border border-solid": !primary,
     "min-w-[62px] h-[32px]": true,
     "w-full": fullWidth,
     "bg-opacity-50 cursor-not-allowed": disabled,
