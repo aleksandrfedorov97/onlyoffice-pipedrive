@@ -37,6 +37,8 @@
     "settings.validation.error": "Please provide Document Server credentials or enable valid demo mode",
     "settings.saving.ok": "As configurações do ONLYOFFICE foram salvas",
     "settings.saving.error": "Could not save ONLYOFFICE settings",
+    "settings.links.learnmore": "Learn more",
+    "settings.links.suggest": "Suggest a feature",
     "editor.error": "Não foi possível abrir o arquivo. Algo deu errado",
     "background.error.title": "Erro",
     "background.error.title.main": "Something went wrong",

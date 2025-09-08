@@ -37,6 +37,8 @@
     "settings.validation.error": "Please provide Document Server credentials or enable valid demo mode",
     "settings.saving.ok": "ONLYOFFICEの設定が保存されました",
     "settings.saving.error": "ONLYOFFICEの設定を保存できませんでした",
+    "settings.links.learnmore": "Learn more",
+    "settings.links.suggest": "Suggest a feature",
     "editor.error": "ファイルを開くことに失敗しました。エラーが発生しました",
     "background.error.title": "エラー",
     "background.error.title.main": "Something went wrong",

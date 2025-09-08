@@ -234,6 +234,24 @@ export const SettingsPage: React.FC = () => {
               `
               )}
             </p>
+            <div className="flex items-center gap-4" style={{ marginTop: '10px' }}>
+              <a
+                href="https://helpcenter.onlyoffice.com/integration/pipedrive.aspx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-200"
+              >
+                {t("settings.links.learnmore", "Learn more")} ↗
+              </a>
+              <a
+                href="https://feedback.onlyoffice.com/forums/966080-your-voice-matters?category_id=519288"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-200"
+              >
+                {t("settings.links.suggest", "Suggest a feature")} ↗
+              </a>
+            </div>
           </div>
           <div className="max-w-[320px]">
             <div className="pl-5 pr-5 pb-2">
