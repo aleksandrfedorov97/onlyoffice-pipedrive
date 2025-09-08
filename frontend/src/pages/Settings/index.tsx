@@ -89,7 +89,7 @@ export const SettingsPage: React.FC = () => {
     const daysLeft = 5 - daysAgo;
     
     if (daysLeft > 0)
-      return t("settings.demo.status.active", `Demo active - ${daysLeft} day(s) remaining`);
+      return t("settings.demo.status.active", "Demo active - {{days}} day(s) remaining", { days: daysLeft });
     return t("settings.demo.status.expired", "Demo has expired - please provide credentials");
   };
 
