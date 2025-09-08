@@ -53,7 +53,7 @@ export const Creation: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full bg-white dark:bg-dark-bg">
       <div className="h-[calc(100%-3rem)] w-full overflow-hidden">
         <div className="px-5 flex flex-col justify-center items-start h-full">
           <OnlyofficeTitle
@@ -107,7 +107,7 @@ export const Creation: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="h-[48px] flex items-center w-full">
+      <div className="h-[48px] flex items-center w-full bg-white dark:bg-dark-surface border-t dark:border-dark-border">
         <div className="flex justify-between items-center w-full">
           <div className="mx-5">
             <OnlyofficeButton

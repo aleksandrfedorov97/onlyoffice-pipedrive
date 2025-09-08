@@ -171,7 +171,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="custom-scroll w-screen h-screen overflow-y-scroll overflow-x-hidden">
+      <div className="custom-scroll w-screen h-screen overflow-y-scroll overflow-x-hidden bg-white dark:bg-dark-bg">
       {loading && !error && (
         <div className="h-full w-full flex justify-center items-center">
           <OnlyofficeSpinner />
@@ -223,7 +223,7 @@ export const SettingsPage: React.FC = () => {
                 text={t("settings.title", "Configure ONLYOFFICE app settings")}
               />
             </div>
-            <p className="text-slate-800 font-normal text-base text-left">
+            <p className="text-slate-800 dark:text-dark-text font-normal text-base text-left">
               {t(
                 "settings.text",
                 `
@@ -272,13 +272,13 @@ export const SettingsPage: React.FC = () => {
                   checked={demoEnabled}
                   onChange={(e) => setDemoEnabled(e.target.checked)}
                   disabled={saving}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-surface border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <label htmlFor="demo-enabled" className="ml-2 text-sm font-medium text-gray-900">
+                <label htmlFor="demo-enabled" className="ml-2 text-sm font-medium text-gray-900 dark:text-dark-text">
                   {t("settings.inputs.demo", "Enable Demo Mode")}
                 </label>
               </div>
-              <p className="text-xs text-gray-500 mt-1 ml-6">
+              <p className="text-xs text-gray-500 dark:text-dark-muted mt-1 ml-6">
                 {demoEnabled ? getDemoStatus() : t("settings.inputs.demo.description", "Enable demo mode to test the integration without a Document Server")}
               </p>
             </div>

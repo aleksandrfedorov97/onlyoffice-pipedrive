@@ -37,7 +37,7 @@ export const OnlyofficeBackgroundError: React.FC<ErrorProps> = ({
   button,
   onClick,
 }) => (
-  <div className="w-full h-full flex justify-center flex-col items-center overflow-hidden">
+  <div className="w-full h-full flex justify-center flex-col items-center overflow-hidden bg-white dark:bg-dark-bg">
     <div className="flex justify-center items-center overflow-hidden">
       {Icon}
     </div>

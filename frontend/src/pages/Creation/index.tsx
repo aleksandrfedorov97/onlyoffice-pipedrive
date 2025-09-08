@@ -46,7 +46,7 @@ export const CreatePage: React.FC = () => {
   });
   
   return (
-    <div className="relative w-full h-full flex flex-col overflow-hidden">
+    <div className="relative w-full h-full flex flex-col overflow-hidden bg-white dark:bg-dark-bg">
       {(!loaded && !loadingError) ? (
         <div className="flex justify-center items-center h-full w-full">
           <OnlyofficeSpinner />
@@ -57,15 +57,14 @@ export const CreatePage: React.FC = () => {
           onSelect={(index) => setSelected(index)}
         >
           <TabList
-            className="flex justify-start items-center min-h-[40px] w-full"
-            style={{ backgroundColor: "#F7F7F7" }}
+            className="flex justify-start items-center min-h-[40px] w-full bg-gray-100 dark:bg-dark-surface"
           >
             <Tab
               id="create-file"
               className={`flex justify-center items-center text-sm font-inter outline-none hover:cursor-pointer min-h-[40px] ${
                 selected === 0
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-slate-500"
+                  : "text-slate-500 dark:text-dark-muted"
               }`}
               style={{ margin: "0 0 0 1em", padding: "1em" }}
             >
@@ -76,7 +75,7 @@ export const CreatePage: React.FC = () => {
               className={`flex justify-center items-center text-sm font-inter outline-none hover:cursor-pointer min-h-[40px] ${
                 selected === 1
                   ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-slate-500"
+                  : "text-slate-500 dark:text-dark-muted"
               }`}
               style={{ margin: "0 0 0 1em", padding: "1em" }}
             >

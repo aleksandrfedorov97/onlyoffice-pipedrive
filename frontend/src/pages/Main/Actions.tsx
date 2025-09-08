@@ -22,6 +22,7 @@ import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 import { useTranslation } from "react-i18next";
 
+import { useTheme } from "@context/ThemeContext";
 import { useDeleteFile } from "@hooks/useDeleteFile";
 
 import { downloadFile } from "@services/file";
@@ -32,8 +33,11 @@ import { getCurrentURL } from "@utils/url";
 import { File } from "src/types/file";
 
 import Pencil from "@assets/pencil.svg";
+import PencilDark from "@assets/pencil_dark.svg";
 import Download from "@assets/download.svg";
+import DownloadDark from "@assets/download_dark.svg";
 import Trash from "@assets/trash.svg";
+import TrashDark from "@assets/trash_dark.svg";
 
 type FileActionsProps = {
   file: File;
@@ -42,6 +46,7 @@ type FileActionsProps = {
 export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   const { t } = useTranslation();
   const { url, parameters } = getCurrentURL();
+  const { isDark } = useTheme();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const [disable, setDisable] = useState(false);
   const mutator = useDeleteFile(`${url}api/v1/files/${file.id}`);
@@ -151,7 +156,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         onKeyDown={isEditorDisabled ? undefined : handleKeyDown(handleEditor)}
         aria-disabled={isEditorDisabled}
       >
-        <Pencil />
+        {isDark ? <PencilDark /> : <Pencil />}
       </div>
       <div
         role="button"
@@ -163,7 +168,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         onKeyDown={handleKeyDown(handleDownload)}
         aria-disabled={isDownloadDisabled}
       >
-        <Download />
+        {isDark ? <DownloadDark /> : <Download />}
       </div>
       <div
         role="button"
@@ -175,7 +180,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         onKeyDown={handleKeyDown(handleDelete)}
         aria-disabled={isDeleteDisabled}
       >
-        <Trash />
+        {isDark ? <TrashDark /> : <Trash />}
       </div>
     </>
   );

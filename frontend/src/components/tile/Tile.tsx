@@ -41,15 +41,15 @@ export const OnlyofficeTile: React.FC<TileProps> = ({
     "transition duration-100 ease-linear": true,
     "h-[82px]": true,
     "max-h-36 flex flex-col justify-center": true,
-    "hover:bg-gray-100 cursor-pointer": !selected,
-    "bg-white": !selected,
-    "bg-gray-200": selected,
+    "hover:bg-gray-100 dark:hover:bg-dark-border cursor-pointer": !selected,
+    "bg-white dark:bg-dark-surface": !selected,
+    "bg-gray-200 dark:bg-dark-border": selected,
   });
 
   const spn = cx({
     "text-sm": size === "sm",
     "text-xs text-[9px]": size === "xs",
-    "font-semibold text-slate-500": true,
+    "font-semibold text-slate-500 dark:text-dark-muted": true,
     "overflow-hidden whitespace-nowrap inline-block text-ellipsis": true,
   });
 

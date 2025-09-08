@@ -40,7 +40,7 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
   const [showDetails, setShowDetails] = useState(false);
   return (
     <>
-      <div className="flex items-center w-full border-b py-2 my-1">
+      <div className="flex items-center w-full border-b dark:border-dark-border py-2 my-1">
         <div className="flex items-center justify-center">
           <div
             role="button"
@@ -61,7 +61,7 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
           <button
             className={`${
               supported && onClick ? "cursor-pointer" : "cursor-default"
-            } text-left font-semibold font-sans md:text-sm text-xs px-2 w-[170px] h-[32px] overflow-hidden text-ellipsis whitespace-nowrap`}
+            } text-left font-semibold font-sans md:text-sm text-xs px-2 w-[170px] h-[32px] overflow-hidden text-ellipsis whitespace-nowrap text-black dark:text-dark-text`}
             type="button"
             title={name}
             onClick={onClick}

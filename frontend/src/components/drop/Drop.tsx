@@ -116,25 +116,25 @@ export const OnlyofficeDragDrop: React.FC<DragDropProps> = ({
 
   const style = cx({
     "flex flex-col items-center justify-center p-5": true,
-    "border-2 border-slate-300 border-dashed rounded-lg": true,
-    "bg-transparent bg-opacity-20 text-black": true,
+    "border-2 border-slate-300 dark:border-dark-border border-dashed rounded-lg": true,
+    "bg-transparent bg-opacity-20 text-black dark:text-dark-text": true,
     "transition-all transition-timing-function: ease-in-out": true,
     "transition-duration: 300ms": true,
-    "bg-sky-100": isDragActive,
-    "bg-emerald-100": uploading,
-    "bg-red-100": error,
+    "bg-sky-100 dark:bg-sky-900": isDragActive,
+    "bg-emerald-100 dark:bg-emerald-900": uploading,
+    "bg-red-100 dark:bg-red-900": error,
   });
 
   return (
     <div className={`${style} w-full h-full`} {...getRootProps()}>
       <UploadIcon />
       {error && (
-        <span className="font-sans font-semibold text-sm text-center">
+        <span className="font-sans font-semibold text-sm text-center text-black dark:text-dark-text">
           {errorText}
         </span>
       )}
       {uploading && !error && (
-        <span className="font-sans font-semibold text-sm text-center">
+        <span className="font-sans font-semibold text-sm text-center text-black dark:text-dark-text">
           {uploadingText}
         </span>
       )}
@@ -156,11 +156,11 @@ export const OnlyofficeDragDrop: React.FC<DragDropProps> = ({
             >
               {selectText}
             </button>
-            <span className="text-center max-w-max text-ellipsis truncate">
+            <span className="text-center max-w-max text-ellipsis truncate text-black dark:text-dark-text">
               {dragdropText}
             </span>
           </div>
-          <span className="font-sans font-normal text-xs text-gray-400 text-center max-w-max text-ellipsis truncate">
+          <span className="font-sans font-normal text-xs text-gray-400 dark:text-dark-muted text-center max-w-max text-ellipsis truncate">
             {subtext}
           </span>
         </>

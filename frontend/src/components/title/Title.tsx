@@ -29,7 +29,7 @@ export const OnlyofficeTitle: React.FC<TitleProps> = ({
   large = false,
 }) => {
   const style = cx({
-    "font-semibold text-slate-800 text-center": !!text,
+    "font-semibold text-slate-800 dark:text-dark-text text-center": !!text,
     "text-base": large,
     "text-sm": !large,
   });

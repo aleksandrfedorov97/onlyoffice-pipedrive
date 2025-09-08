@@ -39,7 +39,7 @@ export const MainPage: React.FC = () => {
   const loadingError = !accessToken && error;
   const loaded = accessToken && !error;
   return (
-    <div className="relative w-full h-full flex flex-col my-0 mx-auto">
+    <div className="relative w-full h-full flex flex-col my-0 mx-auto bg-white dark:bg-dark-bg">
       {loading && (
         <div className="w-full h-full flex justify-center items-center">
           <OnlyofficeSpinner />

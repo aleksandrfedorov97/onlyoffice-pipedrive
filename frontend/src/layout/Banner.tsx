@@ -27,8 +27,7 @@ export const Banner: React.FC = () => {
   const { t } = useTranslation();
   return (
     <div
-      className="flex justify-between items-center p-5 mt-5 mb-5"
-      style={{ backgroundColor: "#F6F6F6", border: "1px solid #EFEFEF" }}
+      className="flex justify-between items-center p-5 mt-5 mb-5 bg-gray-100 dark:bg-dark-surface border border-gray-300 dark:border-dark-border"
     >
       <div className="w-2/12">
         <BannerIcon />
@@ -61,8 +60,7 @@ export const Banner: React.FC = () => {
       <div className="w-3/12">
         <button
           type="button"
-          className="pl-5 pr-5 pt-2 pb-2 text-sm rounded overflow-hidden text-ellipsis inline-block max-w-[120px] cursor-pointer hover:shadow-sm duration-200"
-          style={{ backgroundColor: "#192435", color: "#FFFFFF" }}
+          className="pl-5 pr-5 pt-2 pb-2 text-sm rounded overflow-hidden text-ellipsis inline-block max-w-[120px] cursor-pointer hover:shadow-sm duration-200 bg-gray-800 dark:bg-gray-700 text-white"
           onClick={() =>
             window.open(
               "https://www.onlyoffice.com/docs-registration.aspx?referer=pipedrive"

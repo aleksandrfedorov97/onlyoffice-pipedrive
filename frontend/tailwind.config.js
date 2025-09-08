@@ -18,6 +18,7 @@
 
 module.exports = {
     content: ["./src/**/*.{ts,tsx}"],
+    darkMode: 'class', // Enable class-based dark mode
     theme: {
         extend: {
             width: {
@@ -67,6 +68,13 @@ module.exports = {
             colors: {
                 onlyoffice: "#0F4071",
                 "smoke-light": "rgba(0, 0, 0, 0.4)",
+                dark: {
+                    bg: "#1e2029",
+                    surface: "#2d2d2d",
+                    border: "#404040",
+                    text: "#e5e5e5",
+                    muted: "#a3a3a3"
+                }
             },
             screens: {
                 wrap: { raw: "(max-width: 713px)" },

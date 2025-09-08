@@ -84,7 +84,7 @@
   },
   "dependencies": {
     "@onlyoffice/document-editor-react": "^1.2.0",
-    "@pipedrive/app-extensions-sdk": "^0.6.1",
+    "@pipedrive/app-extensions-sdk": "^0.13.0",
     "axios": "^1.6.0",
     "axios-retry": "^3.4.0",
     "classnames": "^2.3.2",

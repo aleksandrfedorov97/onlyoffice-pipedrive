@@ -1418,10 +1418,10 @@
   resolved "https://registry.yarnpkg.com/@onlyoffice/document-editor-react/-/document-editor-react-1.3.0.tgz#68db658a5405e03b1778296eb607e8aa93f1868a"
   integrity sha512-TihZOkow+tCb87evJwecXzbQtmtIvnXURKGIp21zKWoFiwNivFsUiH7qIZeRM+LaWsIAIkfLEdIQiqFLqB60bw==
 
-"@pipedrive/app-extensions-sdk@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@pipedrive/app-extensions-sdk/-/app-extensions-sdk-0.6.1.tgz#ecda40803a81f412bf5f6c85f5c4c556c9733358"
-  integrity sha512-ST8KO5CEywYisbWpQ6tN+GTMpR2Z37IRcXRle26KLxLCFEngSgVprLFBns4ktcPlENvhQF4I+UZULUMcYzbC6A==
+"@pipedrive/app-extensions-sdk@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@pipedrive/app-extensions-sdk/-/app-extensions-sdk-0.13.0.tgz#301f17ee3853ceb3f611198465bd976baf270529"
+  integrity sha512-ciW6jPY+KreWAkjrZWi6/vViJFjFIzZeyyzPqYksbZ/qN740A9/E+OLd3bgeGTFe0rSbRxAbfWVqXGEGBjdjKw==
 
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"

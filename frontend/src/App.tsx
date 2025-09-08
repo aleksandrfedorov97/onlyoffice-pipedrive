@@ -32,6 +32,7 @@ import { OnlyofficeEditorPage } from "@pages/Editor";
 
 import { OnlyofficeSpinner } from "@components/spinner";
 import { TokenProvider } from "@context/TokenContext";
+import { ThemeProvider } from "@context/ThemeContext";
 
 const CenteredOnlyofficeSpinner = () => (
   <div className="w-full h-full flex justify-center items-center">
@@ -90,11 +91,13 @@ const LazyRoutes: React.FC = () => {
 
 function App() {
   return (
-    <div className="w-full h-full flex justify-center items-center">
-      <Router>
-        <LazyRoutes />
-      </Router>
-    </div>
+    <ThemeProvider>
+      <div className="w-full h-full flex justify-center items-center bg-white dark:bg-dark-bg transition-colors duration-200">
+        <Router>
+          <LazyRoutes />
+        </Router>
+      </div>
+    </ThemeProvider>
   );
 }
 
