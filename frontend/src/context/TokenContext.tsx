@@ -19,7 +19,7 @@
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
 import i18next from "i18next";
 import axios, { AxiosError } from "axios";
-import React, { useEffect } from "react";
+import React, { useEffect, ReactNode } from "react";
 import { proxy } from "valtio";
 
 import { getMe, getPipedriveMe } from "@services/me";
@@ -34,7 +34,7 @@ export const AuthToken = proxy({
 });
 
 type ProviderProps = {
-  children?: JSX.Element | JSX.Element[];
+  children?: ReactNode;
 };
 
 const TokenContext = React.createContext<boolean>(true);
@@ -86,5 +86,5 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
 
     return () => clearTimeout(timerID);
   }, []);
-  return <TokenContext.Provider value>{children}</TokenContext.Provider>;
+  return <TokenContext.Provider value={true}>{children}</TokenContext.Provider>;
 };

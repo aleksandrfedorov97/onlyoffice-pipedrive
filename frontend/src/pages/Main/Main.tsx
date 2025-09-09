@@ -46,7 +46,7 @@ export const Main: React.FC = () => {
       20
     );
 
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver | null>(null);
   const lastItem = useCallback(
     (node: Element | null) => {
       if (isLoading) return;
