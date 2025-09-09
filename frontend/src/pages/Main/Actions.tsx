@@ -95,7 +95,9 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
             parameters.get("selectedIds") || "1"
           }&id=${file.id}&name=${`${encodeURIComponent(
             name.substring(0, 190)
-          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${i18next.language}&dark=${isDark}`;
+          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${
+            i18next.language
+          }&dark=${isDark}`;
       }
     }
     // temporary solution
@@ -129,7 +131,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleKeyDown = (handler: () => void) => (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       e.stopPropagation();
       if (!disable) {
@@ -162,7 +164,9 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         role="button"
         tabIndex={isDownloadDisabled ? -1 : 0}
         className={`mx-1 ${
-          isDownloadDisabled ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+          isDownloadDisabled
+            ? "hover:cursor-default opacity-50"
+            : "hover:cursor-pointer"
         }`}
         onClick={handleClick(handleDownload)}
         onKeyDown={handleKeyDown(handleDownload)}
@@ -174,7 +178,9 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         role="button"
         tabIndex={isDeleteDisabled ? -1 : 0}
         className={`mx-1 ${
-          isDeleteDisabled ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+          isDeleteDisabled
+            ? "hover:cursor-default opacity-50"
+            : "hover:cursor-pointer"
         }`}
         onClick={handleClick(handleDelete)}
         onKeyDown={handleKeyDown(handleDelete)}

@@ -44,10 +44,10 @@ export const CreatePage: React.FC = () => {
       },
     });
   });
-  
+
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden bg-white dark:bg-dark-bg">
-      {(!loaded && !loadingError) ? (
+      {!loaded && !loadingError ? (
         <div className="flex justify-center items-center h-full w-full">
           <OnlyofficeSpinner />
         </div>
@@ -56,9 +56,7 @@ export const CreatePage: React.FC = () => {
           className="flex justify-center items-start flex-col h-screen"
           onSelect={(index) => setSelected(index)}
         >
-          <TabList
-            className="flex justify-start items-center min-h-[40px] w-full bg-gray-100 dark:bg-dark-bg"
-          >
+          <TabList className="flex justify-start items-center min-h-[40px] w-full bg-gray-100 dark:bg-dark-bg">
             <Tab
               id="create-file"
               className={`flex justify-center items-center text-sm font-inter outline-none hover:cursor-pointer min-h-[40px] ${

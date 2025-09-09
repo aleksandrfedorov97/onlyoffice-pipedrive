@@ -92,7 +92,9 @@ export const OnlyofficeEditorPage: React.FC = () => {
         </div>
       )}
       {!!error && (
-        <div className={`w-full h-full flex justify-center flex-col items-center mb-1 ${backgroundClass}`}>
+        <div
+          className={`w-full h-full flex justify-center flex-col items-center mb-1 ${backgroundClass}`}
+        >
           <Icon />
           <OnlyofficeError
             text={t(

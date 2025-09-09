@@ -49,11 +49,17 @@ export const MainPage: React.FC = () => {
         <OnlyofficeBackgroundError
           Icon={<TokenError className="mb-5" />}
           title={t(
-            status === 401 ? "background.reinstall.title" : "background.error.title.main",
-            status === 401 ? "The document security token has expired" : "Something went wrong"
+            status === 401
+              ? "background.reinstall.title"
+              : "background.error.title.main",
+            status === 401
+              ? "The document security token has expired"
+              : "Something went wrong"
           )}
           subtitle={t(
-            status === 401 ? "background.reinstall.subtitle.token" : "background.reinstall.subtitle",
+            status === 401
+              ? "background.reinstall.subtitle.token"
+              : "background.reinstall.subtitle",
             status === 401
               ? "Something went wrong. Please reinstall the app."
               : "Something went wrong. Please reload the app."

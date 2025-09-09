@@ -54,8 +54,13 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
           ) {
             try {
               const token = await getMe(sdk);
-              const resp = await getPipedriveMe(`${url}api/v1/users/me`, token.response.access_token);
-              await i18next.changeLanguage(`${resp.data.language.language_code}-${resp.data.language.country_code}`);
+              const resp = await getPipedriveMe(
+                `${url}api/v1/users/me`,
+                token.response.access_token
+              );
+              await i18next.changeLanguage(
+                `${resp.data.language.language_code}-${resp.data.language.country_code}`
+              );
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
             } catch (err) {

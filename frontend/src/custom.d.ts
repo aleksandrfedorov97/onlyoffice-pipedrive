@@ -24,4 +24,4 @@ declare module "*.svg" {
 declare module "*ico" {
   const content: any;
   export default content;
-};
+}

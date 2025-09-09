@@ -44,32 +44,33 @@ interface Format {
 const formats = formatsData as Format[];
 
 const DOCUMENT_EXTS = formats
-  .filter(f => f.type === "word" && f.actions.includes("view"))
-  .map(f => f.name);
+  .filter((f) => f.type === "word" && f.actions.includes("view"))
+  .map((f) => f.name);
 
 const SPREADSHEET_EXTS = formats
-  .filter(f => f.type === "cell" && f.actions.includes("view"))
-  .map(f => f.name);
+  .filter((f) => f.type === "cell" && f.actions.includes("view"))
+  .map((f) => f.name);
 
 const PRESENTATION_EXTS = formats
-  .filter(f => f.type === "slide" && f.actions.includes("view"))
-  .map(f => f.name);
+  .filter((f) => f.type === "slide" && f.actions.includes("view"))
+  .map((f) => f.name);
 
 const DIAGRAM_EXTS = formats
-  .filter(f => f.type === "diagram" && f.actions.includes("view"))
-  .map(f => f.name);
+  .filter((f) => f.type === "diagram" && f.actions.includes("view"))
+  .map((f) => f.name);
 
 const PDF_EXTS = formats
-  .filter(f => f.type === "pdf" && f.actions.includes("view"))
-  .map(f => f.name);
+  .filter((f) => f.type === "pdf" && f.actions.includes("view"))
+  .map((f) => f.name);
 
 const EDITABLE_EXTS = formats
-  .filter(f => f.actions.includes("edit"))
-  .map(f => f.name);
+  .filter((f) => f.actions.includes("edit"))
+  .map((f) => f.name);
 
-
-const OPENABLE_EXTS =
-  DOCUMENT_EXTS.concat(SPREADSHEET_EXTS).concat(PRESENTATION_EXTS).concat(DIAGRAM_EXTS).concat(PDF_EXTS);
+const OPENABLE_EXTS = DOCUMENT_EXTS.concat(SPREADSHEET_EXTS)
+  .concat(PRESENTATION_EXTS)
+  .concat(DIAGRAM_EXTS)
+  .concat(PDF_EXTS);
 
 const WORD = "word";
 const SLIDE = "slide";
@@ -110,8 +111,8 @@ export const getFileType = (filename: string) => {
 
 export const getMimeType = (filename: string) => {
   const e = getFileExt(filename).toLowerCase();
-  
-  const format = formats.find(f => f.name === e);
+
+  const format = formats.find((f) => f.name === e);
   if (format && format.mime.length > 0) {
     return format.mime[0];
   }

@@ -77,7 +77,7 @@ export const Upload: React.FC = () => {
             }
             onDrop={async (files, rejections, event) => {
               try {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise((resolve) => setTimeout(resolve, 1000));
                 onDrop(files, rejections, event);
                 await sdk?.execute(Command.SHOW_SNACKBAR, {
                   message: t(

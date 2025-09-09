@@ -26,11 +26,12 @@ export function useBuildConfig(
   name: string,
   key: string,
   dealID: string,
-  dark: boolean = false
+  dark = false
 ) {
   const { isLoading, error, data } = useQuery({
     queryKey: ["config", id, key, dark],
-    queryFn: ({ signal }) => fetchConfig(token, id, name, key, dealID, dark, signal),
+    queryFn: ({ signal }) =>
+      fetchConfig(token, id, name, key, dealID, dark, signal),
     staleTime: 0,
     cacheTime: 0,
     refetchOnWindowFocus: false,

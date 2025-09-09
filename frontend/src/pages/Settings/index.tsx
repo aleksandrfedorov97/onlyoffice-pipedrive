@@ -37,14 +37,12 @@ import OnlyofficeLogo from "@assets/onlyoffice-logo.svg";
 import SettingsError from "@assets/settings-error.svg";
 import { getCurrentURL } from "@utils/url";
 
-const SettingsErrorIcon = () => {
-  return (
-    <div className="flex flex-col items-center justify-center">
-      <OnlyofficeLogo />
-      <SettingsError />
-    </div>
-  );
-}
+const SettingsErrorIcon = () => (
+  <div className="flex flex-col items-center justify-center">
+    <OnlyofficeLogo />
+    <SettingsError />
+  </div>
+);
 
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -61,36 +59,58 @@ export const SettingsPage: React.FC = () => {
 
   const isDemoValid = (): boolean => {
     if (!demoEnabled) return false;
-    
-    if (!demoStarted || demoStarted === "" || demoStarted.startsWith("0001-01-01"))
+
+    if (
+      !demoStarted ||
+      demoStarted === "" ||
+      demoStarted.startsWith("0001-01-01")
+    )
       return true;
-    
+
     const startDate = new Date(demoStarted);
-    if (isNaN(startDate.getTime()))
-      return true;
-    
+    if (isNaN(startDate.getTime())) return true;
+
     const fiveDaysAgo = new Date();
     fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-    
+
     return startDate > fiveDaysAgo;
   };
 
   const getDemoStatus = (): string => {
     if (!demoEnabled) return "";
-    
-    if (!demoStarted || demoStarted === "" || demoStarted.startsWith("0001-01-01"))
-      return t("settings.demo.status.notstarted", "Demo will start when first used");
-    
+
+    if (
+      !demoStarted ||
+      demoStarted === "" ||
+      demoStarted.startsWith("0001-01-01")
+    )
+      return t(
+        "settings.demo.status.notstarted",
+        "Demo will start when first used"
+      );
+
     const startDate = new Date(demoStarted);
     if (isNaN(startDate.getTime()))
-      return t("settings.demo.status.notstarted", "Demo will start when first used");
-    
-    const daysAgo = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      return t(
+        "settings.demo.status.notstarted",
+        "Demo will start when first used"
+      );
+
+    const daysAgo = Math.floor(
+      (Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
     const daysLeft = 5 - daysAgo;
-    
+
     if (daysLeft > 0)
-      return t("settings.demo.status.active", "Demo active - {{days}} day(s) remaining", { days: daysLeft });
-    return t("settings.demo.status.expired", "Demo has expired - please provide credentials");
+      return t(
+        "settings.demo.status.active",
+        "Demo active - {{days}} day(s) remaining",
+        { days: daysLeft }
+      );
+    return t(
+      "settings.demo.status.expired",
+      "Demo has expired - please provide credentials"
+    );
   };
 
   useEffect(() => {
@@ -148,9 +168,16 @@ export const SettingsPage: React.FC = () => {
 
       try {
         setSaving(true);
-        const finalAddress = address && !address.endsWith("/") ? `${address}/` : address;
-        await postSettings(sdk, finalAddress || "", secret || "", header || "", demoEnabled);
-        setDemoStarted(demoStarted ? demoStarted : new Date().toISOString());
+        const finalAddress =
+          address && !address.endsWith("/") ? `${address}/` : address;
+        await postSettings(
+          sdk,
+          finalAddress || "",
+          secret || "",
+          header || "",
+          demoEnabled
+        );
+        setDemoStarted(demoStarted || new Date().toISOString());
         await sdk.execute(Command.SHOW_SNACKBAR, {
           message: t(
             "settings.saving.ok",
@@ -171,7 +198,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-      <div className="custom-scroll w-screen h-screen overflow-y-scroll overflow-x-hidden bg-white dark:bg-dark-bg">
+    <div className="custom-scroll w-screen h-screen overflow-y-scroll overflow-x-hidden bg-white dark:bg-dark-bg">
       {loading && !error && (
         <div className="h-full w-full flex justify-center items-center">
           <OnlyofficeSpinner />
@@ -190,17 +217,21 @@ export const SettingsPage: React.FC = () => {
               : "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app"
           )}
           button={
-            status === 401 
+            status === 401
               ? t("background.reinstall.button", "Reinstall") || "Reinstall"
               : t("button.reload", "Reload") || "Reload"
           }
-          onClick={status === 401 ? () => {
-            if (status === 401)
-              window.open(
-                `${getCurrentURL().url}settings/marketplace`,
-                "_blank"
-              );
-          } : () => window.location.reload()}
+          onClick={
+            status === 401
+              ? () => {
+                  if (status === 401)
+                    window.open(
+                      `${getCurrentURL().url}settings/marketplace`,
+                      "_blank"
+                    );
+                }
+              : () => window.location.reload()
+          }
         />
       )}
       {!loading && !error && !admin && (
@@ -234,7 +265,10 @@ export const SettingsPage: React.FC = () => {
               `
               )}
             </p>
-            <div className="flex items-center gap-4" style={{ marginTop: '10px' }}>
+            <div
+              className="flex items-center gap-4"
+              style={{ marginTop: "10px" }}
+            >
               <a
                 href="https://helpcenter.onlyoffice.com/integration/pipedrive.aspx"
                 target="_blank"
@@ -292,12 +326,20 @@ export const SettingsPage: React.FC = () => {
                   disabled={saving}
                   className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-bg border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <label htmlFor="demo-enabled" className="ml-2 text-sm font-medium text-gray-900 dark:text-dark-text">
+                <label
+                  htmlFor="demo-enabled"
+                  className="ml-2 text-sm font-medium text-gray-900 dark:text-dark-text"
+                >
                   {t("settings.inputs.demo", "Enable Demo Mode")}
                 </label>
               </div>
               <p className="text-xs text-gray-500 dark:text-dark-muted mt-1 ml-6">
-                {demoEnabled ? getDemoStatus() : t("settings.inputs.demo.description", "Enable demo mode to test the integration without a Document Server")}
+                {demoEnabled
+                  ? getDemoStatus()
+                  : t(
+                      "settings.inputs.demo.description",
+                      "Enable demo mode to test the integration without a Document Server"
+                    )}
               </p>
             </div>
             <div className="flex justify-start items-center mt-4 ml-5">

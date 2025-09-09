@@ -55,7 +55,11 @@ export const OnlyofficeFile: React.FC<FileProps> = ({
               showDetails ? "rotate-180" : "rotate-0"
             }`}
           >
-            {isDark ? <DetailsIconDark className="fill-current" /> : <DetailsIcon className="fill-current" />}
+            {isDark ? (
+              <DetailsIconDark className="fill-current" />
+            ) : (
+              <DetailsIcon className="fill-current" />
+            )}
           </div>
         </div>
         <div className="flex items-center justify-start w-3/4">

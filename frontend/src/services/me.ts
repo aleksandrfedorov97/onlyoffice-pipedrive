@@ -61,7 +61,7 @@ export const getPipedriveMe = async (url: string, access_token?: string) => {
     url,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${access_token ? access_token : AuthToken.access_token}`,
+      Authorization: `Bearer ${access_token || AuthToken.access_token}`,
     },
     timeout: 3000,
   });
