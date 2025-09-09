@@ -47,7 +47,7 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
   return { response: res.data };
 };
 
-export const getPipedriveMe = async (url: string, access_token?: string) => {
+export const getPipedriveMe = async (url: string, accessToken?: string) => {
   const client = axios.create();
   axiosRetry(client, {
     retries: 3,
@@ -61,7 +61,7 @@ export const getPipedriveMe = async (url: string, access_token?: string) => {
     url,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${access_token || AuthToken.access_token}`,
+      Authorization: `Bearer ${accessToken || AuthToken.access_token}`,
     },
     timeout: 3000,
   });

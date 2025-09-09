@@ -24,7 +24,7 @@ import DetailsIcon from "@assets/arrow-down.svg";
 import DetailsIconDark from "@assets/arrow-down_dark.svg";
 
 type FileProps = {
-  Icon: any;
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   name: string;
   supported?: boolean;
   actions?: React.ReactNode;

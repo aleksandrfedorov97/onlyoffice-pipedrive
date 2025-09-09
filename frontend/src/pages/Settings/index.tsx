@@ -68,7 +68,7 @@ export const SettingsPage: React.FC = () => {
       return true;
 
     const startDate = new Date(demoStarted);
-    if (isNaN(startDate.getTime())) return true;
+    if (Number.isNaN(startDate.getTime())) return true;
 
     const fiveDaysAgo = new Date();
     fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
@@ -90,7 +90,7 @@ export const SettingsPage: React.FC = () => {
       );
 
     const startDate = new Date(demoStarted);
-    if (isNaN(startDate.getTime()))
+    if (Number.isNaN(startDate.getTime()))
       return t(
         "settings.demo.status.notstarted",
         "Demo will start when first used"
@@ -143,7 +143,7 @@ export const SettingsPage: React.FC = () => {
             setLoading(false);
           }
         })
-        .catch((e) => {
+        .catch(() => {
           setLoading(false);
         });
     }

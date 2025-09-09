@@ -16,7 +16,13 @@
  *
  */
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
 
 type Theme = "light" | "dark";
@@ -73,11 +79,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     applyThemeToDOM(theme);
   }, [theme]);
 
-  const value: ThemeContextType = {
-    theme,
-    toggleTheme,
-    isDark,
-  };
+  const value = useMemo(
+    () => ({
+      theme,
+      toggleTheme,
+      isDark,
+    }),
+    [theme, isDark]
+  );
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

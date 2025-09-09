@@ -17,11 +17,11 @@
  */
 
 declare module "*.svg" {
-  const content: any;
+  const content: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   export default content;
 }
 
 declare module "*ico" {
-  const content: any;
+  const content: string;
   export default content;
 }

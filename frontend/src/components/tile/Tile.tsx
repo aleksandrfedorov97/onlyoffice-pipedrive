@@ -20,7 +20,7 @@ import React from "react";
 import cx from "classnames";
 
 type TileProps = {
-  Icon: any;
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   text: string;
   size?: "xs" | "sm";
   selected?: boolean;

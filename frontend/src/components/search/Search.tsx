@@ -49,6 +49,7 @@ export const OnlyofficeSearchBar: React.FC<SearchProps> = ({
         type="button"
         className={`px-6 ${disabled && "bg-gray-50 dark:bg-dark-bg"}`}
         disabled={disabled}
+        aria-label="Search"
       >
         <svg
           className="h-4 w-4 text-grey-dark dark:text-dark-muted"

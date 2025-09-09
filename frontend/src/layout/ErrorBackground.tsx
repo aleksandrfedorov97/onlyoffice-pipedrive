@@ -23,7 +23,7 @@ import { OnlyofficeSubtitle } from "@components/title";
 import { OnlyofficeError } from "@components/error/Error";
 
 type ErrorProps = {
-  Icon: any;
+  Icon: React.ReactNode;
   title: string;
   subtitle: string;
   button?: string;

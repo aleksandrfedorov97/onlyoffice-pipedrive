@@ -28,11 +28,7 @@ import { uploadFile } from "@services/file";
 
 import { getCurrentURL } from "@utils/url";
 
-const onDrop = <T extends File>(
-  acceptedFiles: T[],
-  _: FileRejection[],
-  __: DropEvent
-): Promise<void> => {
+const onDrop = <T extends File>(acceptedFiles: T[]): Promise<void> => {
   const { url, parameters } = getCurrentURL();
   return uploadFile(
     `${url}api/v1/files`,
@@ -77,8 +73,10 @@ export const Upload: React.FC = () => {
             }
             onDrop={async (files, rejections, event) => {
               try {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-                onDrop(files, rejections, event);
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 1000);
+                });
+                await onDrop(files);
                 await sdk?.execute(Command.SHOW_SNACKBAR, {
                   message: t(
                     "snackbar.uploaded.ok",
