@@ -101,6 +101,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
               "editor.error",
               "Could not open the file. Something went wrong"
             )}
+            isDark={isDark}
           />
           <div className="pt-5">
             <OnlyofficeButton
