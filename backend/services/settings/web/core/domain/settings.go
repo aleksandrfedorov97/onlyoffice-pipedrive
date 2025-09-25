@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,16 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type DocSettings struct {
-	CompanyID  string `json:"company_id" mapstructure:"company_id"`
-	DocAddress string `json:"doc_address" mapstructure:"doc_address"`
-	DocSecret  string `json:"doc_secret" mapstructure:"doc_secret"`
-	DocHeader  string `json:"doc_header" mapstructure:"doc_header"`
+	CompanyID   string    `json:"company_id" mapstructure:"company_id"`
+	DocAddress  string    `json:"doc_address" mapstructure:"doc_address"`
+	DocSecret   string    `json:"doc_secret" mapstructure:"doc_secret"`
+	DocHeader   string    `json:"doc_header" mapstructure:"doc_header"`
+	DemoEnabled bool      `json:"demo_enabled" mapstructure:"demo_enabled"`
+	DemoStarted time.Time `json:"demo_started" mapstructure:"demo_started"`
 }
 
 func (u DocSettings) ToJSON() []byte {
@@ -51,39 +54,65 @@ func (u *DocSettings) Validate() error {
 		}
 	}
 
-	url, err := url.Parse(u.DocAddress)
-	if err != nil {
-		return &InvalidModelFieldError{
-			Model:  "Docserver",
-			Field:  "Document Address",
-			Reason: err.Error(),
+	hasCredentials := u.DocAddress != "" || u.DocSecret != "" || u.DocHeader != ""
+
+	if hasCredentials {
+		if u.DocAddress == "" {
+			return &InvalidModelFieldError{
+				Model:  "Docserver",
+				Field:  "Document Address",
+				Reason: "Required when other credentials are provided",
+			}
 		}
-	}
 
-	u.DocAddress = fmt.Sprintf("%s://%s/%s", url.Scheme, url.Host, url.Path)
-	for {
-		if strings.LastIndex(u.DocAddress, "/") == len(u.DocAddress)-1 {
-			u.DocAddress = u.DocAddress[:len(u.DocAddress)-1]
-		} else {
-			break
+		if u.DocSecret == "" {
+			return &InvalidModelFieldError{
+				Model:  "Docserver",
+				Field:  "Document Secret",
+				Reason: "Required when other credentials are provided",
+			}
 		}
-	}
 
-	u.DocAddress += "/"
-
-	if u.DocSecret == "" {
-		return &InvalidModelFieldError{
-			Model:  "Docserver",
-			Field:  "Document Secret",
-			Reason: "Should not be empty",
+		if u.DocHeader == "" {
+			return &InvalidModelFieldError{
+				Model:  "Docserver",
+				Field:  "Document Header",
+				Reason: "Required when other credentials are provided",
+			}
 		}
-	}
 
-	if u.DocHeader == "" {
-		return &InvalidModelFieldError{
-			Model:  "Docserver",
-			Field:  "Document Header",
-			Reason: "Should not be empty",
+		url, err := url.Parse(u.DocAddress)
+		if err != nil {
+			return &InvalidModelFieldError{
+				Model:  "Docserver",
+				Field:  "Document Address",
+				Reason: err.Error(),
+			}
+		}
+
+		u.DocAddress = fmt.Sprintf("%s://%s/%s", url.Scheme, url.Host, url.Path)
+		for {
+			if strings.LastIndex(u.DocAddress, "/") == len(u.DocAddress)-1 {
+				u.DocAddress = u.DocAddress[:len(u.DocAddress)-1]
+			} else {
+				break
+			}
+		}
+
+		u.DocAddress += "/"
+	} else if u.DemoEnabled {
+		if u.DemoStarted.IsZero() {
+			u.DemoStarted = time.Now()
+			return nil
+		}
+
+		fiveDaysAgo := time.Now().AddDate(0, 0, -5)
+		if u.DemoStarted.Before(fiveDaysAgo) {
+			return &InvalidModelFieldError{
+				Model:  "Docserver",
+				Field:  "Demo Started",
+				Reason: "Demo period has expired (more than 5 days old)",
+			}
 		}
 	}
 

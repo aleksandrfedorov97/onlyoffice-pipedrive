@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ export const Main: React.FC = () => {
       20
     );
 
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver | null>(null);
   const lastItem = useCallback(
     (node: Element | null) => {
       if (isLoading) return;
@@ -69,7 +69,7 @@ export const Main: React.FC = () => {
   }, []);
 
   return (
-    <div className="table-shadow h-full">
+    <div className="table-shadow h-full bg-white dark:bg-dark-bg">
       <div className="overflow-x-hidden overflow-y-auto custom-scroll px-5 h-[85%] md:justify-between mr-5">
         {isLoading && (
           <div className="h-[85%] w-full flex justify-center items-center">

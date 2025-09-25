@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,16 @@ import { getPipedriveMe } from "@services/me";
 
 import { AuthToken } from "@context/TokenContext";
 
+import OnlyofficeLogo from "@assets/onlyoffice-logo.svg";
 import SettingsError from "@assets/settings-error.svg";
 import { getCurrentURL } from "@utils/url";
+
+const SettingsErrorIcon = () => (
+  <div className="flex flex-col items-center justify-center">
+    <OnlyofficeLogo />
+    <SettingsError />
+  </div>
+);
 
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -45,7 +53,65 @@ export const SettingsPage: React.FC = () => {
   const [address, setAddress] = useState<string | undefined>(undefined);
   const [secret, setSecret] = useState<string | undefined>(undefined);
   const [header, setHeader] = useState<string | undefined>(undefined);
+  const [demoEnabled, setDemoEnabled] = useState(false);
+  const [demoStarted, setDemoStarted] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+
+  const isDemoValid = (): boolean => {
+    if (!demoEnabled) return false;
+
+    if (
+      !demoStarted ||
+      demoStarted === "" ||
+      demoStarted.startsWith("0001-01-01")
+    )
+      return true;
+
+    const startDate = new Date(demoStarted);
+    if (Number.isNaN(startDate.getTime())) return true;
+
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+
+    return startDate > fiveDaysAgo;
+  };
+
+  const getDemoStatus = (): string => {
+    if (!demoEnabled) return "";
+
+    if (
+      !demoStarted ||
+      demoStarted === "" ||
+      demoStarted.startsWith("0001-01-01")
+    )
+      return t(
+        "settings.demo.status.notstarted",
+        "Demo will start when first used"
+      );
+
+    const startDate = new Date(demoStarted);
+    if (Number.isNaN(startDate.getTime()))
+      return t(
+        "settings.demo.status.notstarted",
+        "Demo will start when first used"
+      );
+
+    const daysAgo = Math.floor(
+      (Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const daysLeft = 5 - daysAgo;
+
+    if (daysLeft > 0)
+      return t(
+        "settings.demo.status.active",
+        "Demo active - {{days}} day(s) remaining",
+        { days: daysLeft }
+      );
+    return t(
+      "settings.demo.status.expired",
+      "Demo has expired - please provide credentials"
+    );
+  };
 
   useEffect(() => {
     new AppExtensionsSDK()
@@ -67,6 +133,8 @@ export const SettingsPage: React.FC = () => {
               setAddress(res.doc_address);
               setSecret(res.doc_secret);
               setHeader(res.doc_header);
+              setDemoEnabled(res.demo_enabled);
+              setDemoStarted(res.demo_started);
               setAdmin(true);
             }
           } catch {
@@ -75,7 +143,7 @@ export const SettingsPage: React.FC = () => {
             setLoading(false);
           }
         })
-        .catch((e) => {
+        .catch(() => {
           setLoading(false);
         });
     }
@@ -84,15 +152,32 @@ export const SettingsPage: React.FC = () => {
   }, [sdk, accessToken, error]);
 
   const handleSettings = async () => {
-    if (address && secret && header && sdk) {
+    if (sdk) {
+      const hasCredentials = address && secret && header;
+      const canSave = hasCredentials || isDemoValid();
+
+      if (!canSave) {
+        await sdk.execute(Command.SHOW_SNACKBAR, {
+          message: t(
+            "settings.validation.error",
+            "Please provide Document Server credentials or enable valid demo mode"
+          ),
+        });
+        return;
+      }
+
       try {
         setSaving(true);
-        if (!address.endsWith("/")) {
-          await postSettings(sdk, `${address}/`, secret, header);
-          setAddress(`${address}/`);
-        } else {
-          await postSettings(sdk, address, secret, header);
-        }
+        const finalAddress =
+          address && !address.endsWith("/") ? `${address}/` : address;
+        await postSettings(
+          sdk,
+          finalAddress || "",
+          secret || "",
+          header || "",
+          demoEnabled
+        );
+        setDemoStarted(demoStarted || new Date().toISOString());
         await sdk.execute(Command.SHOW_SNACKBAR, {
           message: t(
             "settings.saving.ok",
@@ -113,7 +198,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="custom-scroll w-screen h-screen overflow-y-scroll overflow-x-hidden">
+    <div className="custom-scroll w-screen h-screen overflow-y-scroll overflow-x-hidden bg-white dark:bg-dark-bg">
       {loading && !error && (
         <div className="h-full w-full flex justify-center items-center">
           <OnlyofficeSpinner />
@@ -121,8 +206,8 @@ export const SettingsPage: React.FC = () => {
       )}
       {!loading && error && (
         <OnlyofficeBackgroundError
-          Icon={<SettingsError />}
-          title={t("background.error.title", "Error")}
+          Icon={<SettingsErrorIcon />}
+          title={t("background.error.title.settings", "Something went wrong")}
           subtitle={t(
             status !== 401
               ? "background.error.subtitle"
@@ -132,26 +217,33 @@ export const SettingsPage: React.FC = () => {
               : "Could not fetch plugin settings. Something went wrong with your access token. Please reinstall the app"
           )}
           button={
-            status === 401 && t("background.reinstall.button", "Reinstall") ||
-            "Reinstall"
+            status === 401
+              ? t("background.reinstall.button", "Reinstall") || "Reinstall"
+              : t("button.reload", "Reload") || "Reload"
           }
-          onClick={status === 401 ? () => {
-            if (status === 401)
-              window.open(
-                `${getCurrentURL().url}settings/marketplace`,
-                "_blank"
-              );
-          } : undefined}
+          onClick={
+            status === 401
+              ? () => {
+                  if (status === 401)
+                    window.open(
+                      `${getCurrentURL().url}settings/marketplace`,
+                      "_blank"
+                    );
+                }
+              : () => window.location.reload()
+          }
         />
       )}
       {!loading && !error && !admin && (
         <OnlyofficeBackgroundError
-          Icon={<SettingsError />}
+          Icon={<SettingsErrorIcon />}
           title={t("background.access.title", "Access Denied")}
           subtitle={t(
             "background.access.subtitle",
             "Something went wrong or access denied"
           )}
+          button={t("button.reload", "Reload") || "Reload"}
+          onClick={() => window.location.reload()}
         />
       )}
       {!loading && !error && admin && (
@@ -162,7 +254,7 @@ export const SettingsPage: React.FC = () => {
                 text={t("settings.title", "Configure ONLYOFFICE app settings")}
               />
             </div>
-            <p className="text-slate-800 font-normal text-base text-left">
+            <p className="text-slate-800 dark:text-dark-text font-normal text-base text-left">
               {t(
                 "settings.text",
                 `
@@ -173,12 +265,33 @@ export const SettingsPage: React.FC = () => {
               `
               )}
             </p>
+            <div
+              className="flex items-center gap-4"
+              style={{ marginTop: "10px" }}
+            >
+              <a
+                href="https://helpcenter.onlyoffice.com/integration/pipedrive.aspx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-200"
+              >
+                {t("settings.links.learnmore", "Learn more")} ↗
+              </a>
+              <a
+                href="https://feedback.onlyoffice.com/forums/966080-your-voice-matters?category_id=519288"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors duration-200"
+              >
+                {t("settings.links.suggest", "Suggest a feature")} ↗
+              </a>
+            </div>
           </div>
           <div className="max-w-[320px]">
             <div className="pl-5 pr-5 pb-2">
               <OnlyofficeInput
                 text={t("settings.inputs.address", "Document Server Address")}
-                valid={!!address}
+                valid={!!address || (demoEnabled && isDemoValid())}
                 disabled={saving}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -187,7 +300,7 @@ export const SettingsPage: React.FC = () => {
             <div className="pl-5 pr-5 pb-2">
               <OnlyofficeInput
                 text={t("settings.inputs.secret", "Document Server Secret")}
-                valid={!!secret}
+                valid={!!secret || (demoEnabled && isDemoValid())}
                 disabled={saving}
                 value={secret}
                 onChange={(e) => setSecret(e.target.value)}
@@ -197,11 +310,37 @@ export const SettingsPage: React.FC = () => {
             <div className="pl-5 pr-5">
               <OnlyofficeInput
                 text={t("settings.inputs.header", "Document Server Header")}
-                valid={!!header}
+                valid={!!header || (demoEnabled && isDemoValid())}
                 disabled={saving}
                 value={header}
                 onChange={(e) => setHeader(e.target.value)}
               />
+            </div>
+            <div className="pl-5 pr-5 mt-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="demo-enabled"
+                  checked={demoEnabled}
+                  onChange={(e) => setDemoEnabled(e.target.checked)}
+                  disabled={saving}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-bg border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label
+                  htmlFor="demo-enabled"
+                  className="ml-2 text-sm font-medium text-gray-900 dark:text-dark-text"
+                >
+                  {t("settings.inputs.demo", "Enable Demo Mode")}
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-dark-muted mt-1 ml-6">
+                {demoEnabled
+                  ? getDemoStatus()
+                  : t(
+                      "settings.inputs.demo.description",
+                      "Enable demo mode to test the integration without a Document Server"
+                    )}
+              </p>
             </div>
             <div className="flex justify-start items-center mt-4 ml-5">
               <OnlyofficeButton

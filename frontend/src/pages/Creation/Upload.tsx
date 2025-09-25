@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,7 @@ import { uploadFile } from "@services/file";
 
 import { getCurrentURL } from "@utils/url";
 
-const onDrop = <T extends File>(
-  acceptedFiles: T[],
-  _: FileRejection[],
-  __: DropEvent
-): Promise<void> => {
+const onDrop = <T extends File>(acceptedFiles: T[]): Promise<void> => {
   const { url, parameters } = getCurrentURL();
   return uploadFile(
     `${url}api/v1/files`,
@@ -52,7 +48,7 @@ export const Upload: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-full">
+    <div className="h-full bg-white dark:bg-dark-bg">
       <div className="h-[calc(100%-3rem)] overflow-hidden">
         <div className="px-5 py-20 flex flex-col justify-center items-start h-full">
           <OnlyofficeDragDrop
@@ -77,8 +73,10 @@ export const Upload: React.FC = () => {
             }
             onDrop={async (files, rejections, event) => {
               try {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                onDrop(files, rejections, event);
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 1000);
+                });
+                await onDrop(files);
                 await sdk?.execute(Command.SHOW_SNACKBAR, {
                   message: t(
                     "snackbar.uploaded.ok",
@@ -101,7 +99,7 @@ export const Upload: React.FC = () => {
           />
         </div>
       </div>
-      <div className="h-[48px] flex items-center w-full">
+      <div className="h-[48px] flex items-center w-full bg-white dark:bg-dark-bg border-t dark:border-dark-border">
         <div className="flex justify-between items-center w-full">
           <div className="mx-5">
             <OnlyofficeButton

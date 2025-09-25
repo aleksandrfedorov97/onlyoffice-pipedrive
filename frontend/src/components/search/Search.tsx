@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@ export const OnlyofficeSearchBar: React.FC<SearchProps> = ({
   autocomplete = false,
   onChange,
 }) => (
-  <div className="font-sans text-black bg-white w-screen">
-    <div className="border rounded overflow-hidden flex">
+  <div className="font-sans text-black dark:text-dark-text bg-white dark:bg-dark-bg w-screen">
+    <div className="border dark:border-dark-border rounded overflow-hidden flex">
       <input
         type="text"
-        className="py-2 px-2 w-full select-auto outline-none"
+        className="py-2 px-2 w-full select-auto outline-none bg-white dark:bg-dark-bg text-black dark:text-dark-text"
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -47,11 +47,12 @@ export const OnlyofficeSearchBar: React.FC<SearchProps> = ({
       />
       <button
         type="button"
-        className={`px-6 ${disabled && "bg-gray-50"}`}
+        className={`px-6 ${disabled && "bg-gray-50 dark:bg-dark-bg"}`}
         disabled={disabled}
+        aria-label="Search"
       >
         <svg
-          className="h-4 w-4 text-grey-dark"
+          className="h-4 w-4 text-grey-dark dark:text-dark-muted"
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"

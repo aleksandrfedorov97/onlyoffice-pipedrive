@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
 	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
+	shared "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/constants"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
 	"golang.org/x/sync/errgroup"
@@ -51,12 +51,13 @@ var (
 )
 
 type ConfigHandler struct {
-	client     client.Client
-	apiClient  pclient.PipedriveApiClient
-	jwtManager crypto.JwtManager
-	config     *config.ServerConfig
-	onlyoffice *shared.OnlyofficeConfig
-	logger     plog.Logger
+	client        client.Client
+	apiClient     pclient.PipedriveApiClient
+	jwtManager    crypto.JwtManager
+	config        *config.ServerConfig
+	onlyoffice    *shared.OnlyofficeConfig
+	logger        plog.Logger
+	formatManager shared.FormatManager
 }
 
 func NewConfigHandler(
@@ -65,16 +66,31 @@ func NewConfigHandler(
 	apiClient pclient.PipedriveApiClient,
 	config *config.ServerConfig,
 	onlyoffice *shared.OnlyofficeConfig,
+	formatManager shared.FormatManager,
 	logger plog.Logger,
 ) ConfigHandler {
 	return ConfigHandler{
-		client:     client,
-		apiClient:  apiClient,
-		jwtManager: jwtManager,
-		config:     config,
-		onlyoffice: onlyoffice,
-		logger:     logger,
+		client:        client,
+		apiClient:     apiClient,
+		jwtManager:    jwtManager,
+		config:        config,
+		onlyoffice:    onlyoffice,
+		logger:        logger,
+		formatManager: formatManager,
 	}
+}
+
+func (c ConfigHandler) isDemoModeValid(settings response.DocSettingsResponse) bool {
+	if !settings.DemoEnabled {
+		return false
+	}
+
+	if settings.DemoStarted.IsZero() {
+		return true
+	}
+
+	fiveDaysAgo := time.Now().AddDate(0, 0, -5)
+	return settings.DemoStarted.After(fiveDaysAgo)
 }
 
 func (c ConfigHandler) processConfig(user response.UserResponse, req request.BuildConfigRequest, ctx context.Context) (response.BuildConfigResponse, error) {
@@ -118,10 +134,27 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			c.logger.Debugf("could not document server settings: %s", err.Error())
 			return err
 		}
-		if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
-			c.logger.Debugf("no settings found")
-			return ErrNoSettingsFound
+
+		if c.isDemoModeValid(docs) {
+			if c.onlyoffice.Onlyoffice.Demo.DocumentServerURL == "" ||
+				c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret == "" ||
+				c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader == "" {
+				c.logger.Errorf("demo mode is enabled but demo credentials are not configured")
+				return ErrNoSettingsFound
+			}
+
+			c.logger.Debugf("using demo mode for company %d", req.CID)
+			docs.DocAddress = c.onlyoffice.Onlyoffice.Demo.DocumentServerURL
+			docs.DocSecret = c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret
+			docs.DocHeader = c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader
+		} else {
+			if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
+				c.logger.Debugf("no settings found and demo mode not valid")
+				return ErrNoSettingsFound
+			}
+			c.logger.Debugf("using regular document server settings for company %d", req.CID)
 		}
+
 		settings = docs
 		return nil
 	})
@@ -151,7 +184,12 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		}
 	}()
 
-	filename := shared.EscapeFilename(req.Filename)
+	filename := c.formatManager.EscapeFileName(req.Filename)
+	theme := "default-light"
+	if req.Dark {
+		theme = "default-dark"
+	}
+
 	config = response.BuildConfigResponse{
 		Document: response.Document{
 			Key:   req.DocKey,
@@ -175,6 +213,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 				},
 				Plugins:       false,
 				HideRightMenu: false,
+				UiTheme:       theme,
 			},
 			Lang: usr.Language.Lang,
 		},
@@ -182,15 +221,22 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		ServerURL: settings.DocAddress,
 	}
 
+	var fileType string
+	var isEditable bool
+
 	if strings.TrimSpace(filename) != "" {
 		ext := strings.ReplaceAll(filepath.Ext(filename), ".", "")
-		fileType, err := constants.GetFileType(ext)
-		if err != nil {
-			return config, err
-		}
 		config.Document.FileType = strings.ToLower(ext)
+		format, exists := c.formatManager.GetFormatByName(ext)
+		if !exists {
+			return config, fmt.Errorf("format not supported: %s", ext)
+		}
+
+		fileType = format.Type
+		isEditable = format.IsEditable()
+
 		config.Document.Permissions = response.Permissions{
-			Edit:                 constants.IsExtensionEditable(ext),
+			Edit:                 isEditable,
 			Comment:              true,
 			Download:             true,
 			Print:                false,
@@ -202,6 +248,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		config.DocumentType = fileType
 	}
 
+	config.ExpiresAt = jwt.NewNumericDate(time.Now().Add(5 * time.Minute))
 	token, err := c.jwtManager.Sign(settings.DocSecret, config)
 	if err != nil {
 		c.logger.Debugf("could not sign document server config: %s", err.Error())

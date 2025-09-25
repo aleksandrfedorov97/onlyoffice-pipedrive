@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,8 +120,8 @@ func (c ApiController) BuildPostSettings() http.HandlerFunc {
 		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
-			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")
+			rw.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -145,24 +145,29 @@ func (c ApiController) BuildPostSettings() http.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 
 		var companyID int64
 
 		eg, ectx := errgroup.WithContext(ctx)
-		eg.Go(func() error {
-			select {
-			case <-ectx.Done():
-				return ectx.Err()
-			default:
-				if err := c.commandClient.License(ectx, settings.DocAddress, settings.DocSecret); err != nil {
-					c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
-					return err
+
+		if !settings.DemoEnabled {
+			eg.Go(func() error {
+				select {
+				case <-ectx.Done():
+					return ectx.Err()
+				default:
+					if err := c.commandClient.License(ectx, settings.DocAddress, settings.DocSecret); err != nil {
+						c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
+						return err
+					}
+					return nil
 				}
-				return nil
-			}
-		})
+			})
+		} else {
+			c.logger.Debugf("skipping document server validation - demo mode enabled")
+		}
 
 		eg.Go(func() error {
 			select {
@@ -198,19 +203,26 @@ func (c ApiController) BuildPostSettings() http.HandlerFunc {
 		})
 
 		if err := eg.Wait(); err != nil {
+			c.logger.Errorf("validation failed: %s", err.Error())
 			if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+				c.logger.Errorf("request timeout during validation")
 				rw.WriteHeader(http.StatusRequestTimeout)
+			} else if errors.Is(err, ErrNotAdmin) {
+				c.logger.Errorf("user does not have admin permissions")
+				rw.WriteHeader(http.StatusForbidden)
 			} else {
+				c.logger.Errorf("other validation error: %s", err.Error())
 				rw.WriteHeader(http.StatusForbidden)
 			}
 			return
 		}
 
 		sreq := request.DocSettings{
-			CompanyID:  int(atomic.LoadInt64(&companyID)),
-			DocAddress: settings.DocAddress,
-			DocHeader:  settings.DocHeader,
-			DocSecret:  settings.DocSecret,
+			CompanyID:   int(atomic.LoadInt64(&companyID)),
+			DocAddress:  settings.DocAddress,
+			DocHeader:   settings.DocHeader,
+			DocSecret:   settings.DocSecret,
+			DemoEnabled: settings.DemoEnabled,
 		}
 
 		tctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -314,8 +326,8 @@ func (c ApiController) BuildGetConfig() http.HandlerFunc {
 		rw.Header().Set("Content-Type", "application/json")
 
 		query := r.URL.Query()
-		id, filename, key, dealID := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
-			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id"))
+		id, filename, key, dealID, dark := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
+			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id")), query.Get("dark") == "true"
 
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
@@ -359,6 +371,7 @@ func (c ApiController) BuildGetConfig() http.HandlerFunc {
 					Filename:  filename,
 					FileID:    id,
 					DocKey:    key,
+					Dark:      dark,
 				},
 			),
 			&resp,

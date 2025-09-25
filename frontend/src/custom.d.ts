@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
  */
 
 declare module "*.svg" {
-  const content: any;
+  const content: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   export default content;
 }
 
 declare module "*ico" {
-  const content: any;
+  const content: string;
   export default content;
-};
+}

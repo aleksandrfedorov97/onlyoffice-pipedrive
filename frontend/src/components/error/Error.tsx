@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,13 @@ import React from "react";
 
 type ErrorProps = {
   text: string;
+  isDark?: boolean;
 };
 
-export const OnlyofficeError: React.FC<ErrorProps> = ({ text }) => (
+export const OnlyofficeError: React.FC<ErrorProps> = ({ text, isDark = false }) => (
   <div className="flex flex-col justify-center items-center">
-    <span className="font-semibold text-center flex items-center">{text}</span>
+    <span className={`font-semibold text-center flex items-center ${isDark ? 'text-white' : 'text-black'}`}>
+      {text}
+    </span>
   </div>
 );

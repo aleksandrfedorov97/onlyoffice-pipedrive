@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,12 +48,13 @@ export const OnlyofficeInput: React.FC<InputProps> = ({
   onChange,
 }) => {
   const istyle = cx({
-    "font-normal text-sm text-gray-700 appearance-none block select-auto": true,
+    "font-normal text-sm text-gray-700 dark:text-dark-text appearance-none block select-auto":
+      true,
     "text-xs": textSize === "xs",
-    "w-full border rounded-sm h-10 px-4": true,
-    "border-gray-light": valid,
+    "w-full border rounded-sm h-10 px-4 bg-white dark:bg-dark-bg": true,
+    "border-gray-light dark:border-dark-border": valid,
     "border-red-600": !valid,
-    "bg-slate-200": disabled,
+    "bg-slate-200 dark:bg-dark-bg": disabled,
   });
 
   const pstyle = cx({
@@ -62,7 +63,9 @@ export const OnlyofficeInput: React.FC<InputProps> = ({
 
   return (
     <div>
-      <label className={`font-semibold text-${labelSize} text-gray-700 py-2`}>
+      <label
+        className={`font-semibold text-${labelSize} text-gray-700 dark:text-dark-text py-2`}
+      >
         {text}
       </label>
       <input

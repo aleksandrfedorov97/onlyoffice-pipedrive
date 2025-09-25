@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,20 +27,16 @@ type FileInfoProps = {
 };
 
 export const OnlyofficeFileInfo: React.FC<FileInfoProps> = ({ info }) => (
-  <table className="table-auto mx-1">
-    <tbody>
-      {Object.keys(info).map((subtitle) => (
-        <tr key={subtitle + info[subtitle]} className="text-left">
-          <td className="flex justify-start mr-10 my-1">
-            <OnlyofficeSubtitle text={subtitle} />
-          </td>
-          <td>
-            <div className="flex justify-start">
-              <OnlyofficeTitle text={info[subtitle]} />
-            </div>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+  <div className="mx-1">
+    {Object.keys(info).map((subtitle) => (
+      <div key={subtitle + info[subtitle]} className="flex text-left mb-2">
+        <div className="flex justify-start mr-10 my-1 min-w-0">
+          <OnlyofficeSubtitle text={subtitle} />
+        </div>
+        <div className="flex justify-start min-w-0">
+          <OnlyofficeTitle text={info[subtitle]} />
+        </div>
+      </div>
+    ))}
+  </div>
 );

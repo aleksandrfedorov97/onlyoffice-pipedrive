@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  */
 
 import i18n from "i18next";
-import LanguageDetector from 'i18next-browser-languagedetector';
+import LanguageDetector from "i18next-browser-languagedetector";
 import ChainedBackend from "i18next-chained-backend";
 import I18NextHttpBackend from "i18next-http-backend";
 import LocalStorageBackend from "i18next-localstorage-backend";
@@ -34,15 +34,13 @@ i18n
       escapeValue: false,
     },
     backend: {
-      backends: [
-        LocalStorageBackend,
-        I18NextHttpBackend,
+      backends: [LocalStorageBackend, I18NextHttpBackend],
+      backendOptions: [
+        {
+          expirationTime: 24 * 60 * 60 * 1000,
+        },
       ],
-      backendOptions: [{
-        expirationTime: 24 * 60 * 60 * 1000
-      }
-    ]
-    }
+    },
   });
 
 export default i18n;

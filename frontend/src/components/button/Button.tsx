@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,10 @@ export const OnlyofficeButton: React.FC<ButtonProps> = ({
   onClick,
 }) => {
   const classes = cx({
-    "hover:shadow-lg duration-200": !disabled,
-    "bg-green-700 text-white": primary,
-    "bg-white text-black border-2 border-slate-300 border-solid": !primary,
+    "hover:shadow-lg duration-200 transition-all": !disabled,
+    "bg-green-700 dark:bg-dark-primary text-white": primary,
+    "bg-white dark:bg-dark-bg text-black dark:text-dark-text border-2 border-slate-300 dark:border-dark-border border-solid":
+      !primary,
     "min-w-[62px] h-[32px]": true,
     "w-full": fullWidth,
     "bg-opacity-50 cursor-not-allowed": disabled,

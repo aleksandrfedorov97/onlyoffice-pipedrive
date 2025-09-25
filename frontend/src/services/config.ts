@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ export const fetchConfig = async (
   name: string,
   key: string,
   dealID: string,
+  dark?: boolean,
   signal?: AbortSignal
 ) => {
   const client = axios.create();
@@ -45,6 +46,7 @@ export const fetchConfig = async (
       name,
       key,
       deal_id: dealID,
+      dark: dark?.toString() || "false",
     },
     headers: {
       "Content-Type": "application/json",

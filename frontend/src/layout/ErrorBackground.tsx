@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import { OnlyofficeSubtitle } from "@components/title";
 import { OnlyofficeError } from "@components/error/Error";
 
 type ErrorProps = {
-  Icon: any;
+  Icon: React.ReactNode;
   title: string;
   subtitle: string;
   button?: string;
@@ -37,7 +37,7 @@ export const OnlyofficeBackgroundError: React.FC<ErrorProps> = ({
   button,
   onClick,
 }) => (
-  <div className="w-full h-full flex justify-center flex-col items-center overflow-hidden">
+  <div className="w-full h-full flex justify-center flex-col items-center overflow-hidden bg-white dark:bg-dark-bg">
     <div className="flex justify-center items-center overflow-hidden">
       {Icon}
     </div>

@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import React from "react";
 import cx from "classnames";
 
 type TileProps = {
-  Icon: any;
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   text: string;
   size?: "xs" | "sm";
   selected?: boolean;
@@ -41,15 +41,16 @@ export const OnlyofficeTile: React.FC<TileProps> = ({
     "transition duration-100 ease-linear": true,
     "h-[82px]": true,
     "max-h-36 flex flex-col justify-center": true,
-    "hover:bg-gray-100 cursor-pointer": !selected,
-    "bg-white": !selected,
-    "bg-gray-200": selected,
+    "border border-gray-300 dark:border-dark-border": true,
+    "hover:bg-gray-100 dark:hover:bg-dark-hover cursor-pointer": !selected,
+    "bg-white dark:bg-dark-bg": !selected,
+    "bg-gray-200 dark:bg-dark-selected": selected,
   });
 
   const spn = cx({
     "text-sm": size === "sm",
     "text-xs text-[9px]": size === "xs",
-    "font-semibold text-slate-500": true,
+    "font-semibold text-slate-500 dark:text-dark-muted": true,
     "overflow-hidden whitespace-nowrap inline-block text-ellipsis": true,
   });
 

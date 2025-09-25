@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,6 +78,7 @@ type Customization struct {
 	Goback        Goback `json:"goback"`
 	Plugins       bool   `json:"plugins"`
 	HideRightMenu bool   `json:"hideRightMenu"`
+	UiTheme       string `json:"uiTheme"`
 }
 
 type Goback struct {

@@ -32,6 +32,10 @@ onlyoffice:
     document_server_header: ""
     gateway_url: ""
     callback_url: ""
+  demo:
+    document_server_url: ""
+    document_server_secret: ""
+    document_server_header: ""
   callback:
     max_size: 210000000000
     upload_timeout: 120
