@@ -70,10 +70,27 @@ export const SettingsPage: React.FC = () => {
     const startDate = new Date(demoStarted);
     if (Number.isNaN(startDate.getTime())) return true;
 
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    return startDate > fiveDaysAgo;
+    return startDate > thirtyDaysAgo;
+  };
+
+  const isDemoExpired = (): boolean => {
+    if (
+      !demoStarted ||
+      demoStarted === "" ||
+      demoStarted.startsWith("0001-01-01")
+    )
+      return false;
+
+    const startDate = new Date(demoStarted);
+    if (Number.isNaN(startDate.getTime())) return false;
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    return startDate <= thirtyDaysAgo;
   };
 
   const getDemoStatus = (): string => {
@@ -99,7 +116,7 @@ export const SettingsPage: React.FC = () => {
     const daysAgo = Math.floor(
       (Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    const daysLeft = 5 - daysAgo;
+    const daysLeft = 30 - daysAgo;
 
     if (daysLeft > 0)
       return t(
@@ -323,8 +340,8 @@ export const SettingsPage: React.FC = () => {
                   id="demo-enabled"
                   checked={demoEnabled}
                   onChange={(e) => setDemoEnabled(e.target.checked)}
-                  disabled={saving}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-bg border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2"
+                  disabled={saving || isDemoExpired()}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-dark-bg border-gray-300 dark:border-dark-border rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <label
                   htmlFor="demo-enabled"
