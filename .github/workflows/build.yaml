@@ -33,7 +33,7 @@ env:
 
 jobs:
   build:
-    name: "Build tag: ${{ github.event.inputs.version }}"
+    name: "Build ${{ matrix.service}}: ${{ github.event.inputs.tag || github.run_number }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
