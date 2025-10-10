@@ -4,34 +4,34 @@ services:
     build:
       context: .
       target: gateway
-    image: ${REGISTRY}/pipedrive-gateway:${PRODUCT_VERSION}
+    image: onlyoffice/pipedrive-gateway:${PRODUCT_VERSION}
 
   auth:
     build:
       context: .
       target: auth
-    image: ${REGISTRY}/pipedrive-auth:${PRODUCT_VERSION}
+    image: onlyoffice/pipedrive-auth:${PRODUCT_VERSION}
 
   builder:
     build:
       context: .
       target: builder
-    image: ${REGISTRY}/pipedrive-builder:${PRODUCT_VERSION}
+    image: onlyoffice/pipedrive-builder:${PRODUCT_VERSION}
 
   callback:
     build:
       context: .
       target: callback
-    image: ${REGISTRY}/pipedrive-callback:${PRODUCT_VERSION}
+    image: onlyoffice/pipedrive-callback:${PRODUCT_VERSION}
 
   settings:
     build:
       context: .
       target: settings
-    image: ${REGISTRY}/pipedrive-settings:${PRODUCT_VERSION}
+    image: onlyoffice/pipedrive-settings:${PRODUCT_VERSION}
 
   frontend:
     build:
       context: .
       target: frontend
-    image: ${REGISTRY}/pipedrive-frontend:${PRODUCT_VERSION}
+    image: onlyoffice/pipedrive-frontend:${PRODUCT_VERSION}
