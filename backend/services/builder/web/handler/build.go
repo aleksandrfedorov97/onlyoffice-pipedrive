@@ -89,8 +89,8 @@ func (c ConfigHandler) isDemoModeValid(settings response.DocSettingsResponse) bo
 		return true
 	}
 
-	fiveDaysAgo := time.Now().AddDate(0, 0, -5)
-	return settings.DemoStarted.After(fiveDaysAgo)
+	staleDate := time.Now().AddDate(0, 0, -30)
+	return settings.DemoStarted.After(staleDate)
 }
 
 func (c ConfigHandler) processConfig(user response.UserResponse, req request.BuildConfigRequest, ctx context.Context) (response.BuildConfigResponse, error) {
