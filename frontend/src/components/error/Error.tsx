@@ -25,7 +25,7 @@ type ErrorProps = {
 
 export const OnlyofficeError: React.FC<ErrorProps> = ({ text, isDark = false }) => (
   <div className="flex flex-col justify-center items-center">
-    <span className={`font-semibold text-center flex items-center ${isDark ? 'text-white' : 'text-black'}`}>
+    <span className="font-semibold text-center flex items-center text-gray-900 dark:text-dark-text">
       {text}
     </span>
   </div>
