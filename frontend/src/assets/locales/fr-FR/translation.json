@@ -40,6 +40,7 @@
     "settings.links.learnmore": "Learn more",
     "settings.links.suggest": "Suggest a feature",
     "editor.error": "Impossible d'ouvrir le fichier. Une erreur s'est produite.",
+    "editor.demo.message": "You are using public demo ONLYOFFICE Document Server. Please do not store private sensitive data. FR",
     "background.error.title": "Erreur",
     "background.error.title.main": "Something went wrong",
     "background.error.title.settings": "Something went wrong",

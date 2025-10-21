@@ -27,7 +27,7 @@ export const postSettings = async (
   address: string,
   secret: string,
   header: string,
-  demoEnabled = false
+  demoEnabled = false,
 ) => {
   const pctx = await sdk.execute(Command.GET_SIGNED_TOKEN);
   const client = axios.create({ baseURL: process.env.BACKEND_GATEWAY });
