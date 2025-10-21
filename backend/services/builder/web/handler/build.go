@@ -217,8 +217,9 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			},
 			Lang: usr.Language.Lang,
 		},
-		Type:      t,
-		ServerURL: settings.DocAddress,
+		Type:        t,
+		ServerURL:   settings.DocAddress,
+		DemoEnabled: settings.DemoEnabled,
 	}
 
 	var fileType string

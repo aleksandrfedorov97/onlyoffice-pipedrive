@@ -39,6 +39,7 @@
     "settings.links.learnmore": "Learn more",
     "settings.links.suggest": "Suggest a feature",
     "editor.error": "Не удалось открыть файл. Что-то пошло не так",
+    "editor.demo.message": "You are using public demo ONLYOFFICE Document Server. Please do not store private sensitive data. RU",
     "background.error.title": "Ошибка",
     "background.error.title.main": "Something went wrong",
     "background.error.title.settings": "Что-то пошло не так",
