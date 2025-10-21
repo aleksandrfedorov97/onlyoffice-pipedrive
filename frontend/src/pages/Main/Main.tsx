@@ -43,7 +43,7 @@ export const Main: React.FC = () => {
   const { isLoading, fetchNextPage, isFetchingNextPage, files, hasNextPage } =
     useFileSearch(
       `${url}api/v1/deals/${parameters.get("selectedIds")}/files`,
-      20
+      20,
     );
 
   const observer = useRef<IntersectionObserver | null>(null);
@@ -58,7 +58,7 @@ export const Main: React.FC = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, fetchNextPage, hasNextPage]
+    [isLoading, fetchNextPage, hasNextPage],
   );
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export const Main: React.FC = () => {
                         [t("files.info.creation", "Creation date")]:
                           file.add_time,
                         [t("files.info.size", "Size")]: formatBytes(
-                          file.file_size
+                          file.file_size,
                         ),
                       }}
                     />
@@ -132,7 +132,7 @@ export const Main: React.FC = () => {
                       [t("files.info.creation", "Creation date")]:
                         file.add_time,
                       [t("files.info.size", "Size")]: formatBytes(
-                        file.file_size
+                        file.file_size,
                       ),
                     }}
                   />

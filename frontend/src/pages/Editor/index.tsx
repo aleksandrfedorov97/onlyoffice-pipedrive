@@ -57,7 +57,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
     params.get("name") || "new.docx",
     params.get("key") || new Date().toTimeString(),
     params.get("deal_id") || "1",
-    isDark
+    isDark,
   );
 
   const validConfig = !error && !isLoading && data;
@@ -65,13 +65,21 @@ export const OnlyofficeEditorPage: React.FC = () => {
 
   const onDocumentReady = () => {
     if (data?.demo_enabled) {
-      const docEditor = (window as any).DocEditor?.instances?.["docxEditor"];
+      const docEditor = (
+        window as {
+          DocEditor?: {
+            instances?: {
+              docxEditor?: { showMessage?: (message: string) => void };
+            };
+          };
+        }
+      ).DocEditor?.instances?.docxEditor;
       if (docEditor && docEditor.showMessage) {
         docEditor.showMessage(
           t(
             "editor.demo.message",
-            "You are using public demo ONLYOFFICE Document Server. Please do not store private sensitive data."
-          )
+            "You are using public demo ONLYOFFICE Document Server. Please do not store private sensitive data.",
+          ),
         );
       }
     }
@@ -114,7 +122,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
           <OnlyofficeError
             text={t(
               "editor.error",
-              "Could not open the file. Something went wrong"
+              "Could not open the file. Something went wrong",
             )}
             isDark={isDark}
           />
@@ -164,7 +172,7 @@ export const OnlyofficeEditorPage: React.FC = () => {
                   onEditor();
                 },
                 onWarning: onEditor,
-                onDocumentReady: onDocumentReady,
+                onDocumentReady,
               },
             }}
           />

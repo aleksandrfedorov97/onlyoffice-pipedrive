@@ -33,9 +33,7 @@ export const OnlyofficeError: React.FC<ErrorProps> = ({ text, isDark }) => {
 
   return (
     <div className="flex flex-col justify-center items-center">
-      <span className={textStyle}>
-        {text}
-      </span>
+      <span className={textStyle}>{text}</span>
     </div>
   );
 };

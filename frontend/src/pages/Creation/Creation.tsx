@@ -38,7 +38,7 @@ export const Creation: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const [file, setFile] = useState(
-    t("document.new", "New Document") || "New Document"
+    t("document.new", "New Document") || "New Document",
   );
   const [fileType, setFileType] = useState<"docx" | "pptx" | "xlsx">("docx");
   const handleChangeFile = (newType: "docx" | "pptx" | "xlsx") => {
@@ -68,7 +68,7 @@ export const Creation: React.FC = () => {
               errorText={
                 t(
                   "creation.inputs.error",
-                  "File name length should be less than 190 characters"
+                  "File name length should be less than 190 characters",
                 ) || "File name length should be less than 190 characters"
               }
               value={file}
@@ -152,10 +152,10 @@ export const Creation: React.FC = () => {
                     }&deal_id=${
                       fres.data.data.deal_id
                     }&name=${`${encodeURIComponent(
-                      file.substring(0, 190)
+                      file.substring(0, 190),
                     )}.${fileType}`}&key=${md5(
-                      fres.data.data.id + fres.data.data.update_time
-                    )}&lng=${i18next.language}`
+                      fres.data.data.id + fres.data.data.update_time,
+                    )}&lng=${i18next.language}`,
                   );
                   await sdk?.execute(Command.CLOSE_MODAL);
                 } catch {
