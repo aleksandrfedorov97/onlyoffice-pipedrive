@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Specify tag (ex. rc5) or it will be set automaticaly :rc<run_number>'
+        description: 'Specify tag (ex. rc.5) or it will be set automaticaly :rc.<run_number>'
         type: string
         required: false
       create_modal_id:
@@ -75,9 +75,9 @@ jobs:
           echo "APP_VERSION=$(cat frontend/package.json | jq -r '.version')" >> "$GITHUB_ENV"
 
           if [[ "$EVENT" == 'push' && "$REF" == 'develop' ]]; then
-           echo "RC_TAG=rc${{ github.run_number }}" >> "$GITHUB_ENV"
+           echo "RC_TAG=rc.${{ github.run_number }}" >> "$GITHUB_ENV"
           elif [[ "$EVENT" == 'workflow_dispatch' && -z "$TAG" ]]; then
-           echo "RC_TAG=rc${{ github.run_number }}" >> "$GITHUB_ENV"
+           echo "RC_TAG=rc.${{ github.run_number }}" >> "$GITHUB_ENV"
           fi
 
       - name: Handle build arguments
