@@ -110,3 +110,15 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: ${{ env.DOCKER_HUB_NAMESPACE }}/pipedrive-${{ matrix.service }}:${{ env.APP_VERSION }}-${{ github.event.inputs.tag || env.RC_TAG }}
+
+  update:
+    name: Update connector
+    runs-on: ubuntu-latest
+    needs: ['build']
+    steps:
+      - name: Make hook
+        id: webhook
+        run: |
+          pipedrive_webhook_hash=$(printf 'pipedrive-webhook' | openssl dgst -sha256 -r -hmac "${{ secrets.PIPEDRIVE_WEBHOOK_TOKEN }}" | awk '{print $1}')
+          curl ${{ secrets.PIPEDRIVE_WEBHOOK_URL }} -X POST -H "X-Signature: sha256=${pipedrive_webhook_hash}" -d 'pipedrive-webhook'
+        shell: bash
