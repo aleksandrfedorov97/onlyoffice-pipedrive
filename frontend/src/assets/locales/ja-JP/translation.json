@@ -15,6 +15,7 @@
     "creation.title": "ONLYOFFICEで作成する",
     "creation.inputs.title": "タイトル",
     "creation.inputs.error": "ファイル名の長さは190文字以下であること",
+    "creation.inputs.error.empty": "ファイル名を空にすることはできません",
     "creation.tiles.doc": "ドキュメント",
     "creation.tiles.spreadsheet": "スプレッドシート",
     "creation.tiles.presentation": "プレゼンテーション",

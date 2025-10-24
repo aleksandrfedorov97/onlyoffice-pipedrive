@@ -15,6 +15,7 @@
     "creation.title": "Criar com o ONLYOFFICE",
     "creation.inputs.title": "Título",
     "creation.inputs.error": "O comprimento do nome do arquivo deve ser inferior a 190 caracteres",
+    "creation.inputs.error.empty": "O nome do arquivo não pode estar vazio",
     "creation.tiles.doc": "Documento",
     "creation.tiles.spreadsheet": "Planilha",
     "creation.tiles.presentation": "Apresentação",

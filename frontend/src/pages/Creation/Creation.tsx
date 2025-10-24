@@ -45,6 +45,8 @@ export const Creation: React.FC = () => {
     if (!creating) setFileType(newType);
   };
 
+  const isFileNameValid = file.trim().length > 0 && file.length <= 190;
+
   useEffect(() => {
     new AppExtensionsSDK()
       .initialize()
@@ -64,12 +66,17 @@ export const Creation: React.FC = () => {
             <OnlyofficeInput
               text={t("creation.inputs.title", "Title")}
               labelSize="sm"
-              valid={file.length <= 190}
+              valid={isFileNameValid}
               errorText={
-                t(
-                  "creation.inputs.error",
-                  "File name length should be less than 190 characters",
-                ) || "File name length should be less than 190 characters"
+                file.trim().length === 0
+                  ? t(
+                      "creation.inputs.error.empty",
+                      "File name cannot be empty",
+                    ) || "File name cannot be empty"
+                  : t(
+                      "creation.inputs.error",
+                      "File name length should be less than 190 characters",
+                    ) || "File name length should be less than 190 characters"
               }
               value={file}
               onChange={(e) => setFile(e.target.value)}
@@ -120,7 +127,7 @@ export const Creation: React.FC = () => {
           </div>
           <div className="mx-5">
             <OnlyofficeButton
-              disabled={file.length > 190 || creating}
+              disabled={!isFileNameValid || creating}
               text={t("button.create", "Create document")}
               primary
               Icon={<Redirect />}
@@ -129,6 +136,7 @@ export const Creation: React.FC = () => {
                 const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
                 if (!token) return;
                 const { parameters } = getCurrentURL();
+                
                 try {
                   const fres = await axios({
                     method: "GET",

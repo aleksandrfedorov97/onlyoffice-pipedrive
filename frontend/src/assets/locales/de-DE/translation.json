@@ -15,6 +15,7 @@
     "creation.title": "Mit ONLYOFFICE erstellen",
     "creation.inputs.title": "Titel",
     "creation.inputs.error": "Die Länge des Dateinamens sollte weniger als 190 Zeichen betragen",
+    "creation.inputs.error.empty": "Dateiname darf nicht leer sein",
     "creation.tiles.doc": "Dokument",
     "creation.tiles.spreadsheet": "Tabelle",
     "creation.tiles.presentation": "Präsentation",

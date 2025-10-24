@@ -14,6 +14,7 @@
     "creation.title": "Создать в ONLYOFFICE",
     "creation.inputs.title": "Заголовок",
     "creation.inputs.error": "Имя файла должно содержать менее 190 символов",
+    "creation.inputs.error.empty": "Имя файла не может быть пустым",
     "creation.tiles.doc": "Документ",
     "creation.tiles.spreadsheet": "Электронная таблица",
     "creation.tiles.presentation": "Презентация",

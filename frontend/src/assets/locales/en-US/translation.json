@@ -15,6 +15,7 @@
     "creation.title": "Create with ONLYOFFICE",
     "creation.inputs.title": "Title",
     "creation.inputs.error": "File name length should be less than 190 characters",
+    "creation.inputs.error.empty": "File name cannot be empty",
     "creation.tiles.doc": "Document",
     "creation.tiles.spreadsheet": "Spreadsheet",
     "creation.tiles.presentation": "Presentation",

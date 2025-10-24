@@ -15,6 +15,7 @@
     "creation.title": "Crea con ONLYOFFICE",
     "creation.inputs.title": "Titolo",
     "creation.inputs.error": "La lunghezza del nome del file dovrebbe essere inferiore a 190 caratteri",
+    "creation.inputs.error.empty": "Il nome del file non può essere vuoto",
     "creation.tiles.doc": "Documento",
     "creation.tiles.spreadsheet": "Foglio di calcolo",
     "creation.tiles.presentation": "Presentazione",
