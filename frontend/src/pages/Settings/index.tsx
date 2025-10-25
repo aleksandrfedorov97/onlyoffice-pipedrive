@@ -321,17 +321,14 @@ export const SettingsPage: React.FC = () => {
               <OnlyofficeInput
                 text={t("settings.inputs.address", "Document Server Address")}
                 valid={
-                  (!address || address.trim() === ""
+                  !address || address.trim() === ""
                     ? demoEnabled && isDemoValid()
-                    :
-                      address.trim().toLowerCase().startsWith("https://"))
+                    : address.trim().toLowerCase().startsWith("https://")
                 }
-                errorText={
-                  t(
-                    "settings.validation.https",
-                    "Document Server must use https protocol for Pipedrive integration",
-                  )
-                }
+                errorText={t(
+                  "settings.validation.https",
+                  "Document Server must use https protocol for Pipedrive integration",
+                )}
                 disabled={saving}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -341,9 +338,9 @@ export const SettingsPage: React.FC = () => {
               <OnlyofficeInput
                 text={t("settings.inputs.secret", "Document Server Secret")}
                 valid={
-                  (!secret || secret.trim() === ""
+                  !secret || secret.trim() === ""
                     ? demoEnabled && isDemoValid()
-                    : true)
+                    : true
                 }
                 errorText={
                   t(
@@ -361,9 +358,9 @@ export const SettingsPage: React.FC = () => {
               <OnlyofficeInput
                 text={t("settings.inputs.header", "Document Server Header")}
                 valid={
-                  (!header || header.trim() === ""
+                  !header || header.trim() === ""
                     ? demoEnabled && isDemoValid()
-                    : true)
+                    : true
                 }
                 errorText={
                   t(
@@ -408,7 +405,7 @@ export const SettingsPage: React.FC = () => {
                 primary
                 disabled={
                   saving ||
-                  ((!address || address.trim() === ""
+                  (!address || address.trim() === ""
                     ? !(demoEnabled && isDemoValid())
                     : !address.trim().toLowerCase().startsWith("https://")) ||
                   (!secret || secret.trim() === ""
@@ -416,7 +413,7 @@ export const SettingsPage: React.FC = () => {
                     : false) ||
                   (!header || header.trim() === ""
                     ? !(demoEnabled && isDemoValid())
-                    : false))
+                    : false)
                 }
                 onClick={handleSettings}
               />

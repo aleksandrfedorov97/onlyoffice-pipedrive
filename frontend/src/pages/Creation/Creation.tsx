@@ -58,10 +58,14 @@ export const Creation: React.FC = () => {
   useEffect(() => {
     if (fileTypeRef.current !== fileType) {
       const defaultDocx = t("document.new", "New Document") || "New Document";
-      const defaultPptx = t("document.new.presentation", "New Presentation") || "New Presentation";
-      const defaultXlsx = t("document.new.spreadsheet", "New Spreadsheet") || "New Spreadsheet";
+      const defaultPptx =
+        t("document.new.presentation", "New Presentation") ||
+        "New Presentation";
+      const defaultXlsx =
+        t("document.new.spreadsheet", "New Spreadsheet") || "New Spreadsheet";
 
-      const isDefault = file === defaultDocx || file === defaultPptx || file === defaultXlsx;
+      const isDefault =
+        file === defaultDocx || file === defaultPptx || file === defaultXlsx;
       if (isDefault) {
         switch (fileType) {
           case "docx":
@@ -73,9 +77,11 @@ export const Creation: React.FC = () => {
           case "xlsx":
             setFile(defaultXlsx);
             break;
+          default:
+            break;
         }
       }
-      
+
       fileTypeRef.current = fileType;
     }
   }, [fileType, file, t]);
@@ -162,7 +168,7 @@ export const Creation: React.FC = () => {
                 const token = await sdk?.execute(Command.GET_SIGNED_TOKEN);
                 if (!token) return;
                 const { parameters } = getCurrentURL();
-                
+
                 try {
                   const fres = await axios({
                     method: "GET",

@@ -38,17 +38,16 @@ import { checkSettings } from "@services/settings";
 import { formatBytes, getFileIcon, isFileSupported } from "@utils/file";
 import { getCurrentURL } from "@utils/url";
 
-import { OnlyofficeFileActions } from "./Actions";
-
 import SettingsError from "@assets/settings-error.svg";
+import { OnlyofficeFileActions } from "./Actions";
 
 export const Main: React.FC = () => {
   const { t } = useTranslation();
   const { url, parameters } = getCurrentURL();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
-  const [settingsConfigured, setSettingsConfigured] = useState<
-    boolean | null
-  >(null);
+  const [settingsConfigured, setSettingsConfigured] = useState<boolean | null>(
+    null,
+  );
   const { isLoading, fetchNextPage, isFetchingNextPage, files, hasNextPage } =
     useFileSearch(
       `${url}api/v1/deals/${parameters.get("selectedIds")}/files`,
@@ -96,10 +95,7 @@ export const Main: React.FC = () => {
     return (
       <OnlyofficeBackgroundError
         Icon={<SettingsError className="mb-5" />}
-        title={t(
-          "background.settings.title",
-          "Document Server not configured",
-        )}
+        title={t("background.settings.title", "Document Server not configured")}
         subtitle={t(
           "background.settings.subtitle",
           "Please configure the Document Server in the settings.",
