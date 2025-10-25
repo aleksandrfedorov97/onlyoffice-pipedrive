@@ -185,6 +185,16 @@ export const SettingsPage: React.FC = () => {
         return;
       }
 
+      if (address && !address.trim().toLowerCase().startsWith("https://")) {
+        await sdk.execute(Command.SHOW_SNACKBAR, {
+          message: t(
+            "settings.validation.https",
+            "Document Server must use https protocol for Pipedrive integration",
+          ),
+        });
+        return;
+      }
+
       try {
         setSaving(true);
         const finalAddress =
@@ -310,7 +320,18 @@ export const SettingsPage: React.FC = () => {
             <div className="pl-5 pr-5 pb-2">
               <OnlyofficeInput
                 text={t("settings.inputs.address", "Document Server Address")}
-                valid={!!address || (demoEnabled && isDemoValid())}
+                valid={
+                  (!address || address.trim() === ""
+                    ? demoEnabled && isDemoValid()
+                    :
+                      address.trim().toLowerCase().startsWith("https://"))
+                }
+                errorText={
+                  t(
+                    "settings.validation.https",
+                    "Document Server must use https protocol for Pipedrive integration",
+                  )
+                }
                 disabled={saving}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -319,7 +340,17 @@ export const SettingsPage: React.FC = () => {
             <div className="pl-5 pr-5 pb-2">
               <OnlyofficeInput
                 text={t("settings.inputs.secret", "Document Server Secret")}
-                valid={!!secret || (demoEnabled && isDemoValid())}
+                valid={
+                  (!secret || secret.trim() === ""
+                    ? demoEnabled && isDemoValid()
+                    : true)
+                }
+                errorText={
+                  t(
+                    "settings.inputs.error.secret",
+                    "Document Server Secret is required",
+                  ) || "Document Server Secret is required"
+                }
                 disabled={saving}
                 value={secret}
                 onChange={(e) => setSecret(e.target.value)}
@@ -329,7 +360,17 @@ export const SettingsPage: React.FC = () => {
             <div className="pl-5 pr-5">
               <OnlyofficeInput
                 text={t("settings.inputs.header", "Document Server Header")}
-                valid={!!header || (demoEnabled && isDemoValid())}
+                valid={
+                  (!header || header.trim() === ""
+                    ? demoEnabled && isDemoValid()
+                    : true)
+                }
+                errorText={
+                  t(
+                    "settings.inputs.error.header",
+                    "Document Server Header is required",
+                  ) || "Document Server Header is required"
+                }
                 disabled={saving}
                 value={header}
                 onChange={(e) => setHeader(e.target.value)}
@@ -365,7 +406,18 @@ export const SettingsPage: React.FC = () => {
               <OnlyofficeButton
                 text={t("button.save", "Save")}
                 primary
-                disabled={saving}
+                disabled={
+                  saving ||
+                  ((!address || address.trim() === ""
+                    ? !(demoEnabled && isDemoValid())
+                    : !address.trim().toLowerCase().startsWith("https://")) ||
+                  (!secret || secret.trim() === ""
+                    ? !(demoEnabled && isDemoValid())
+                    : false) ||
+                  (!header || header.trim() === ""
+                    ? !(demoEnabled && isDemoValid())
+                    : false))
+                }
                 onClick={handleSettings}
               />
             </div>
