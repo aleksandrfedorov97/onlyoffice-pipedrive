@@ -60,6 +60,8 @@
     "background.reinstall.subtitle.token": "Qualcosa è andato storto. Reinstalla l'app.",
     "background.reinstall.button": "Reinstalla",
     "document.new": "Nuovo documento",
+    "document.new.presentation": "Nuova presentazione",
+    "document.new.spreadsheet": "Nuovo foglio di calcolo",
     "button.upload": "Crea o carica un documento",
     "button.reload": "Ricarica",
     "button.save": "Salva",

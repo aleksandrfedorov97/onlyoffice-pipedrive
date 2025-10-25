@@ -16,7 +16,7 @@
  *
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
@@ -46,6 +46,7 @@ export const Creation: React.FC = () => {
   };
 
   const isFileNameValid = file.trim().length > 0 && file.length <= 190;
+  const fileTypeRef = useRef(fileType);
 
   useEffect(() => {
     new AppExtensionsSDK()
@@ -53,6 +54,31 @@ export const Creation: React.FC = () => {
       .then((s) => setSDK(s))
       .catch(() => setSDK(null));
   }, []);
+
+  useEffect(() => {
+    if (fileTypeRef.current !== fileType) {
+      const defaultDocx = t("document.new", "New Document") || "New Document";
+      const defaultPptx = t("document.new.presentation", "New Presentation") || "New Presentation";
+      const defaultXlsx = t("document.new.spreadsheet", "New Spreadsheet") || "New Spreadsheet";
+
+      const isDefault = file === defaultDocx || file === defaultPptx || file === defaultXlsx;
+      if (isDefault) {
+        switch (fileType) {
+          case "docx":
+            setFile(defaultDocx);
+            break;
+          case "pptx":
+            setFile(defaultPptx);
+            break;
+          case "xlsx":
+            setFile(defaultXlsx);
+            break;
+        }
+      }
+      
+      fileTypeRef.current = fileType;
+    }
+  }, [fileType, file, t]);
 
   return (
     <div className="h-full w-full bg-white dark:bg-dark-bg">

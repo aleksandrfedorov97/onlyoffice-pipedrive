@@ -59,6 +59,8 @@
     "background.reinstall.subtitle.token": "Что-то пошло не так. Пожалуйста, переустановите приложение.",
     "background.reinstall.button": "Переустановить",
     "document.new": "Новый документ",
+    "document.new.presentation": "Новая презентация",
+    "document.new.spreadsheet": "Новая электронная таблица",
     "button.upload": "Создать или загрузить документ",
     "button.reload": "Перезагрузить",
     "button.save": "Сохранить",

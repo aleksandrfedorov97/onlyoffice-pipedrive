@@ -60,6 +60,8 @@
     "background.reinstall.subtitle.token": "Ein Fehler ist aufgetreten. Bitte installieren Sie die App neu.",
     "background.reinstall.button": "Neu installieren",
     "document.new": "Neues Dokument",
+    "document.new.presentation": "Neue Präsentation",
+    "document.new.spreadsheet": "Neue Tabelle",
     "button.upload": "Dokument erstellen oder hochladen",
     "button.reload": "Neu laden",
     "button.save": "Speichern",
