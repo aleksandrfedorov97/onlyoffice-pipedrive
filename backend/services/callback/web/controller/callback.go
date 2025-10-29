@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,19 @@ func NewCallbackController(
 	}
 }
 
+func (c CallbackController) isDemoModeValid(settings response.DocSettingsResponse) bool {
+	if !settings.DemoEnabled {
+		return false
+	}
+
+	if settings.DemoStarted.IsZero() {
+		return true
+	}
+
+	staleDate := time.Now().AddDate(0, 0, -30)
+	return settings.DemoStarted.After(staleDate)
+}
+
 func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
@@ -110,7 +123,32 @@ func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 			return
 		}
 
-		if err := c.jwtManager.Verify(res.DocSecret, body.Token, &body); err != nil {
+		var jwtSecret string
+		if c.isDemoModeValid(res) {
+			if c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret == "" {
+				c.logger.Errorf("demo mode is enabled but demo secret is not configured")
+				rw.WriteHeader(http.StatusInternalServerError)
+				rw.Write(response.CallbackResponse{
+					Error: 1,
+				}.ToJSON())
+				return
+			}
+
+			jwtSecret = c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret
+		} else {
+			if res.DocSecret == "" {
+				c.logger.Errorf("no document server secret found and demo mode not valid (company %s)", cid)
+				rw.WriteHeader(http.StatusBadRequest)
+				rw.Write(response.CallbackResponse{
+					Error: 1,
+				}.ToJSON())
+				return
+			}
+
+			jwtSecret = res.DocSecret
+		}
+
+		if err := c.jwtManager.Verify(jwtSecret, body.Token, &body); err != nil {
 			c.logger.Errorf("could not verify callback jwt (%s). Reason: %s", body.Token, err.Error())
 			rw.WriteHeader(http.StatusForbidden)
 			rw.Write(response.CallbackResponse{
@@ -139,7 +177,7 @@ func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 				return
 			}
 
-			ctx, cancel := context.WithTimeout(r.Context(), 7*time.Second)
+			ctx, cancel := context.WithTimeout(r.Context(), time.Duration(c.onlyoffice.Onlyoffice.Callback.UploadTimeout)*time.Second)
 			defer cancel()
 
 			usr := body.Users[0]
@@ -154,12 +192,9 @@ func (c CallbackController) BuildPostHandleCallback() http.HandlerFunc {
 					return
 				}
 
-				uctx, cancel := context.WithTimeout(ctx, time.Duration(c.onlyoffice.Onlyoffice.Callback.UploadTimeout)*time.Second)
-				defer cancel()
-
 				req := c.client.NewRequest(fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser", usr)
 				var ures response.UserResponse
-				if err := c.client.Call(uctx, req, &ures, client.WithRetries(3), client.WithBackoff(func(ctx context.Context, req client.Request, attempts int) (time.Duration, error) {
+				if err := c.client.Call(ctx, req, &ures, client.WithRetries(3), client.WithBackoff(func(ctx context.Context, req client.Request, attempts int) (time.Duration, error) {
 					return backoff.Do(attempts), nil
 				})); err != nil {
 					c.logger.Errorf("could not get user tokens: %s", err.Error())

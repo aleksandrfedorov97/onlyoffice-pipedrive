@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
@@ -37,6 +37,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
+	"golang.org/x/sync/errgroup"
 )
 
 var ErrNotAdmin = errors.New("no admin access")
@@ -119,8 +120,8 @@ func (c ApiController) BuildPostSettings() http.HandlerFunc {
 		rw.Header().Set("Content-Type", "application/json")
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
-			rw.WriteHeader(http.StatusForbidden)
 			c.logger.Error("could not extract pipedrive context from the context")
+			rw.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -144,80 +145,98 @@ func (c ApiController) BuildPostSettings() http.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 
-		var wg sync.WaitGroup
-		wg.Add(2)
-		errChan := make(chan error, 2)
-		cidChan := make(chan int, 1)
+		var companyID int64
 
-		go func() {
-			defer wg.Done()
-			if err := c.commandClient.License(ctx, settings.DocAddress, settings.DocSecret); err != nil {
-				c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
-				errChan <- err
-				return
-			}
-		}()
+		eg, ectx := errgroup.WithContext(ctx)
 
-		go func() {
-			defer wg.Done()
-			ures, _, err := c.getUser(ctx, fmt.Sprint(pctx.UID+pctx.CID))
-			if err != nil {
-				errChan <- err
-				return
-			}
-
-			urs, err := c.apiClient.GetMe(ctx, model.Token{
-				AccessToken:  ures.AccessToken,
-				RefreshToken: ures.RefreshToken,
-				TokenType:    ures.TokenType,
-				Scope:        ures.Scope,
-				ApiDomain:    ures.ApiDomain,
-			})
-
-			for _, access := range urs.Access {
-				if access.App == "global" && !access.Admin {
-					errChan <- ErrNotAdmin
-					return
+		if !settings.DemoEnabled {
+			eg.Go(func() error {
+				select {
+				case <-ectx.Done():
+					return ectx.Err()
+				default:
+					if err := c.commandClient.License(ectx, settings.DocAddress, settings.DocSecret); err != nil {
+						c.logger.Errorf("could not validate ONLYOFFICE document server credentials: %s", err.Error())
+						return err
+					}
+					return nil
 				}
-			}
-
-			if err != nil {
-				c.logger.Errorf("could not get pipedrive user or no user has admin permissions")
-				errChan <- err
-				return
-			}
-
-			cidChan <- urs.CompanyID
-		}()
-
-		wg.Wait()
-
-		select {
-		case <-errChan:
-			rw.WriteHeader(http.StatusForbidden)
-			return
-		case <-ctx.Done():
-			rw.WriteHeader(http.StatusRequestTimeout)
-			return
-		default:
+			})
+		} else {
+			c.logger.Debugf("skipping document server validation - demo mode enabled")
 		}
+
+		eg.Go(func() error {
+			select {
+			case <-ectx.Done():
+				return ectx.Err()
+			default:
+				ures, _, err := c.getUser(ectx, fmt.Sprint(pctx.UID+pctx.CID))
+				if err != nil {
+					return err
+				}
+
+				urs, err := c.apiClient.GetMe(ectx, model.Token{
+					AccessToken:  ures.AccessToken,
+					RefreshToken: ures.RefreshToken,
+					TokenType:    ures.TokenType,
+					Scope:        ures.Scope,
+					ApiDomain:    ures.ApiDomain,
+				})
+				if err != nil {
+					c.logger.Errorf("could not get pipedrive user or no user has admin permissions")
+					return err
+				}
+
+				for _, access := range urs.Access {
+					if access.App == "global" && !access.Admin {
+						return ErrNotAdmin
+					}
+				}
+
+				atomic.StoreInt64(&companyID, int64(urs.CompanyID))
+				return nil
+			}
+		})
+
+		if err := eg.Wait(); err != nil {
+			c.logger.Errorf("validation failed: %s", err.Error())
+			if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+				c.logger.Errorf("request timeout during validation")
+				rw.WriteHeader(http.StatusRequestTimeout)
+			} else if errors.Is(err, ErrNotAdmin) {
+				c.logger.Errorf("user does not have admin permissions")
+				rw.WriteHeader(http.StatusForbidden)
+			} else {
+				c.logger.Errorf("other validation error: %s", err.Error())
+				rw.WriteHeader(http.StatusForbidden)
+			}
+			return
+		}
+
+		sreq := request.DocSettings{
+			CompanyID:   int(atomic.LoadInt64(&companyID)),
+			DocAddress:  settings.DocAddress,
+			DocHeader:   settings.DocHeader,
+			DocSecret:   settings.DocSecret,
+			DemoEnabled: settings.DemoEnabled,
+		}
+
+		tctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
 
 		var sres interface{}
 		if err := c.client.Call(
-			ctx, c.client.NewRequest(
+			tctx,
+			c.client.NewRequest(
 				fmt.Sprintf("%s:settings", c.config.Namespace),
 				"SettingsInsertHandler.InsertSettings",
-				request.DocSettings{
-					CompanyID:  <-cidChan,
-					DocAddress: settings.DocAddress,
-					DocHeader:  settings.DocHeader,
-					DocSecret:  settings.DocSecret,
-				},
+				sreq,
 			), &sres); err != nil {
-			c.logger.Errorf("could not get user access info: %s", err.Error())
+			c.logger.Errorf("could not post new settings: %s", err.Error())
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				rw.WriteHeader(http.StatusRequestTimeout)
 				return
@@ -302,13 +321,48 @@ func (c ApiController) BuildGetSettings() http.HandlerFunc {
 	}
 }
 
+func (c ApiController) BuildCheckSettings() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Type", "application/json")
+		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
+		if !ok {
+			rw.WriteHeader(http.StatusForbidden)
+			c.logger.Error("could not extract pipedrive context from the context")
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+
+		var docs response.DocSettingsResponse
+		if err := c.client.Call(
+			ctx,
+			c.client.NewRequest(
+				fmt.Sprintf("%s:settings", c.config.Namespace),
+				"SettingsSelectHandler.GetSettings",
+				fmt.Sprint(pctx.CID),
+			),
+			&docs,
+		); err != nil {
+			c.logger.Debugf("could not get settings: %s", err.Error())
+			rw.Write(response.SettingsConfiguredResponse{Configured: false}.ToJSON())
+			return
+		}
+
+		hasCredentials := docs.DocAddress != "" && docs.DocSecret != "" && docs.DocHeader != ""
+		hasDemoMode := docs.DemoEnabled && (docs.DemoStarted.IsZero() || docs.DemoStarted.After(time.Now().AddDate(0, 0, -30)))
+
+		rw.Write(response.SettingsConfiguredResponse{Configured: hasCredentials || hasDemoMode}.ToJSON())
+	}
+}
+
 func (c ApiController) BuildGetConfig() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 
 		query := r.URL.Query()
-		id, filename, key, dealID := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
-			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id"))
+		id, filename, key, dealID, dark := strings.TrimSpace(query.Get("id")), strings.TrimSpace(query.Get("name")),
+			strings.TrimSpace(query.Get("key")), strings.TrimSpace(query.Get("deal_id")), query.Get("dark") == "true"
 
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
@@ -352,6 +406,7 @@ func (c ApiController) BuildGetConfig() http.HandlerFunc {
 					Filename:  filename,
 					FileID:    id,
 					DocKey:    key,
+					Dark:      dark,
 				},
 			),
 			&resp,
@@ -365,6 +420,11 @@ func (c ApiController) BuildGetConfig() http.HandlerFunc {
 			microErr := response.MicroError{}
 			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			if strings.Contains(err.Error(), "could not find document server settings") {
+				rw.WriteHeader(http.StatusPreconditionFailed)
 				return
 			}
 

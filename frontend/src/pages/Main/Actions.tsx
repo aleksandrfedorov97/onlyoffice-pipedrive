@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import md5 from "md5";
 import AppExtensionsSDK, { Command } from "@pipedrive/app-extensions-sdk";
 import { useTranslation } from "react-i18next";
 
+import { useTheme } from "@context/ThemeContext";
 import { useDeleteFile } from "@hooks/useDeleteFile";
 
 import { downloadFile } from "@services/file";
@@ -32,8 +33,11 @@ import { getCurrentURL } from "@utils/url";
 import { File } from "src/types/file";
 
 import Pencil from "@assets/pencil.svg";
+import PencilDark from "@assets/pencil_dark.svg";
 import Download from "@assets/download.svg";
+import DownloadDark from "@assets/download_dark.svg";
 import Trash from "@assets/trash.svg";
+import TrashDark from "@assets/trash_dark.svg";
 
 type FileActionsProps = {
   file: File;
@@ -42,6 +46,7 @@ type FileActionsProps = {
 export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   const { t } = useTranslation();
   const { url, parameters } = getCurrentURL();
+  const { isDark } = useTheme();
   const [sdk, setSDK] = useState<AppExtensionsSDK | null>();
   const [disable, setDisable] = useState(false);
   const mutator = useDeleteFile(`${url}api/v1/files/${file.id}`);
@@ -54,7 +59,6 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   }, []);
 
   const handleDelete = () => {
-    if (disable) return;
     setDisable(true);
     mutator
       .mutateAsync()
@@ -63,7 +67,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
           message: t(
             "snackbar.fileremoved.ok",
             `File ${file.name} has been removed`,
-            { file: file.name }
+            { file: file.name },
           ),
         });
       })
@@ -73,14 +77,13 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
           message: t(
             "snackbar.fileremoved.error",
             `Could not remove file ${file.name}`,
-            { file: file.name }
+            { file: file.name },
           ),
         });
       });
   };
 
   const handleEditor = async () => {
-    if (disable) return;
     setDisable(true);
     if (isFileSupported(file.name)) {
       const win = window.open("/editor");
@@ -91,8 +94,10 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
           win.location.href = `/editor?token=${token.token}&deal_id=${
             parameters.get("selectedIds") || "1"
           }&id=${file.id}&name=${`${encodeURIComponent(
-            name.substring(0, 190)
-          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${i18next.language}`;
+            name.substring(0, 190),
+          )}.${ext}`}&key=${md5(file.id + file.update_time)}&lng=${
+            i18next.language
+          }&dark=${isDark}`;
       }
     }
     // temporary solution
@@ -100,7 +105,6 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
   };
 
   const handleDownload = async () => {
-    if (disable) return;
     setDisable(true);
     try {
       const durl = await downloadFile(url, file.id);
@@ -110,7 +114,7 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
         message: t(
           "snackbar.filedownload.error",
           `Could not download file ${file.name}`,
-          { file: file.name }
+          { file: file.name },
         ),
       });
     } finally {
@@ -118,42 +122,71 @@ export const OnlyofficeFileActions: React.FC<FileActionsProps> = ({ file }) => {
     }
   };
 
+  const handleClick = (handler: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!disable) {
+      handler();
+    }
+  };
+
+  const handleKeyDown = (handler: () => void) => (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disable) {
+        handler();
+      }
+    }
+  };
+
+  const isEditorDisabled = !isFileSupported(file.name) || disable;
+  const isDownloadDisabled = disable;
+  const isDeleteDisabled = disable;
+
   return (
     <>
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={isEditorDisabled ? -1 : 0}
         className={`${
-          !isFileSupported(file.name) || disable
+          isEditorDisabled
             ? "hover:cursor-default opacity-50"
             : "hover:cursor-pointer"
         } mx-1`}
-        onClick={() => handleEditor()}
-        onKeyDown={() => handleEditor()}
+        onClick={isEditorDisabled ? undefined : handleClick(handleEditor)}
+        onKeyDown={isEditorDisabled ? undefined : handleKeyDown(handleEditor)}
+        aria-disabled={isEditorDisabled}
       >
-        <Pencil />
+        {isDark ? <PencilDark /> : <Pencil />}
       </div>
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={isDownloadDisabled ? -1 : 0}
         className={`mx-1 ${
-          disable ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+          isDownloadDisabled
+            ? "hover:cursor-default opacity-50"
+            : "hover:cursor-pointer"
         }`}
-        onClick={() => handleDownload()}
-        onKeyDown={() => handleDownload()}
+        onClick={handleClick(handleDownload)}
+        onKeyDown={handleKeyDown(handleDownload)}
+        aria-disabled={isDownloadDisabled}
       >
-        <Download />
+        {isDark ? <DownloadDark /> : <Download />}
       </div>
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={isDeleteDisabled ? -1 : 0}
         className={`mx-1 ${
-          disable ? "hover:cursor-default opacity-50" : "hover:cursor-pointer"
+          isDeleteDisabled
+            ? "hover:cursor-default opacity-50"
+            : "hover:cursor-pointer"
         }`}
-        onClick={() => handleDelete()}
-        onKeyDown={() => handleDelete()}
+        onClick={handleClick(handleDelete)}
+        onKeyDown={handleKeyDown(handleDelete)}
+        aria-disabled={isDeleteDisabled}
       >
-        <Trash />
+        {isDark ? <TrashDark /> : <Trash />}
       </div>
     </>
   );

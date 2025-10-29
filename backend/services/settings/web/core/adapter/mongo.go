@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +35,12 @@ import (
 
 type docSettingsCollection struct {
 	mgm.DefaultModel `bson:",inline"`
-	CompanyID        string `json:"company_id" bson:"company_id"`
-	DocAddress       string `json:"doc_address" bson:"doc_address"`
-	DocSecret        string `json:"doc_secret" bson:"doc_secret"`
-	DocHeader        string `json:"doc_header" bson:"doc_header"`
+	CompanyID        string    `json:"company_id" bson:"company_id"`
+	DocAddress       string    `json:"doc_address" bson:"doc_address"`
+	DocSecret        string    `json:"doc_secret" bson:"doc_secret"`
+	DocHeader        string    `json:"doc_header" bson:"doc_header"`
+	DemoEnabled      bool      `json:"demo_enabled" bson:"demo_enabled"`
+	DemoStarted      time.Time `json:"demo_started" bson:"demo_started"`
 }
 
 type mongoUserAdapter struct {
@@ -62,10 +64,12 @@ func (m *mongoUserAdapter) save(ctx context.Context, settings domain.DocSettings
 
 		if err := collection.FirstWithCtx(ctx, bson.M{"company_id": settings.CompanyID}, u); err != nil {
 			if cerr := collection.CreateWithCtx(ctx, &docSettingsCollection{
-				CompanyID:  settings.CompanyID,
-				DocAddress: settings.DocAddress,
-				DocSecret:  settings.DocSecret,
-				DocHeader:  settings.DocHeader,
+				CompanyID:   settings.CompanyID,
+				DocAddress:  settings.DocAddress,
+				DocSecret:   settings.DocSecret,
+				DocHeader:   settings.DocHeader,
+				DemoEnabled: settings.DemoEnabled,
+				DemoStarted: settings.DemoStarted,
 			}); cerr != nil {
 				return cerr
 			}
@@ -77,6 +81,11 @@ func (m *mongoUserAdapter) save(ctx context.Context, settings domain.DocSettings
 		u.DocAddress = settings.DocAddress
 		u.DocSecret = settings.DocSecret
 		u.DocHeader = settings.DocHeader
+		u.DemoEnabled = settings.DemoEnabled
+		if u.DemoStarted.IsZero() {
+			u.DemoStarted = settings.DemoStarted
+		}
+
 		u.UpdatedAt = time.Now()
 
 		if err := collection.UpdateWithCtx(ctx, u); err != nil {
@@ -104,12 +113,19 @@ func (m *mongoUserAdapter) SelectSettings(ctx context.Context, cid string) (doma
 
 	settings := &docSettingsCollection{}
 	collection := mgm.Coll(settings)
+
+	if err := collection.FirstWithCtx(ctx, bson.M{"company_id": cid}, settings); err != nil {
+		return domain.DocSettings{}, err
+	}
+
 	return domain.DocSettings{
-		CompanyID:  cid,
-		DocAddress: settings.DocAddress,
-		DocSecret:  settings.DocSecret,
-		DocHeader:  settings.DocHeader,
-	}, collection.FirstWithCtx(ctx, bson.M{"company_id": cid}, settings)
+		CompanyID:   settings.CompanyID,
+		DocAddress:  settings.DocAddress,
+		DocSecret:   settings.DocSecret,
+		DocHeader:   settings.DocHeader,
+		DemoEnabled: settings.DemoEnabled,
+		DemoStarted: settings.DemoStarted,
+	}, nil
 }
 
 func (m *mongoUserAdapter) UpsertSettings(ctx context.Context, settings domain.DocSettings) (domain.DocSettings, error) {

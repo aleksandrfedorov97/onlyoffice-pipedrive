@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ export const getMe = async (sdk: AppExtensionsSDK) => {
   return { response: res.data };
 };
 
-export const getPipedriveMe = async (url: string, access_token?: string) => {
+export const getPipedriveMe = async (url: string, accessToken?: string) => {
   const client = axios.create();
   axiosRetry(client, {
     retries: 3,
@@ -61,7 +61,7 @@ export const getPipedriveMe = async (url: string, access_token?: string) => {
     url,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${access_token ? access_token : AuthToken.access_token}`,
+      Authorization: `Bearer ${accessToken || AuthToken.access_token}`,
     },
     timeout: 3000,
   });

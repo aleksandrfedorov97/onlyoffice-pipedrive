@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ type NoFileProps = {
 export const OnlyofficeNoFile: React.FC<NoFileProps> = ({ title }) => (
   <div className="h-full w-full flex flex-col justify-center items-center">
     <Nofiles />
-    <span className="font-sans font-bold text-sm max-w-max break-words text-center">
+    <span className="font-sans font-bold text-sm max-w-max break-words text-center text-black dark:text-dark-text">
       {title}
     </span>
   </div>

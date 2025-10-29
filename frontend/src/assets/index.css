@@ -17,6 +17,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: white;
+}
+
+.dark body {
+  background-color: #1e2029;
 }
 
 code {
@@ -69,12 +74,20 @@ code {
   animation: 1s rotate infinite linear;
 }
 
+.dark .spinner {
+  background: conic-gradient(from 90deg at 50% 50%, rgba(255, 255, 255, 0.0001) 0deg, #E2E2E4 359.96deg, rgba(255, 255, 255, 0.0001) 360deg);
+}
+
 .spinner::before {
   content: "";
   height: 40px;
   width: 40px;
   background: #fff;
   border-radius: 48px;
+}
+
+.dark .spinner::before {
+  background: #1a1a1a;
 }
 
 .spinner::after {
@@ -87,6 +100,10 @@ code {
   width: 8px;
   background: #454545;
   border-radius: 8px;
+}
+
+.dark .spinner::after {
+  background: #E2E2E4;
 }
 
 @keyframes rotate {

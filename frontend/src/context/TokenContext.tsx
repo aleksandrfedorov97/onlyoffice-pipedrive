@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 import AppExtensionsSDK from "@pipedrive/app-extensions-sdk";
 import i18next from "i18next";
 import axios, { AxiosError } from "axios";
-import React, { useEffect } from "react";
+import React, { useEffect, ReactNode } from "react";
 import { proxy } from "valtio";
 
 import { getMe, getPipedriveMe } from "@services/me";
@@ -34,7 +34,7 @@ export const AuthToken = proxy({
 });
 
 type ProviderProps = {
-  children?: JSX.Element | JSX.Element[];
+  children?: ReactNode;
 };
 
 const TokenContext = React.createContext<boolean>(true);
@@ -54,8 +54,13 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
           ) {
             try {
               const token = await getMe(sdk);
-              const resp = await getPipedriveMe(`${url}api/v1/users/me`, token.response.access_token);
-              await i18next.changeLanguage(`${resp.data.language.language_code}-${resp.data.language.country_code}`);
+              const resp = await getPipedriveMe(
+                `${url}api/v1/users/me`,
+                token.response.access_token,
+              );
+              await i18next.changeLanguage(
+                `${resp.data.language.language_code}-${resp.data.language.country_code}`,
+              );
               AuthToken.access_token = token.response.access_token;
               AuthToken.expires_at = token.response.expires_at;
             } catch (err) {
@@ -73,7 +78,7 @@ export const TokenProvider: React.FC<ProviderProps> = ({ children }) => {
           }
           timerID = setTimeout(
             update,
-            AuthToken.expires_at - Date.now() - 1000 * 30
+            AuthToken.expires_at - Date.now() - 1000 * 30,
           );
         }, 0);
       })

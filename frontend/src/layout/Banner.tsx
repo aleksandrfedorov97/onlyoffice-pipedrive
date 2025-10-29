@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,7 @@ import { useTranslation } from "react-i18next";
 export const Banner: React.FC = () => {
   const { t } = useTranslation();
   return (
-    <div
-      className="flex justify-between items-center p-5 mt-5 mb-5"
-      style={{ backgroundColor: "#F6F6F6", border: "1px solid #EFEFEF" }}
-    >
+    <div className="flex justify-between items-center p-5 mt-5 mb-5 bg-gray-100 dark:bg-dark-bg border border-gray-300 dark:border-dark-border">
       <div className="w-2/12">
         <BannerIcon />
       </div>
@@ -49,7 +46,7 @@ export const Banner: React.FC = () => {
               text={
                 t(
                   "banner.subtitle",
-                  "Easily launch the editors in the cloud without downloading and installation"
+                  "Easily launch the editors in the cloud without downloading and installation",
                 ) ||
                 "Easily launch the editors in the cloud without downloading and installation"
               }
@@ -61,11 +58,10 @@ export const Banner: React.FC = () => {
       <div className="w-3/12">
         <button
           type="button"
-          className="pl-5 pr-5 pt-2 pb-2 text-sm rounded overflow-hidden text-ellipsis inline-block max-w-[120px] cursor-pointer hover:shadow-sm duration-200"
-          style={{ backgroundColor: "#192435", color: "#FFFFFF" }}
+          className="pl-5 pr-5 pt-2 pb-2 text-sm rounded overflow-hidden text-ellipsis inline-block max-w-[120px] cursor-pointer hover:shadow-sm duration-200 bg-gray-800 dark:bg-gray-700 text-white"
           onClick={() =>
             window.open(
-              "https://www.onlyoffice.com/docs-registration.aspx?referer=pipedrive"
+              "https://www.onlyoffice.com/docs-registration.aspx?referer=pipedrive",
             )
           }
         >

@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,15 @@ import { OnlyofficeEditorPage } from "@pages/Editor";
 
 import { OnlyofficeSpinner } from "@components/spinner";
 import { TokenProvider } from "@context/TokenContext";
+import { ThemeProvider } from "@context/ThemeContext";
 
-const CenteredOnlyofficeSpinner = () => (
-  <div className="w-full h-full flex justify-center items-center">
-    <OnlyofficeSpinner />
-  </div>
-);
+function CenteredOnlyofficeSpinner() {
+  return (
+    <div className="w-full h-full flex justify-center items-center">
+      <OnlyofficeSpinner />
+    </div>
+  );
+}
 
 const LazyRoutes: React.FC = () => {
   const location = useLocation();
@@ -90,11 +93,13 @@ const LazyRoutes: React.FC = () => {
 
 function App() {
   return (
-    <div className="w-full h-full flex justify-center items-center">
-      <Router>
-        <LazyRoutes />
-      </Router>
-    </div>
+    <ThemeProvider>
+      <div className="w-full h-full flex justify-center items-center bg-white dark:bg-dark-bg transition-colors duration-200">
+        <Router>
+          <LazyRoutes />
+        </Router>
+      </div>
+    </ThemeProvider>
   );
 }
 

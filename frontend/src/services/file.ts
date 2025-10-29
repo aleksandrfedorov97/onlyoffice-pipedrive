@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ export const fetchFiles = async (
   start = 0,
   limit = 50,
   signal: AbortSignal | undefined = undefined,
-  sort = "add_time ASC"
+  sort = "add_time ASC",
 ) => {
   const client = axios.create();
   axiosRetry(client, {
@@ -59,7 +59,7 @@ export const fetchFiles = async (
       response: res.data.data,
       pagination: res.data.additional_data.pagination,
     };
-  } catch (err) {
+  } catch {
     return {
       response: [],
       pagination: {
@@ -75,13 +75,13 @@ export const fetchFiles = async (
 export const downloadFile = async (domain: string, id: string) => {
   const resp = await axios.get(
     `${process.env.BACKEND_GATEWAY}/files/download?domain=${encodeURIComponent(
-      domain
+      domain,
     )}&file_id=${id}`,
     {
       headers: {
         Authorization: `Bearer ${AuthToken.access_token}`,
       },
-    }
+    },
   );
 
   return resp.data;
@@ -89,7 +89,7 @@ export const downloadFile = async (domain: string, id: string) => {
 
 export const deleteFile = async (
   url: string,
-  signal: AbortSignal | undefined = undefined
+  signal: AbortSignal | undefined = undefined,
 ) => {
   const res = await axios({
     method: "DELETE",

@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,10 +46,11 @@ func NewSettingsInsertHandler(
 func (i SettingsInsertHandler) InsertSettings(ctx context.Context, req request.DocSettings, res *interface{}) error {
 	_, err, _ := group.Do(fmt.Sprintf("insert-%d", req.CompanyID), func() (interface{}, error) {
 		settings, err := i.service.UpdateSettings(ctx, domain.DocSettings{
-			CompanyID:  fmt.Sprint(req.CompanyID),
-			DocAddress: req.DocAddress,
-			DocHeader:  req.DocHeader,
-			DocSecret:  req.DocSecret,
+			CompanyID:   fmt.Sprint(req.CompanyID),
+			DocAddress:  req.DocAddress,
+			DocHeader:   req.DocHeader,
+			DocSecret:   req.DocSecret,
+			DemoEnabled: req.DemoEnabled,
 		})
 
 		if err != nil {

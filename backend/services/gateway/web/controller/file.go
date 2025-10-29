@@ -1,3 +1,21 @@
+/**
+ *
+ * (c) Copyright Ascensio System SIA 2025
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package controller
 
 import (
@@ -88,6 +106,16 @@ func (c FileController) BuildGetFile() http.HandlerFunc {
 			return
 		}
 
+		if len(filename) > 0 {
+			lastDot := strings.LastIndex(filename, ".")
+			if lastDot > 0 {
+				baseName := strings.TrimSpace(filename[:lastDot])
+				if baseName == "" {
+					filename = fmt.Sprintf("New Document.%s", fileType)
+				}
+			}
+		}
+
 		pctx, ok := r.Context().Value("X-Pipedrive-App-Context").(request.PipedriveTokenContext)
 		if !ok {
 			rw.WriteHeader(http.StatusForbidden)
@@ -106,13 +134,15 @@ func (c FileController) BuildGetFile() http.HandlerFunc {
 
 		file, err := assets.Files.Open(fmt.Sprintf("assets/%s/new.%s", lang, fileType))
 		if err != nil {
-			lang = "en-US"
+			lang = "default"
 			file, err = assets.Files.Open(fmt.Sprintf("assets/%s/new.%s", lang, fileType))
 			if err != nil {
 				rw.WriteHeader(http.StatusBadRequest)
 				c.logger.Errorf("could not get a new file: %s", err.Error())
 				return
 			}
+
+			defer file.Close()
 			res, ferr := c.apiClient.CreateFile(ctx, dealID, filename, file, model.Token{
 				AccessToken:  ures.AccessToken,
 				RefreshToken: ures.AccessToken,
@@ -131,6 +161,7 @@ func (c FileController) BuildGetFile() http.HandlerFunc {
 			return
 		}
 
+		defer file.Close()
 		res, ferr := c.apiClient.CreateFile(ctx, dealID, filename, file, model.Token{
 			AccessToken:  ures.AccessToken,
 			RefreshToken: ures.AccessToken,
@@ -168,6 +199,10 @@ func (c FileController) BuildGetDownloadUrl() http.HandlerFunc {
 			c.logger.Errorf("could not build a new download url: %s", err.Error())
 			rw.WriteHeader(http.StatusBadRequest)
 			return
+		}
+
+		if resp != nil {
+			defer resp.Body.Close()
 		}
 
 		if resp.StatusCode != 302 {

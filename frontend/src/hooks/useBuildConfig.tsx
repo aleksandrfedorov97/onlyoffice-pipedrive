@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,13 @@ export function useBuildConfig(
   id: string,
   name: string,
   key: string,
-  dealID: string
+  dealID: string,
+  dark = false,
 ) {
   const { isLoading, error, data } = useQuery({
-    queryKey: ["config", id, key],
-    queryFn: ({ signal }) => fetchConfig(token, id, name, key, dealID, signal),
+    queryKey: ["config", id, key, dark],
+    queryFn: ({ signal }) =>
+      fetchConfig(token, id, name, key, dealID, dark, signal),
     staleTime: 0,
     cacheTime: 0,
     refetchOnWindowFocus: false,

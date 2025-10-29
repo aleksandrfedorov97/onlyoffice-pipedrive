@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 module.exports = {
     content: ["./src/**/*.{ts,tsx}"],
+    darkMode: 'class', // Enable class-based dark mode
     theme: {
         extend: {
             width: {
@@ -67,6 +68,16 @@ module.exports = {
             colors: {
                 onlyoffice: "#0F4071",
                 "smoke-light": "rgba(0, 0, 0, 0.4)",
+                dark: {
+                    bg: "#1e2029",
+                    surface: "#282C34",
+                    border: "#444D56",
+                    text: "#E6E6E8",
+                    muted: "#B0B0B3",
+                    primary: "#4CAF50",
+                    hover: "#2C3038",
+                    selected: "#3E444D"
+                }
             },
             screens: {
                 wrap: { raw: "(max-width: 713px)" },

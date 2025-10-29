@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
  *
  */
 
-export function setWithExpiry(key: string, value: any, expiry: number) {
+export function setWithExpiry<T>(key: string, value: T, expiry: number): void {
   localStorage.setItem(
     key,
     JSON.stringify({
       value,
       expiry,
-    })
+    }),
   );
 }
 
-export function getWithExpiry(key: string) {
+export function getWithExpiry<T>(key: string): T | null {
   const sitem = localStorage.getItem(key);
   if (!sitem) {
     return null;
@@ -39,5 +39,5 @@ export function getWithExpiry(key: string) {
     return null;
   }
 
-  return item.value;
+  return item.value as T;
 }

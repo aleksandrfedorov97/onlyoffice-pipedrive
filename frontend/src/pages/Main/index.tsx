@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ export const MainPage: React.FC = () => {
   const loadingError = !accessToken && error;
   const loaded = accessToken && !error;
   return (
-    <div className="relative w-full h-full flex flex-col my-0 mx-auto">
+    <div className="relative w-full h-full flex flex-col my-0 mx-auto bg-white dark:bg-dark-bg">
       {loading && (
         <div className="w-full h-full flex justify-center items-center">
           <OnlyofficeSpinner />
@@ -49,14 +49,20 @@ export const MainPage: React.FC = () => {
         <OnlyofficeBackgroundError
           Icon={<TokenError className="mb-5" />}
           title={t(
-            status === 401 ? "background.reinstall.title" : "background.error.title",
-            status === 401 ? "The document security token has expired" : "Error"
+            status === 401
+              ? "background.reinstall.title"
+              : "background.error.title.main",
+            status === 401
+              ? "The document security token has expired"
+              : "Something went wrong",
           )}
           subtitle={t(
-            status === 401 ? "background.reinstall.subtitle.token" : "background.reinstall.subtitle",
+            status === 401
+              ? "background.reinstall.subtitle.token"
+              : "background.reinstall.subtitle",
             status === 401
               ? "Something went wrong. Please reinstall the app."
-              : "Something went wrong. Please reload the app."
+              : "Something went wrong. Please reload the app.",
           )}
           button={t("background.reinstall.button", "Reinstall") || "Reinstall"}
           onClick={
@@ -64,7 +70,7 @@ export const MainPage: React.FC = () => {
               ? () =>
                   window.open(
                     `${getCurrentURL().url}settings/marketplace`,
-                    "_blank"
+                    "_blank",
                   )
               : undefined
           }

@@ -1,4 +1,4 @@
-# ONLYOFFICE App for Pipedrive 
+# ONLYOFFICE app for Pipedrive
 
 This app allows users to edit and collaborate on office documents right within [Pipedrive](https://www.pipedrive.com/) deals using ONLYOFFICE Docs.
 
@@ -26,7 +26,7 @@ You can add the ONLYOFFICE app from the [Pipedrive App Marketplace](https://www.
 
 Once done, go to the ONLYOFFICE app settings page (Tools and Integrations -> Marketplace apps -> ONLYOFFICE) and enter the name of the server with ONLYOFFICE Docs installed in the *Document Server Address* field.
 
-Starting from version 7.2 of ONLYOFFICE Docs, JWT is enabled by default and the secret key is generated automatically to restrict the access to the editors and for security reasons and data integrity. You can specify your own *Document Server Secret* on the settings page. In the ONLYOFFICE Docs [config file](https://api.onlyoffice.com/editors/signature/), specify the same secret key to enable the validation.
+Starting from version 7.2 of ONLYOFFICE Docs, JWT is enabled by default and the secret key is generated automatically to restrict the access to the editors and for security reasons and data integrity. You can specify your own *Document Server Secret* on the settings page. In the ONLYOFFICE Docs [config file](https://api.onlyoffice.com/docs/docs-api/additional-api/signature/), specify the same secret key to enable the validation.
 
 ## App usage 
 
@@ -100,12 +100,18 @@ The table below will help you make the right choice.
 | Font and paragraph formatting   | + | + |
 | Object insertion                | + | + |
 | Transitions                     | + | + |
+| Animations                      | + | + |
 | Presenter mode                  | + | + |
 | Notes                           | + | + |
 | **Form creator features** | **Community Edition** | **Enterprise Edition** |
 | Adding form fields           | + | + |
 | Form preview                    | + | + |
 | Saving as PDF                   | + | + |
+| **Working with PDF**      | **Community Edition** | **Enterprise Edition** |
+| Text annotations (highlight, underline, cross out) | + | + |
+| Comments                        | + | + |
+| Freehand drawings               | + | + |
+| Form filling                    | + | + |
 | | [Get it now](https://www.onlyoffice.com/download-docs.aspx#docs-community)  | [Start Free Trial](https://www.onlyoffice.com/download-docs.aspx#docs-enterprise)  |
 
 \* If supported by DMS.

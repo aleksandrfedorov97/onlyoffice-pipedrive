@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,29 @@
 
 package response
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type DocSettingsResponse struct {
-	DocAddress string `json:"doc_address"`
-	DocSecret  string `json:"doc_secret"`
-	DocHeader  string `json:"doc_header"`
+	DocAddress  string    `json:"doc_address"`
+	DocSecret   string    `json:"doc_secret"`
+	DocHeader   string    `json:"doc_header"`
+	DemoEnabled bool      `json:"demo_enabled"`
+	DemoStarted time.Time `json:"demo_started"`
 }
 
 func (r DocSettingsResponse) ToJSON() []byte {
+	buf, _ := json.Marshal(r)
+	return buf
+}
+
+type SettingsConfiguredResponse struct {
+	Configured bool `json:"configured"`
+}
+
+func (r SettingsConfiguredResponse) ToJSON() []byte {
 	buf, _ := json.Marshal(r)
 	return buf
 }

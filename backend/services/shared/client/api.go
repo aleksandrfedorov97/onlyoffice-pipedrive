@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,6 +142,11 @@ func (p PipedriveApiClient) getFile(ctx context.Context, url string) (io.ReadClo
 		Get(url)
 	if err != nil {
 		return nil, err
+	}
+
+	if fileResp.RawResponse.StatusCode != http.StatusOK {
+		fileResp.RawBody().Close()
+		return nil, fmt.Errorf("unexpected status code: %d", fileResp.RawResponse.StatusCode)
 	}
 
 	return fileResp.RawBody(), nil

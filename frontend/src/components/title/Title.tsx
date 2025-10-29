@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ export const OnlyofficeTitle: React.FC<TitleProps> = ({
   large = false,
 }) => {
   const style = cx({
-    "font-semibold text-slate-800 text-center": !!text,
+    "font-semibold text-slate-800 dark:text-dark-text text-center": !!text,
     "text-base": large,
     "text-sm": !large,
   });

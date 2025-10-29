@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,6 +96,7 @@ func (s *PipedriveHTTPService) InitializeRoutes() {
 			cr.Get("/config", s.apiController.BuildGetConfig())
 			cr.Post("/settings", s.apiController.BuildPostSettings())
 			cr.Get("/settings", s.apiController.BuildGetSettings())
+			cr.Get("/settings/check", s.apiController.BuildCheckSettings())
 		})
 
 		r.Route("/files", func(fr chi.Router) {

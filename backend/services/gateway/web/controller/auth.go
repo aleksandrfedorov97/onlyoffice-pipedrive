@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,7 @@ import (
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
 	"go-micro.dev/v4/client"
 	"golang.org/x/oauth2"
-	"golang.org/x/sync/singleflight"
 )
-
-var group singleflight.Group
 
 type AuthController struct {
 	client        client.Client
@@ -93,59 +90,59 @@ func (c AuthController) BuildGetAuth() http.HandlerFunc {
 			return
 		}
 
-		group.Do(code, func() (interface{}, error) {
-			token, err := c.pipedriveAuth.GetAccessToken(r.Context(), code, c.credentials.RedirectURL)
-			if err != nil {
-				rw.WriteHeader(http.StatusBadRequest)
-				c.logger.Errorf("could not get pipedrive access token: %s", err.Error())
-				return nil, err
+		ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
+		defer cancel()
+
+		token, err := c.pipedriveAuth.GetAccessToken(ctx, code, c.credentials.RedirectURL)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			c.logger.Errorf("could not get pipedrive access token: %s", err.Error())
+			return
+		}
+
+		usr, err := c.pipedriveAPI.GetMe(ctx, token)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			c.logger.Errorf("could not get pipedrive user: %s", err.Error())
+			return
+		}
+
+		var ures response.UserResponse
+		if err := c.client.Call(
+			ctx,
+			c.client.NewRequest(
+				fmt.Sprintf("%s:auth", c.config.Namespace),
+				"UserInsertHandler.InsertUser",
+				response.UserResponse{
+					ID:           fmt.Sprint(usr.ID + usr.CompanyID),
+					AccessToken:  token.AccessToken,
+					RefreshToken: token.RefreshToken,
+					TokenType:    token.TokenType,
+					Scope:        token.Scope,
+					ApiDomain:    token.ApiDomain,
+					ExpiresAt:    time.Now().Local().Add(time.Second * time.Duration(token.ExpiresIn-700)).UnixMilli(),
+				},
+			),
+			&ures,
+		); err != nil {
+			c.logger.Errorf("could not get user access info: %s", err.Error())
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				rw.WriteHeader(http.StatusRequestTimeout)
+				return
 			}
 
-			usr, err := c.pipedriveAPI.GetMe(r.Context(), token)
-			if err != nil {
-				rw.WriteHeader(http.StatusBadRequest)
-				c.logger.Errorf("could not get pipedrive user: %s", err.Error())
-				return nil, err
+			microErr := response.MicroError{}
+			if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
+				rw.WriteHeader(http.StatusUnauthorized)
+				return
 			}
 
-			var ures response.UserResponse
-			if err := c.client.Call(
-				r.Context(),
-				c.client.NewRequest(
-					fmt.Sprintf("%s:auth", c.config.Namespace),
-					"UserInsertHandler.InsertUser",
-					response.UserResponse{
-						ID:           fmt.Sprint(usr.ID + usr.CompanyID),
-						AccessToken:  token.AccessToken,
-						RefreshToken: token.RefreshToken,
-						TokenType:    token.TokenType,
-						Scope:        token.Scope,
-						ApiDomain:    token.ApiDomain,
-						ExpiresAt:    time.Now().Local().Add(time.Second * time.Duration(token.ExpiresIn-700)).UnixMilli(),
-					},
-				),
-				&ures,
-			); err != nil {
-				c.logger.Errorf("could not get user access info: %s", err.Error())
-				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-					rw.WriteHeader(http.StatusRequestTimeout)
-					return nil, err
-				}
+			rw.WriteHeader(microErr.Code)
+			return
+		}
 
-				microErr := response.MicroError{}
-				if err := json.Unmarshal([]byte(err.Error()), &microErr); err != nil {
-					rw.WriteHeader(http.StatusUnauthorized)
-					return nil, err
-				}
-
-				rw.WriteHeader(microErr.Code)
-				return nil, err
-			}
-
-			c.logger.Debugf("redirecting to api domain: %s", token.ApiDomain)
-			http.Redirect(rw, r, token.ApiDomain, http.StatusMovedPermanently)
-			return nil, nil
-		})
+		c.logger.Debugf("redirecting to api domain: %s", token.ApiDomain)
+		http.Redirect(rw, r, token.ApiDomain, http.StatusMovedPermanently)
 	}
 }
 

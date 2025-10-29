@@ -1,6 +1,6 @@
 /**
  *
- * (c) Copyright Ascensio System SIA 2023
+ * (c) Copyright Ascensio System SIA 2025
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  * limitations under the License.
  *
  */
-
 package handler
 
 import (
@@ -25,28 +24,39 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/config"
 	"github.com/ONLYOFFICE/onlyoffice-integration-adapters/crypto"
 	plog "github.com/ONLYOFFICE/onlyoffice-integration-adapters/log"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
+	shared "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared"
 	pclient "github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/client/model"
-	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/constants"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/request"
 	"github.com/ONLYOFFICE/onlyoffice-pipedrive/services/shared/response"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mileusna/useragent"
 	"go-micro.dev/v4/client"
+	"golang.org/x/sync/errgroup"
+)
+
+var (
+	defaultClient = &http.Client{
+		Timeout: 15 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 )
 
 type ConfigHandler struct {
-	client     client.Client
-	apiClient  pclient.PipedriveApiClient
-	jwtManager crypto.JwtManager
-	config     *config.ServerConfig
-	onlyoffice *shared.OnlyofficeConfig
-	logger     plog.Logger
+	client        client.Client
+	apiClient     pclient.PipedriveApiClient
+	jwtManager    crypto.JwtManager
+	config        *config.ServerConfig
+	onlyoffice    *shared.OnlyofficeConfig
+	logger        plog.Logger
+	formatManager shared.FormatManager
 }
 
 func NewConfigHandler(
@@ -55,52 +65,64 @@ func NewConfigHandler(
 	apiClient pclient.PipedriveApiClient,
 	config *config.ServerConfig,
 	onlyoffice *shared.OnlyofficeConfig,
+	formatManager shared.FormatManager,
 	logger plog.Logger,
 ) ConfigHandler {
 	return ConfigHandler{
-		client:     client,
-		apiClient:  apiClient,
-		jwtManager: jwtManager,
-		config:     config,
-		onlyoffice: onlyoffice,
-		logger:     logger,
+		client:        client,
+		apiClient:     apiClient,
+		jwtManager:    jwtManager,
+		config:        config,
+		onlyoffice:    onlyoffice,
+		logger:        logger,
+		formatManager: formatManager,
 	}
+}
+
+func (c ConfigHandler) isDemoModeValid(settings response.DocSettingsResponse) bool {
+	if !settings.DemoEnabled {
+		return false
+	}
+
+	if settings.DemoStarted.IsZero() {
+		return true
+	}
+
+	staleDate := time.Now().AddDate(0, 0, -30)
+	return settings.DemoStarted.After(staleDate)
 }
 
 func (c ConfigHandler) processConfig(user response.UserResponse, req request.BuildConfigRequest, ctx context.Context) (response.BuildConfigResponse, error) {
 	var config response.BuildConfigResponse
-	var wg sync.WaitGroup
-	wg.Add(2)
-	usrChan := make(chan model.User, 1)
-	settingsChan := make(chan response.DocSettingsResponse, 1)
-	errorsChan := make(chan error, 2)
 
-	go func() {
-		defer wg.Done()
-		u, err := c.apiClient.GetMe(ctx, model.Token{
+	tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	g, gctx := errgroup.WithContext(tctx)
+
+	var usr model.User
+	var settings response.DocSettingsResponse
+
+	g.Go(func() error {
+		u, err := c.apiClient.GetMe(gctx, model.Token{
 			AccessToken:  user.AccessToken,
 			RefreshToken: user.RefreshToken,
 			TokenType:    user.TokenType,
 			Scope:        user.Scope,
 			ApiDomain:    user.ApiDomain,
 		})
-
 		if err != nil {
 			c.logger.Debugf("could not get pipedrive user: %s", err.Error())
-			errorsChan <- err
-			return
+			return err
 		}
+		usr = u
+		return nil
+	})
 
-		c.logger.Debugf("populating pipedrive user %d channel", u.ID)
-		usrChan <- u
-		c.logger.Debugf("successfully populated pipedrive channel")
-	}()
-
-	go func() {
-		defer wg.Done()
+	g.Go(func() error {
 		var docs response.DocSettingsResponse
 		if err := c.client.Call(
-			ctx,
+			gctx,
 			c.client.NewRequest(
 				fmt.Sprintf("%s:settings", c.config.Namespace),
 				"SettingsSelectHandler.GetSettings",
@@ -109,57 +131,64 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 			&docs,
 		); err != nil {
 			c.logger.Debugf("could not document server settings: %s", err.Error())
-			errorsChan <- err
-			return
+			return err
 		}
 
-		if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
-			c.logger.Debugf("no settings found")
-			errorsChan <- ErrNoSettingsFound
-			return
+		if c.isDemoModeValid(docs) {
+			if c.onlyoffice.Onlyoffice.Demo.DocumentServerURL == "" ||
+				c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret == "" ||
+				c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader == "" {
+				c.logger.Errorf("demo mode is enabled but demo credentials are not configured")
+				return ErrNoSettingsFound
+			}
+
+			c.logger.Debugf("using demo mode for company %d", req.CID)
+			docs.DocAddress = c.onlyoffice.Onlyoffice.Demo.DocumentServerURL
+			docs.DocSecret = c.onlyoffice.Onlyoffice.Demo.DocumentServerSecret
+			docs.DocHeader = c.onlyoffice.Onlyoffice.Demo.DocumentServerHeader
+		} else {
+			if docs.DocAddress == "" || docs.DocSecret == "" || docs.DocHeader == "" {
+				c.logger.Debugf("no settings found and demo mode not valid")
+				return ErrNoSettingsFound
+			}
+			c.logger.Debugf("using regular document server settings for company %d", req.CID)
 		}
 
-		c.logger.Debugf("populating document server %d settings channel", req.CID)
-		settingsChan <- docs
-		c.logger.Debugf("successfully populated document server settings channel")
-	}()
+		settings = docs
+		return nil
+	})
 
-	c.logger.Debugf("waiting for goroutines to finish execution")
-	wg.Wait()
-	c.logger.Debugf("goroutines have finished the execution")
-
-	select {
-	case err := <-errorsChan:
+	if err := g.Wait(); err != nil {
 		return config, err
-	case <-ctx.Done():
-		return config, ErrOperationTimeout
-	default:
-		c.logger.Debugf("select default")
 	}
 
-	usr := <-usrChan
-	settings := <-settingsChan
 	t := "desktop"
 	ua := useragent.Parse(req.UserAgent)
-
 	if ua.Mobile || ua.Tablet {
 		t = "mobile"
 	}
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	dreq, _ := http.NewRequest("GET", fmt.Sprintf("%s/files/%s/download", user.ApiDomain, req.FileID), nil)
-	dreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", user.AccessToken))
-	resp, err := client.Do(dreq)
+	dreq, err := http.NewRequestWithContext(tctx, "GET", fmt.Sprintf("%s/files/%s/download", user.ApiDomain, req.FileID), nil)
 	if err != nil {
-		return config, err
+		return config, fmt.Errorf("failed to create request: %w", err)
+	}
+	dreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", user.AccessToken))
+	resp, err := defaultClient.Do(dreq)
+	if err != nil {
+		return config, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+	}()
+
+	filename := c.formatManager.EscapeFileName(req.Filename)
+	theme := "default-light"
+	if req.Dark {
+		theme = "default-dark"
 	}
 
-	filename := shared.EscapeFilename(req.Filename)
 	config = response.BuildConfigResponse{
 		Document: response.Document{
 			Key:   req.DocKey,
@@ -183,22 +212,31 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 				},
 				Plugins:       false,
 				HideRightMenu: false,
+				UiTheme:       theme,
 			},
 			Lang: usr.Language.Lang,
 		},
-		Type:      t,
-		ServerURL: settings.DocAddress,
+		Type:        t,
+		ServerURL:   settings.DocAddress,
+		DemoEnabled: settings.DemoEnabled,
 	}
+
+	var fileType string
+	var isEditable bool
 
 	if strings.TrimSpace(filename) != "" {
 		ext := strings.ReplaceAll(filepath.Ext(filename), ".", "")
-		fileType, err := constants.GetFileType(ext)
-		if err != nil {
-			return config, err
-		}
 		config.Document.FileType = strings.ToLower(ext)
+		format, exists := c.formatManager.GetFormatByName(ext)
+		if !exists {
+			return config, fmt.Errorf("format not supported: %s", ext)
+		}
+
+		fileType = format.Type
+		isEditable = format.IsEditable()
+
 		config.Document.Permissions = response.Permissions{
-			Edit:                 constants.IsExtensionEditable(ext),
+			Edit:                 isEditable,
 			Comment:              true,
 			Download:             true,
 			Print:                false,
@@ -210,6 +248,7 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 		config.DocumentType = fileType
 	}
 
+	config.ExpiresAt = jwt.NewNumericDate(time.Now().Add(5 * time.Minute))
 	token, err := c.jwtManager.Sign(settings.DocSecret, config)
 	if err != nil {
 		c.logger.Debugf("could not sign document server config: %s", err.Error())
@@ -223,30 +262,22 @@ func (c ConfigHandler) processConfig(user response.UserResponse, req request.Bui
 func (c ConfigHandler) BuildConfig(ctx context.Context, payload request.BuildConfigRequest, res *response.BuildConfigResponse) error {
 	c.logger.Debugf("processing a docs config: %s", payload.Filename)
 
-	config, err, _ := group.Do(fmt.Sprint(payload.UID+payload.CID), func() (interface{}, error) {
-		req := c.client.NewRequest(
-			fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser",
-			fmt.Sprint(payload.UID+payload.CID),
-		)
+	req := c.client.NewRequest(
+		fmt.Sprintf("%s:auth", c.config.Namespace), "UserSelectHandler.GetUser",
+		fmt.Sprint(payload.UID+payload.CID),
+	)
 
-		var ures response.UserResponse
-		if err := c.client.Call(ctx, req, &ures); err != nil {
-			c.logger.Debugf("could not get user %d access info: %s", payload.UID+payload.CID, err.Error())
-			return nil, err
-		}
-
-		config, err := c.processConfig(ures, payload, ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		return config, nil
-	})
-
-	if cfg, ok := config.(response.BuildConfigResponse); ok {
-		*res = cfg
-		return nil
+	var ures response.UserResponse
+	if err := c.client.Call(ctx, req, &ures); err != nil {
+		c.logger.Debugf("could not get user %d access info: %s", payload.UID+payload.CID, err.Error())
+		return err
 	}
 
-	return err
+	config, err := c.processConfig(ures, payload, ctx)
+	if err != nil {
+		return err
+	}
+
+	*res = config
+	return nil
 }
