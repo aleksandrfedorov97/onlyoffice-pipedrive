@@ -14,8 +14,17 @@ jobs:
           cd ${{ github.workspace }}
           cwd=$(pwd)
           git submodule update --init --recursive
-      - name: Check Licenses
+      - name: Install NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Check Licenses Backend
         uses: aleksandrfedorov97/check-licenses@v0.0.1
         with:
           project_license: Apache 2.0
           working_directory: backend
+      - name: Check Licenses Frontend
+        uses: aleksandrfedorov97/check-licenses@v0.0.1
+        with:
+          project_license: Apache 2.0
+          working_directory: fronted
