@@ -2,6 +2,10 @@ name: Licenses
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
 
 jobs:
   licences:
@@ -17,14 +21,24 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+      - name: Install Dependencies
+        run: |
+          npm install
+        working-directory: ./frontend
+      - name: Get Repository License
+        id: license
+        run: |
+          license="${{ (github.event.repository.license.spdx_id) || (github.event.repository.licenses[0]) }}"
+          echo "License detected: $license"
+          echo "license=$license" >> $GITHUB_OUTPUT
       - name: Check Licenses Backend
-        uses: aleksandrfedorov97/check-licenses@v0.0.1
+        uses: ONLYOFFICE/check-licenses@v1
         with:
-          project_license: Apache 2.0
-          working_directory: backend
+          project_license: ${{ steps.license.outputs.license }}
+          working_directory: ./backend
       - name: Check Licenses Frontend
-        uses: aleksandrfedorov97/check-licenses@v0.0.1
+        uses: ONLYOFFICE/check-licenses@v1
         with:
-          project_license: Apache 2.0
-          working_directory: fronted
+          project_license: ${{ steps.license.outputs.license }}
+          working_directory: ./frontend
