@@ -24,7 +24,7 @@ jobs:
           node-version: 22
       - name: Install Dependencies
         run: |
-          npm install
+          yarn install
         working-directory: ./frontend
       - name: Get Repository License
         id: license
